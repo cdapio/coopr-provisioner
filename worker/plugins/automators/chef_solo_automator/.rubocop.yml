@@ -1,0 +1,8 @@
+AsciiComments:
+  Enabled: false
+Style/SpecialGlobalVars:
+  Enabled: false
+Metrics/LineLength:
+  Max: 135
+Style/HashSyntax:
+  Enabled: false
