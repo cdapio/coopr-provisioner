@@ -34,6 +34,6 @@ end
 include_recipe 'ulimit::default'
 
 # Add users in the sysadmins group and give them sudo access
-%w(chef-solo-search sudo users).each do |cb|
+%w(chef-solo-search sudo users::sysadmins).each do |cb|
   include_recipe cb unless node['base'].key?("no_#{cb}") && node['base']["no_#{cb}"].to_s == 'true'
 end
