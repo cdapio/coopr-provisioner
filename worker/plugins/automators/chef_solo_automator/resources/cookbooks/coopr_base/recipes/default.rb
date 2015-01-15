@@ -25,8 +25,8 @@ when 'rhel'
   include_recipe 'yum-epel::default' if node['base']['use_epel'].to_s == 'true'
 end
 
-# We always run our dns, firewall, and hosts cookbooks
-%w(dns firewall hosts).each do |cb|
+# We always run our dns, firewall, hosts, and packages cookbooks
+%w(dns firewall hosts packages).each do |cb|
   include_recipe "coopr_#{cb}::default" unless node['base'].key?("no_#{cb}") && node['base']["no_#{cb}"].to_s == 'true'
 end
 
