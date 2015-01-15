@@ -1,5 +1,5 @@
 name             'coopr_base'
-maintainer       'Cask'
+maintainer       'Cask Data, Inc.'
 maintainer_email 'ops@cask.co'
 license          'Apache 2.0'
 description      'Base settings for all hosts'
