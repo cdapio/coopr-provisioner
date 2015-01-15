@@ -1,0 +1,25 @@
+---
+driver:
+  name: vagrant
+  customize:
+    cpus: 2
+    memory: 2048
+
+provisioner:
+  name: chef_solo
+  require_chef_omnibus: true
+
+platforms:
+  - name: centos-6.5
+  - name: ubuntu-12.04
+    run_list:
+    - apt::default
+
+suites:
+  - name: default
+    run_list:
+      - recipe[impala::catalog]
+      - recipe[impala::server]
+      - recipe[impala::shell]
+      - recipe[impala::state_store]
+    attributes: { hadoop: { distribution: 'cdh', distribution_version: '5' } }
