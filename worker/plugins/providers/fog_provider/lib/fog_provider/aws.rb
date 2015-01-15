@@ -86,10 +86,13 @@ class FogProviderAWS < Provider
       log.debug "Waiting for server to come up: #{providerid}"
       server.wait_for(600) { ready? }
 
+      # Get domain name by dropping first dot
+      domainname = @task['config']['hostname'].split('.').drop(1).join('.')
+
       hostname =
-        if !server.dns_name.nil?
+        if !server.dns_name.nil? && domainname = 'local'
           server.dns_name
-        elsif !server.public_ip_address.nil?
+        elsif !server.public_ip_address.nil? && domainname = 'local'
           Resolv.getname(server.public_ip_address)
         else
           @task['config']['hostname']
