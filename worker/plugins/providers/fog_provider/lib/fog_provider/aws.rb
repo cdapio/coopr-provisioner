@@ -90,9 +90,9 @@ class FogProviderAWS < Provider
       domainname = @task['config']['hostname'].split('.').drop(1).join('.')
 
       hostname =
-        if !server.dns_name.nil? && domainname = 'local'
+        if !server.dns_name.nil? && domainname == 'local'
           server.dns_name
-        elsif !server.public_ip_address.nil? && domainname = 'local'
+        elsif !server.public_ip_address.nil? && domainname == 'local'
           Resolv.getname(server.public_ip_address)
         else
           @task['config']['hostname']
