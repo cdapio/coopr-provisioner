@@ -121,8 +121,11 @@ class FogProviderGoogle < Provider
       log.debug "Waiting for server to come up: #{providerid}"
       server.wait_for(600) { ready? }
 
+      # Get domain name by dropping first dot
+      domainname = @task['config']['hostname'].split('.').drop(1).join('.')
+
       hostname =
-        if server.public_ip_address
+        if server.public_ip_address && domainname == 'local'
           Resolv.getname(server.public_ip_address)
         else
           @task['config']['hostname']
