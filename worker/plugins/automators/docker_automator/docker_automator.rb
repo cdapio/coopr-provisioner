@@ -19,23 +19,6 @@
 require 'base64'
 require 'fileutils'
 
-###
-# Notes
-###
-
-# Commands:
-# ========
-# Fetch container: docker pull <image_name>
-# Run container: docker run -t -i [-p<public_port>:<private_port>[,-p...]] <image_name>
-# Stop container: docker stop <container_id>
-# Start container: docker start <container_id>
-# List running containers: docker ps
-# Other:
-# =====
-# Detached run returns container ID
-# We need to store/retrieve container IDs/host
-# Ports must be unique per service, since we use them globally per host
-
 # Docker Automator class
 class DockerAutomator < Automator
   # plugin defined resources
