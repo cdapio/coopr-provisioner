@@ -1,5 +1,5 @@
 name             'coopr_service_manager'
-maintainer       'Cask'
+maintainer       'Cask Data, Inc.'
 maintainer_email 'ops@cask.co'
 license          'All rights reserved'
 description      'Manage service run states'
