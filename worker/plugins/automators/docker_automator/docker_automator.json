@@ -1,0 +1,30 @@
+{
+  "name": "docker",
+  "description": "Utilize Docker containers for Coopr clusters",
+  "automatortypes": [ "docker" ],
+  "docker": {
+    "name": "docker",
+    "classname": "DockerAutomator",
+    "parameters": {
+      "admin": {
+        "fields": {
+          "image_name": {
+            "label": "Image Name",
+            "override": false,
+            "type": "text",
+            "tip": "The Image name on Docker Hub"
+          },
+          "publish_ports": {
+            "label": "Container ports to publish",
+            "override": false,
+            "type": "text",
+            "tip": "Comma-separated list of container ports to publish"
+          }
+        },
+        "required": [
+          [ "image_name" ]
+        ]
+      }
+    }
+  }
+}
