@@ -9,6 +9,7 @@ version '0.1.1'
 depends 'coopr_dns'
 depends 'coopr_firewall'
 depends 'coopr_hosts'
+depends 'coopr_packages'
 
 depends 'apt'
 depends 'yum-epel'
