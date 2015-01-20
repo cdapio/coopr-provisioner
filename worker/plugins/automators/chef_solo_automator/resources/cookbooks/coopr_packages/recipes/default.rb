@@ -17,8 +17,9 @@
 # limitations under the License.
 #
 
+pf = node['platform_family']
 %w(install upgrade remove).each do |act|
-  node['coopr_packages'][node['platform_family']][act].each do |cb|
+  node['coopr_packages'][pf][act].each do |cb|
     package cb do
       action act.to_sym
     end
