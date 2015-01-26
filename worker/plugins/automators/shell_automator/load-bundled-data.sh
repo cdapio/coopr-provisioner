@@ -12,7 +12,7 @@ RESOURCES_DIR=${SHELL_DIR}/resources
 
 COOPR_RUBY=${COOPR_RUBY:-${COOPR_HOME}/provisioner/embedded/bin/ruby}
 test -x ${COOPR_RUBY} || COOPR_RUBY="ruby"
-DATA_UPLOADER="${COOPR_RUBY} ${COOPR_HOME}/provisioner/bin/data-uploader.rb"
+DATA_UPLOADER=${DATA_UPLOADER:-${COOPR_HOME}/provisioner/bin/data-uploader.rb}
 
 SCRIPTS_DIR=${RESOURCES_DIR}/scripts
 ARCHIVES_DIR=${RESOURCES_DIR}/archives
@@ -20,7 +20,7 @@ ARCHIVES_DIR=${RESOURCES_DIR}/archives
 # load scripts
 cd ${SCRIPTS_DIR}
 for f in $(ls -p | grep -v '/$' 2>/dev/null) ; do
-  ${DATA_UPLOADER} --quiet --uri ${COOPR_SERVER_URI} --tenant ${COOPR_TENANT} \
+  ${COOPR_RUBY} ${DATA_UPLOADER} --quiet --uri ${COOPR_SERVER_URI} --tenant ${COOPR_TENANT} \
     --user ${COOPR_API_USER} stage ${f} automatortypes/shell/scripts/${f}
   ret=$?
   [[ ${ret} -ne 0 ]] && failed="${failed} ${f}"
