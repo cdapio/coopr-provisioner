@@ -1,11 +1,8 @@
 #
-# Author:: Doug MacEachern (<dougm@vmware.com>)
-# Author:: Seth Chisamore (<schisamo@opscode.com>)
-# Cookbook Name:: windows
-# Resource:: zipfile
+# Cookbook Name:: krb5
+# Recipe:: rkerberos_gem
 #
-# Copyright:: 2010, VMware, Inc.
-# Copyright:: 2011, Opscode, Inc.
+# Copyright © 2014 Cask Data, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -20,14 +17,14 @@
 # limitations under the License.
 #
 
-actions :unzip, :zip
-
-attribute :path, :kind_of => String, :name_attribute => true
-attribute :source, :kind_of => String
-attribute :overwrite, :kind_of => [ TrueClass, FalseClass ], :default => false
-attribute :checksum, :kind_of => String
-
-def initialize(name, run_context=nil)
-  super
-  @action = :unzip
+node['krb5']['devel']['packages'].each do |pkg|
+  package pkg do
+    action :nothing
+  end.run_action(:install)
 end
+
+chef_gem 'rkerberos' do
+  action :install
+end
+
+require 'rkerberos' unless defined?(ChefSpec)

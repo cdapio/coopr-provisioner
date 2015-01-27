@@ -1,4 +1,15 @@
-## Unreleased
+## v1.1.0
+  Remove ChefSpec deprecation warnings
+  Use container-based Travis CI infrastructure
+  Add missing tests for 100% coverage
+  LWRP for krb5_keytab and krb5_principal
+
+## v1.0.4
+  Fix default realm attributes properly
+
+## v1.0.3
+  Cleanups for Rubocop
+  Switch to CentOS 6.5 in ChefSpec
 
 ## v1.0.2
 
