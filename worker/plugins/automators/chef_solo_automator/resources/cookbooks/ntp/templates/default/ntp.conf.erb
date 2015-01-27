@@ -13,18 +13,30 @@
 <% end -%>
 driftfile <%= node['ntp']['driftfile'] %>
 
-statistics loopstats peerstats clockstats
-filegen loopstats file loopstats type day enable
-filegen peerstats file peerstats type day enable
-filegen clockstats file clockstats type day enable
+<%# Enable logs only if statistics option is defined %>
+<% if node['ntp']['statistics'] -%>
+<%-%>statistics loopstats peerstats clockstats
+<%-%>filegen loopstats file loopstats type day enable
+<%-%>filegen peerstats file peerstats type day enable
+<%-%>filegen clockstats file clockstats type day enable
+<% end -%>
+
+<%# If the ignore attribute is set on the node, then apply it %>
+<% unless node['ntp']['ignore'].nil? -%>
+<%   Array(node['ntp']['ignore']).each do |ignore| -%>
+interface ignore <%= ignore %>
+<%   end -%>
+<% end -%>
 
 <%# If the listen attribute is set on the node, then apply it %>
 <% unless node['ntp']['listen'].nil? -%>
-interface listen <%= node['ntp']['listen'] %>
-  <%# The service must always listen on localhost %>
-  <% if node['ntp']['listen'] != "127.0.0.1" -%>
-interface listen 127.0.0.1
-  <% end -%>
+<%   Array(node['ntp']['listen']).each do |listen| -%>
+interface listen <%= listen %>
+<%   end -%>
+<%#  The service must always listen on localhost %>
+<%   unless Array(node['ntp']['listen']).include? '127.0.0.1' -%>
+ interface listen 127.0.0.1    interface listen 127.0.0.1
+<%   end -%>
 <% end -%>
 
 <% if node['ntp']['monitor'] -%>
@@ -38,7 +50,7 @@ disable monitor
 <%   node['ntp']['peers'].each do |ntppeer| -%>
 <%#    Don't peer with ourself %>
 <%     if node['ipaddress'] != ntppeer && node['fqdn'] != ntppeer -%>
-<%    -%>peer <%= ntppeer %> iburst
+<%    -%>peer <%= ntppeer %><% if node['ntp']['peer']['use_iburst'] -%> iburst<% end -%><% if node['ntp']['peer']['use_burst'] -%> burst<% end -%> minpoll <%= node['ntp']['peer']['minpoll'] %> maxpoll <%= node['ntp']['peer']['maxpoll'] %>
 <%    -%>restrict <%= ntppeer %> nomodify
 <%     end -%>
 <%   end -%>
@@ -50,7 +62,7 @@ disable monitor
 <% ( node['ntp']['servers'] - node['ntp']['peers'] ).each do |ntpserver| -%>
 <%#   Loop through defined servers, but don't try to upstream ourself %>
 <%   if node['ipaddress'] != ntpserver and node['fqdn'] != ntpserver -%>
-<%  -%>server <%= ntpserver %> iburst
+<%  -%>server <%= ntpserver %><% if node['ntp']['server']['use_iburst'] -%> iburst<% end -%><% if node['ntp']['server']['use_burst'] -%> burst<% end -%> minpoll <%= node['ntp']['server']['minpoll'] %> maxpoll <%= node['ntp']['server']['maxpoll'] %>
 <%  -%>restrict <%= ntpserver %> nomodify notrap noquery
 <%   end -%>
 <% end -%>
