@@ -13,7 +13,7 @@ RESOURCES_DIR=${CHEF_SOLO_DIR}/resources
 
 COOPR_RUBY=${COOPR_RUBY:-${COOPR_HOME}/provisioner/embedded/bin/ruby}
 test -x ${COOPR_RUBY} || COOPR_RUBY="ruby"
-DATA_UPLOADER="${COOPR_RUBY} ${COOPR_HOME}/provisioner/bin/data-uploader.rb"
+DATA_UPLOADER=${DATA_UPLOADER:-${COOPR_HOME}/provisioner/bin/data-uploader.rb}
 
 COOKBOOKS_DIR=${RESOURCES_DIR}/cookbooks
 ROLES_DIR=${RESOURCES_DIR}/roles
@@ -22,7 +22,7 @@ DATA_BAGS_DIR=${RESOURCES_DIR}/data_bags
 # load cookbooks
 cd ${COOKBOOKS_DIR}
 for d in $(ls -p -1 | grep "/$" | sed "s,/$,,") ; do
-  ${DATA_UPLOADER} --quiet --uri ${COOPR_SERVER_URI} --tenant ${COOPR_TENANT} \
+  ${COOPR_RUBY} ${DATA_UPLOADER} --quiet --uri ${COOPR_SERVER_URI} --tenant ${COOPR_TENANT} \
     --user ${COOPR_API_USER} stage ${d} automatortypes/chef-solo/cookbooks/${d}
   ret=$?
   [[ ${ret} -ne 0 ]] && failed="${failed} ${d}"
