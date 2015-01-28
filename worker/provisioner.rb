@@ -126,10 +126,10 @@ def _run_plugin(clazz, env, cwd, task)
   clusterId = task['clusterId']
   hostname = task['config']['hostname']
   provider = task['config']['provider']['description']
-  image = task['config']['image']
+  imagetype = task['config']['imagetype']
   hardware = task['config']['hardwaretype']
   taskName = task['taskName'].downcase
-  log.info "Creating node #{hostname} on #{provider} for #{clusterId} using #{image} on #{hardware}" if taskName == 'create'
+  log.info "Creating node #{hostname} on #{provider} for #{clusterId} using #{imagetype} on #{hardware}" if taskName == 'create'
 
   object = clazz.new(env, task)
   FileUtils.mkdir_p(cwd)
