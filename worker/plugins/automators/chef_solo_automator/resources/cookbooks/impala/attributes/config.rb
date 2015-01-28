@@ -25,8 +25,8 @@ default['impala']['user'] = 'impala'
 default['impala']['group'] = 'impala'
 
 # Set Hadoop attributes
-override['hadoop']['distribution'] = 'cdh'
-override['hadoop']['distribution_version'] = 5
+default['hadoop']['distribution'] = 'cdh'
+default['hadoop']['distribution_version'] = 5
 
 # These are required to be set for Impala
 # http://www.cloudera.com/content/cloudera/en/documentation/cloudera-impala/latest/topics/impala_config_performance.html

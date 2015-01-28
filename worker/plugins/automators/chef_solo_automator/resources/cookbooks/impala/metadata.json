@@ -8,6 +8,7 @@
   "platforms": {
     "amazon": ">= 0.0.0",
     "centos": ">= 0.0.0",
+    "debian": ">= 0.0.0",
     "redhat": ">= 0.0.0",
     "scientific": ">= 0.0.0",
     "ubuntu": ">= 0.0.0"
@@ -40,5 +41,5 @@
   "recipes": {
 
   },
-  "version": "0.1.0"
+  "version": "0.1.1"
 }
