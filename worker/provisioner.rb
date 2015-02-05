@@ -27,7 +27,7 @@ require_relative 'utils.rb'
 require_relative 'pluginmanager.rb'
 require_relative 'provider.rb'
 require_relative 'automator.rb'
-require_relative '../master/lib/provisioner/rest-helper'
+require_relative '../lib/provisioner/rest-helper'
 
 $stdout.sync = true
 

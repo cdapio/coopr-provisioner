@@ -22,7 +22,7 @@ export PROVISIONER_SITE_CONF=${PROVISIONER_SITE_CONF:-/etc/coopr/conf/provisione
 
 die ( ) { echo; echo "ERROR: ${*}"; echo; exit 1; }
 
-PROVISIONER_PATH="${COOPR_HOME}/provisioner/master"
+PROVISIONER_PATH="${COOPR_HOME}/provisioner"
 [ -f ${PROVISIONER_SITE_CONF} ] && PROVISIONER_CONF_OPT="--config ${PROVISIONER_SITE_CONF}"
 
 APP_NAME="coopr-provisioner"
