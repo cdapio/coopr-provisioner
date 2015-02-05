@@ -39,9 +39,9 @@ module Coopr
       else
         cert = File.read(@cert_path)
         RestClient::Resource.new(
-            uri,
-            :ssl_client_cert => OpenSSL::X509::Certificate.new(cert),
-            :ssl_client_key => OpenSSL::PKey::RSA.new(cert, @cert_pass)
+          uri,
+          :ssl_client_cert => OpenSSL::X509::Certificate.new(cert),
+          :ssl_client_key => OpenSSL::PKey::RSA.new(cert, @cert_pass)
         )
       end
     end
