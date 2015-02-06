@@ -29,8 +29,15 @@ group :dependencies do
 end
 
 group :test do
+  gem 'rake'
   gem 'rack-test', '~> 0.6'
   gem 'rspec', '~> 3.0'
   gem 'rubocop', '~> 0.24'
   gem 'simplecov', '~> 0.7.1', :require => false
+end
+
+# Install gems from each plugin
+Dir.glob(File.join(File.dirname(__FILE__), 'lib', 'provisioner', 'worker', 'plugins', '*', '*', "Gemfile")) do |gemfile|
+  puts "Including provisioner plugin Gemfile: #{gemfile}"
+  eval(IO.read(gemfile), binding)
 end
