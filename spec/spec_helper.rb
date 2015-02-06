@@ -17,3 +17,8 @@
 
 require 'rspec'
 require 'rack/test'
+
+require_relative '../lib/provisioner/worker/automator'
+require_relative '../lib/provisioner/worker/pluginmanager'
+require_relative '../lib/provisioner/worker/provider'
+require_relative '../lib/provisioner/worker/utils'
