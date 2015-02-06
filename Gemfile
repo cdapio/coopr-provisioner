@@ -39,5 +39,5 @@ end
 # Install gems from each plugin
 Dir.glob(File.join(File.dirname(__FILE__), 'lib', 'provisioner', 'worker', 'plugins', '*', '*', "Gemfile")) do |gemfile|
   puts "Including provisioner plugin Gemfile: #{gemfile}"
-  eval(IO.read(gemfile), binding)
+  eval_gemfile(gemfile)
 end
