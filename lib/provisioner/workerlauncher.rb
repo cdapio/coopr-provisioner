@@ -34,7 +34,7 @@ module Coopr
 
     def prod_cmd
       cmd = "#{File.join(RbConfig::CONFIG['bindir'], RbConfig::CONFIG['ruby_install_name'])}"
-      cmd += " #{File.dirname(__FILE__)}/../../worker/provisioner.rb"
+      cmd += " #{File.dirname(__FILE__)}/worker/provisioner.rb"
       cmd += " --uri #{@config.get(PROVISIONER_SERVER_URI)}" if @config.get(PROVISIONER_SERVER_URI)
       cmd += " --log-dir #{@config.get(PROVISIONER_LOG_DIR)}" if @config.get(PROVISIONER_LOG_DIR)
       cmd += " --log-level #{@config.get(PROVISIONER_LOG_LEVEL)}" if @config.get(PROVISIONER_LOG_LEVEL)
