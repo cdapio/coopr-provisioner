@@ -23,7 +23,7 @@ require 'tmpdir'
 require 'fileutils'
 require 'rubygems/package'
 require 'zlib'
-require_relative '../master/lib/provisioner/rest-helper'
+require_relative '../lib/provisioner/rest-helper'
 
 # ./data-uploader [-u http://localhost:55054] [-t superadmin] [-U admin] upload|stage|sync \ 
 #   ./my/local/cookbooks/hadoop automatortypes/chef-solo/cookbooks/hadoop

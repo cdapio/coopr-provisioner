@@ -18,7 +18,7 @@
 
 require 'rspec/core/rake_task'
 RSpec::Core::RakeTask.new(:rspec) do |t|
-  t.pattern = 'master/spec/**/*_spec.rb,worker/spec/**/*_spec.rb'
+  t.pattern = 'spec/**/*_spec.rb,worker/spec/**/*_spec.rb'
 end
 
 # rubocop rake task
