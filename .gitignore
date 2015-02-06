@@ -1,0 +1,55 @@
+npm-debug.log
+.vagrant
+*~
+*#
+.#*
+\#*#
+.*.sw[a-z]
+*.un~
+/cookbooks
+.DS_Store
+*.py[co]
+*.egg
+PKG-INFO
+build/
+target/
+
+# Bundler
+.bundle/*
+
+# Coverage reports
+coverage
+
+.kitchen/
+.kitchen.local.yml
+
+*.iml
+.idea/
+
+/coopr-server/target/
+/coopr-server/build/
+/coopr-ui/client-built/
+/coopr-web-app/client-built/
+/coopr-ui/build/
+/build
+/integration-testing/target
+.gradle
+/coopr-server/derby*
+
+# Cookbooks tarball
+/coopr-provisioner/worker/plugins/automators/chef_automator/chef_automator/*.tar.gz
+/coopr-provisioner/worker/plugins/automators/shell_automator/*.tar.gz
+
+# Chef client validator
+/coopr-provisioner/worker/plugins/automators/shell_automator/scripts/validation.pem
+
+# Environment
+/.bash*
+/.chef
+/.gem
+/.lesshst
+/.m2
+/.profile
+/.ssh
+/.viminfo
+
