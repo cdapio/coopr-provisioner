@@ -24,7 +24,7 @@ export COOPR_SERVER_URI=${COOPR_SERVER_URI:-http://localhost:55054}
 export COOPR_HOME=${COOPR_HOME:-/opt/coopr}
 export COOPR_RUBY=${COOPR_RUBY:-${COOPR_HOME}/provisioner/embedded/bin/ruby}
 
-export COOPR_PROVISIONER_PLUGIN_DIR=${COOPR_HOME}/provisioner/worker/plugins
+export COOPR_PROVISIONER_PLUGIN_DIR=${COOPR_HOME}/provisioner/lib/worker/plugins
 
 if [ -r "${TRUST_CERT_PATH}" ] && [ -n "${TRUST_CERT_PASSWORD}" ]; then
   export CERT_PARAMETER="--cert ${TRUST_CERT_PATH}:${TRUST_CERT_PASSWORD}"
@@ -53,7 +53,7 @@ wait_for_plugin_registration () {
 }
 
 load_bundled_data ( ) {
-  __skriptz=$(ls -1 ${COOPR_HOME}/provisioner/worker/plugins/*/*/load-bundled-data.sh 2>&1)
+  __skriptz=$(ls -1 ${COOPR_HOME}/provisioner/lib/worker/plugins/*/*/load-bundled-data.sh 2>&1)
   if [ ${__skriptz} != "" ]; then
     for __i in ${__skriptz}; do
       ${__i} || return 1
