@@ -29,13 +29,6 @@ coverage
 /build
 .gradle
 
-# Cookbooks tarball
-lib/provisioner/worker/plugins/automators/chef_automator/chef_automator/*.tar.gz
-lib/provisioner/worker/plugins/automators/shell_automator/*.tar.gz
-
-# Chef client validator
-lib/provisioner/worker/plugins/automators/shell_automator/scripts/validation.pem
-
 # Environment
 /.bash*
 /.chef
