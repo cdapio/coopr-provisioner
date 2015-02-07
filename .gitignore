@@ -1,0 +1,41 @@
+npm-debug.log
+.vagrant
+*~
+*#
+.#*
+\#*#
+.*.sw[a-z]
+*.un~
+/cookbooks
+.DS_Store
+*.py[co]
+*.egg
+PKG-INFO
+build/
+target/
+
+# Bundler
+.bundle/*
+
+# Coverage reports
+coverage
+
+.kitchen/
+.kitchen.local.yml
+
+*.iml
+.idea/
+
+/build
+.gradle
+
+# Environment
+/.bash*
+/.chef
+/.gem
+/.lesshst
+/.m2
+/.profile
+/.ssh
+/.viminfo
+
