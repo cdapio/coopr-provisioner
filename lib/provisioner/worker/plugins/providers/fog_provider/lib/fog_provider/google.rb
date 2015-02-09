@@ -246,7 +246,8 @@ class FogProviderGoogle < Provider
 
       # fetch server object
       begin
-        server = connection.servers.get(providerid)
+        # check for nil providerid in case of failed servers, and prevent Fog lookup
+        server = providerid.nil? || providerid.empty? ? nil : connection.servers.get(providerid)
       rescue ArgumentError => e
         # ok, attempting to delete a server with an invalid name which cannot exist at the provider
         log.debug("ArgumentError in when deleting server #{providerid}. Server must not exist: " + e.inspect)
