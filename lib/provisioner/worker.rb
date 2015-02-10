@@ -161,11 +161,11 @@ module Coopr
       case taskName.downcase
         when 'create', 'confirm', 'delete'
           clazz = Object.const_get(pluginmanager.getHandlerActionObjectForProvider(providerName))
-          cwd = File.join(@plugin_env[:work_dir], @plugin_env[:tenant], 'providertypes', providerName)
+          cwd = File.join(@config.get(PROVISIONER_WORK_DIR), @tenant, 'providertypes', providerName)
           result = _run_plugin(clazz, @plugin_env, cwd, task)
         when 'install', 'configure', 'initialize', 'start', 'stop', 'remove'
           clazz = Object.const_get(pluginmanager.getHandlerActionObjectForAutomator(automatorName))
-          cwd = File.join(@plugin_env[:work_dir], @plugin_env[:tenant], 'automatortypes', automatorName)
+          cwd = File.join(@config.get(PROVISIONER_WORK_DIR), @tenant, 'automatortypes', automatorName)
           result = _run_plugin(clazz, @plugin_env, cwd, task)
         when 'bootstrap'
           combinedresult = {}
@@ -175,7 +175,7 @@ module Coopr
             log.debug "Task #{task_id} running specified bootstrap handlers: #{task['config']['automators']}"
             task['config']['automators'].each do |automator|
               clazz = Object.const_get(pluginmanager.getHandlerActionObjectForAutomator(automator))
-              cwd = File.join(@plugin_env[:work_dir], @plugin_env[:tenant], 'automatortypes', automator)
+              cwd = File.join(@config.get(PROVISIONER_WORK_DIR), @tenant, 'automatortypes', automator)
               result = _run_plugin(clazz, @plugin_env, cwd, task)
               combinedresult.merge!(result)
             end
