@@ -51,6 +51,12 @@ module Coopr
       @options = options
       @config = config
 
+      # Logging module is already configured via the master provisioner or self.run
+      # TODO: reimplement functionality to log each worker to a different file
+      #   if (new config option)
+      #     Logging.configure(config.get(PROVISIONER_LOG_DIR) ? "#{config.get(PROVISIONER_LOG_DIR)}/#{@name}" : nil)
+      #   end
+
       # Log configuration
       log.debug 'Provisioner starting up'
       config.properties.each do |k, v|
@@ -95,7 +101,7 @@ module Coopr
       require 'pp'
       pp config
       config.load
-      # initialize logging
+      # Initialize logging
       Coopr::Logging.configure(config.get(PROVISIONER_LOG_DIR) ? "#{config.get(PROVISIONER_LOG_DIR)}/provisioner.log" : nil)
       Coopr::Logging.level = config.get(PROVISIONER_LOG_LEVEL)
       Coopr::Logging.shift_age = config.get(PROVISIONER_LOG_ROTATION_SHIFT_AGE)
@@ -319,21 +325,3 @@ module Coopr
 
   end
 end
-
-
-
-__END__
-
-
-
-
-include Logging
-log_file = nil
-if options[:log_directory] && options[:name]
-  log_file = [options[:log_directory], options[:name]].join('/') + '.log'
-elsif options[:log_directory]
-  log_file = "#{options[:log_directory]}/worker-default.log"
-end
-Logging.configure(log_file)
-Logging.level = options[:log_level]
-Logging.process_name = options[:name] if options[:name]
