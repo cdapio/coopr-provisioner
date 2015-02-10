@@ -171,33 +171,33 @@ module Coopr
       automatorName = task['config']['service']['action']['type'] rescue nil
 
       case taskName.downcase
-        when 'create', 'confirm', 'delete'
-          clazz = Object.const_get(pluginmanager.getHandlerActionObjectForProvider(providerName))
-          cwd = File.join(@config.get(PROVISIONER_WORK_DIR), @tenant, 'providertypes', providerName)
-          result = _run_plugin(clazz, @plugin_env, cwd, task)
-        when 'install', 'configure', 'initialize', 'start', 'stop', 'remove'
-          clazz = Object.const_get(pluginmanager.getHandlerActionObjectForAutomator(automatorName))
-          cwd = File.join(@config.get(PROVISIONER_WORK_DIR), @tenant, 'automatortypes', automatorName)
-          result = _run_plugin(clazz, @plugin_env, cwd, task)
-        when 'bootstrap'
-          combinedresult = {}
-          classes = []
-          if task['config'].key? 'automators' and !task['config']['automators'].empty?
-            # server must specify which bootstrap handlers need to run
-            log.debug "Task #{task_id} running specified bootstrap handlers: #{task['config']['automators']}"
-            task['config']['automators'].each do |automator|
-              clazz = Object.const_get(pluginmanager.getHandlerActionObjectForAutomator(automator))
-              cwd = File.join(@config.get(PROVISIONER_WORK_DIR), @tenant, 'automatortypes', automator)
-              result = _run_plugin(clazz, @plugin_env, cwd, task)
-              combinedresult.merge!(result)
-            end
-          else
-            log.warn 'No automators specified to bootstrap'
+      when 'create', 'confirm', 'delete'
+        clazz = Object.const_get(pluginmanager.getHandlerActionObjectForProvider(providerName))
+        cwd = File.join(@config.get(PROVISIONER_WORK_DIR), @tenant, 'providertypes', providerName)
+        result = _run_plugin(clazz, @plugin_env, cwd, task)
+      when 'install', 'configure', 'initialize', 'start', 'stop', 'remove'
+        clazz = Object.const_get(pluginmanager.getHandlerActionObjectForAutomator(automatorName))
+        cwd = File.join(@config.get(PROVISIONER_WORK_DIR), @tenant, 'automatortypes', automatorName)
+        result = _run_plugin(clazz, @plugin_env, cwd, task)
+      when 'bootstrap'
+        combinedresult = {}
+        classes = []
+        if task['config'].key? 'automators' and !task['config']['automators'].empty?
+          # server must specify which bootstrap handlers need to run
+          log.debug "Task #{task_id} running specified bootstrap handlers: #{task['config']['automators']}"
+          task['config']['automators'].each do |automator|
+            clazz = Object.const_get(pluginmanager.getHandlerActionObjectForAutomator(automator))
+            cwd = File.join(@config.get(PROVISIONER_WORK_DIR), @tenant, 'automatortypes', automator)
+            result = _run_plugin(clazz, @plugin_env, cwd, task)
+            combinedresult.merge!(result)
           end
-          result = combinedresult
         else
-          log.error "Unhandled task of type #{task['taskName']}"
-          fail "Unhandled task of type #{task['taskName']}"
+          log.warn 'No automators specified to bootstrap'
+        end
+        result = combinedresult
+      else
+        log.error "Unhandled task of type #{task['taskName']}"
+        fail "Unhandled task of type #{task['taskName']}"
       end
       result
     end
