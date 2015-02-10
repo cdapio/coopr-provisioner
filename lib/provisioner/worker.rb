@@ -74,11 +74,7 @@ module Coopr
       # TODO: plugins refer to the prior cmdline option names, should use constants instead
       @plugin_env[:work_dir] = @config.get(PROVISIONER_WORK_DIR)
 
-      require 'pp'
-      puts "class of config: #{@plugin_env.class}"
-
-      pp @plugin_env
-
+      # Run validation checks
       validate
     end
 
