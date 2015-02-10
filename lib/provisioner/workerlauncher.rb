@@ -16,6 +16,7 @@
 # limitations under the License.
 #
 
+require_relative 'worker'
 
 # simple class to construct the ruby command used to launch a worker process
 module Coopr 
@@ -29,7 +30,7 @@ module Coopr
     end
 
     def cmd
-      prod_cmd
+      work_cmd
     end
 
     def prod_cmd
@@ -46,6 +47,20 @@ module Coopr
       cmd += " --cert-path #{@cert_path}" if @cert_path
       cmd += " --cert-pass #{@cert_pass}" if @cert_pass
       cmd
+    end
+
+    def work_cmd
+      # Instantiate new worker, passing options (nil in this context) and @config
+      worker = Coopr::Worker.new({}, @config)
+      # Set instance vars
+      worker.provisioner_id = @provisioner
+      worker.tenant = @tenant
+      worker.name = @name
+      if @register
+        worker.register_plugins
+      else
+        worker.work
+      end
     end
 
     def test_cmd
