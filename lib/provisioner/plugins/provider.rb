@@ -20,51 +20,55 @@
 
 require_relative '../logging'
 
-class Provider
-  include Coopr::Logging
-  attr_accessor :task, :flavor, :image, :hostname, :providerid, :result
-  attr_reader :env
-  def initialize(env, task)
-    @task = task
-    @env = env
-    @result = Hash.new { |h, k| h[k] = Hash.new(&h.default_proc) }
-  end
+module Coopr
+  module Plugins
+    class Provider
+      include Coopr::Logging
+      attr_accessor :task, :flavor, :image, :hostname, :providerid, :result
+      attr_reader :env
+      def initialize(env, task)
+        @task = task
+        @env = env
+        @result = Hash.new { |h, k| h[k] = Hash.new(&h.default_proc) }
+      end
 
-  def runTask
-    case task['taskName'].downcase
-    when "create"
-      create({'flavor' => task['config']['flavor'], 'image' => task['config']['image'], 'hostname' => task['config']['hostname'], 'fields' => task['config']['provider']['provisioner']})
-      return @result
-    when "confirm"
-      confirm({'providerid' => task['config']['providerid'], 'fields' => task['config']['provider']['provisioner']})
-      return @result
-    when "delete"
-      delete({'providerid' => task['config']['providerid'], 'fields' => task['config']['provider']['provisioner']})
-      return @result
-    else
-      fail "unhandled provider task type: #{task['taskName']}"
+      def runTask
+        case task['taskName'].downcase
+        when "create"
+          create({'flavor' => task['config']['flavor'], 'image' => task['config']['image'], 'hostname' => task['config']['hostname'], 'fields' => task['config']['provider']['provisioner']})
+          return @result
+        when "confirm"
+          confirm({'providerid' => task['config']['providerid'], 'fields' => task['config']['provider']['provisioner']})
+          return @result
+        when "delete"
+          delete({'providerid' => task['config']['providerid'], 'fields' => task['config']['provider']['provisioner']})
+          return @result
+        else
+          fail "unhandled provider task type: #{task['taskName']}"
+        end
+      end
+
+      def create(inputmap)
+        @result['status'] = 1
+        @result['message'] = "Unimplemented task create in class #{self.class.name}"
+        # fields under 'result' will be passed to subsequent tasks
+        @result['result']['providerid'] = 'exampleid'
+        @result['result']['foo'] = 'bar'
+        fail "Unimplemented task create in class #{self.class.name}"
+      end
+
+      def confirm(inputmap)
+        @result['status'] = 1
+        @result['message'] = "Unimplemented task create in class #{self.class.name}"
+        @result['result']['ipaddress'] = '1.2.3.4'
+        fail "Unimplemented task confirm in class #{self.class.name}"
+      end
+
+      def delete(inputmap)
+        @result['status'] = 1
+        @result['message'] = "Unimplemented task create in class #{self.class.name}"
+        fail "Unimplemented task delete in class #{self.class.name}"
+      end
     end
-  end
-
-  def create(inputmap)
-    @result['status'] = 1
-    @result['message'] = "Unimplemented task create in class #{self.class.name}"
-    # fields under 'result' will be passed to subsequent tasks
-    @result['result']['providerid'] = 'exampleid'
-    @result['result']['foo'] = 'bar'
-    fail "Unimplemented task create in class #{self.class.name}"
-  end
-
-  def confirm(inputmap)
-    @result['status'] = 1
-    @result['message'] = "Unimplemented task create in class #{self.class.name}"
-    @result['result']['ipaddress'] = '1.2.3.4'
-    fail "Unimplemented task confirm in class #{self.class.name}"
-  end
-
-  def delete(inputmap)
-    @result['status'] = 1
-    @result['message'] = "Unimplemented task create in class #{self.class.name}"
-    fail "Unimplemented task delete in class #{self.class.name}"
   end
 end
