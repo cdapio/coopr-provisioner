@@ -20,7 +20,7 @@ require 'net/scp'
 require 'base64'
 require 'fileutils'
 
-class ShellAutomator < Automator
+class ShellAutomator < Coopr::Plugin::Automator
 
   attr_accessor :credentials, :scripts_dir, :scripts_tar, :remote_cache_dir
 

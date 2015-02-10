@@ -20,7 +20,7 @@ require_relative 'utils'
 require 'resolv'
 
 # top level class for interacting with Google via Fog
-class FogProviderGoogle < Provider
+class FogProviderGoogle < Coopr::Plugin::Provider
   include FogProvider
   #include Coopr::Logging
 

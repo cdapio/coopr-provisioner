@@ -20,7 +20,7 @@ require 'base64'
 require 'fileutils'
 
 # Docker Automator class
-class DockerAutomator < Automator
+class DockerAutomator < Coopr::Plugin::Automator
   # plugin defined resources
   @ssh_key_dir = 'ssh_keys'
   class << self
