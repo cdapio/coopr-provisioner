@@ -98,6 +98,12 @@ module Coopr
       Coopr::Logging.shift_age = config.get(PROVISIONER_LOG_ROTATION_SHIFT_AGE)
       Coopr::Logging.shift_size = config.get(PROVISIONER_LOG_ROTATION_SHIFT_SIZE)
 
+      # If run from command line, validate required options
+      unless options[:tenant] || options[:register]
+        puts 'Either --tenant or --register options must be specified'
+        exit(1)
+      end
+
       worker = Coopr::Worker.new(options, config)
       if options[:register]
         worker.register_plugins
@@ -201,7 +207,7 @@ module Coopr
         # While provisioning, don't allow the provisioner to terminate by disabling signal
         sigterm = SignalHandler.new('TERM')
         sigterm.dont_interupt {
-          result = delegate_task(task, pluginmanager)
+          result = delegate_task(task, @pluginmanager) # TODO: we dont need to pass pluginmanager anymore
         }
       rescue => e
         log.error "Caught exception when running task from file #{@file}"
