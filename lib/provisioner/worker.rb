@@ -76,6 +76,9 @@ module Coopr
 
       # Run validation checks
       validate
+
+      log.debug "worker initialized with providertypes: #{pluginmanager.providermap.keys}"
+      log.debug "worker initialized with automatortypes: #{pluginmanager.automatormap.keys}"
     end
 
     def validate
@@ -334,17 +337,3 @@ end
 Logging.configure(log_file)
 Logging.level = options[:log_level]
 Logging.process_name = options[:name] if options[:name]
-
-
-
-
-
-log.debug "provisioner starting with provider types: #{pluginmanager.providermap.keys}"
-log.debug "provisioner starting with automator types: #{pluginmanager.automatormap.keys}"
-
-if options[:file]
-
-else
-  # run in server polling mode
-
-end
