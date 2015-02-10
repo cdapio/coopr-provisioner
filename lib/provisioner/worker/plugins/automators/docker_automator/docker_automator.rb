@@ -21,6 +21,7 @@ require 'fileutils'
 
 # Docker Automator class
 class DockerAutomator < Automator
+  include Coopr::Logging
   # plugin defined resources
   @ssh_key_dir = 'ssh_keys'
   class << self

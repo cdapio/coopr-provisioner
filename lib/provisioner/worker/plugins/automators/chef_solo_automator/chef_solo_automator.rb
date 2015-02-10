@@ -22,6 +22,8 @@ require 'base64'
 require 'fileutils'
 
 class ChefSoloAutomator < Automator
+  include Coopr::Logging
+
   attr_accessor :credentials, :cookbooks_path, :cookbooks_tar, :remote_cache_dir
 
   # class vars
