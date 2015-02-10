@@ -34,7 +34,6 @@ require_relative 'config'
 require_relative 'logging'
 require_relative 'constants'
 
-
 $stdout.sync = true
 
 module Coopr
@@ -83,8 +82,8 @@ module Coopr
       # Run validation checks
       validate
 
-      log.debug "worker initialized with providertypes: #{pluginmanager.providermap.keys}"
-      log.debug "worker initialized with automatortypes: #{pluginmanager.automatormap.keys}"
+      log.debug "Worker initialized with providertypes: #{@pluginmanager.providermap.keys}"
+      log.debug "Worker initialized with automatortypes: #{@pluginmanager.automatormap.keys}"
     end
 
     def validate
@@ -98,8 +97,6 @@ module Coopr
     def self.run(options)
       # Read configuration xml
       config = Coopr::Config.new(options)
-      require 'pp'
-      pp config
       config.load
       # Initialize logging
       Coopr::Logging.configure(config.get(PROVISIONER_LOG_DIR) ? "#{config.get(PROVISIONER_LOG_DIR)}/provisioner.log" : nil)
@@ -320,8 +317,6 @@ module Coopr
         break if @once
         sleep 5
       }
-
     end
-
   end
 end
