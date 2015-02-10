@@ -273,7 +273,6 @@ class FogProviderAWS < Provider
         server.destroy
       rescue ArgumentError
         log.debug "Invalid provider id #{providerid} specified on delete... skipping"
-      end
       rescue NoMethodError
         log.warn "Could not locate server '#{providerid}'... skipping"
       end
