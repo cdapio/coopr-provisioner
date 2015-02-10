@@ -195,8 +195,8 @@ module Coopr
       begin
         result = nil
         task = nil
-        log.info "Start Provisioner run for file #{options[:file]}"
-        task = JSON.parse(IO.read(options[:file]))
+        log.info "Start Provisioner run for file #{@file}"
+        task = JSON.parse(IO.read(@file))
 
         # While provisioning, don't allow the provisioner to terminate by disabling signal
         sigterm = SignalHandler.new('TERM')
@@ -204,7 +204,7 @@ module Coopr
           result = delegate_task(task, pluginmanager)
         }
       rescue => e
-        log.error "Caught exception when running task from file #{options[:file]}"
+        log.error "Caught exception when running task from file #{@file}"
 
         result = {} if result.nil? == true
         result['status'] = '1'
