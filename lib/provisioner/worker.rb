@@ -114,9 +114,6 @@ __END__
 
 
 
-Coopr::RestHelper.cert_path = options[:cert_path]
-Coopr::RestHelper.cert_pass = options[:cert_pass]
-
 
 include Logging
 log_file = nil
