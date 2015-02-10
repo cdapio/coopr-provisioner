@@ -122,6 +122,26 @@ module Coopr
       exit(0)
     end
 
+    # Instantiate and run an instance of given plugin for a task
+    def _run_plugin(clazz, env, cwd, task)
+      clusterId = task['clusterId']
+      hostname = task['config']['hostname']
+      provider = task['config']['provider']['description']
+      imagetype = task['config']['imagetype']
+      hardware = task['config']['hardwaretype']
+      taskName = task['taskName'].downcase
+      log.info "Creating node #{hostname} on #{provider} for #{clusterId} using #{imagetype} on #{hardware}" if taskName == 'create'
+
+      object = clazz.new(env, task)
+      FileUtils.mkdir_p(cwd)
+      Dir.chdir(cwd) do
+        result = object.runTask
+        log.info "#{clusterId} on #{hostname} could not be deleted: #{result['message']}" if taskName == 'delete' && result['status'] != 0
+        result
+      end
+    end
+
+
   end
 end
 
@@ -144,24 +164,6 @@ Logging.level = options[:log_level]
 Logging.process_name = options[:name] if options[:name]
 
 
-
-def _run_plugin(clazz, env, cwd, task)
-  clusterId = task['clusterId']
-  hostname = task['config']['hostname']
-  provider = task['config']['provider']['description']
-  imagetype = task['config']['imagetype']
-  hardware = task['config']['hardwaretype']
-  taskName = task['taskName'].downcase
-  log.info "Creating node #{hostname} on #{provider} for #{clusterId} using #{imagetype} on #{hardware}" if taskName == 'create'
-
-  object = clazz.new(env, task)
-  FileUtils.mkdir_p(cwd)
-  Dir.chdir(cwd) do
-    result = object.runTask
-    log.info "#{clusterId} on #{hostname} could not be deleted: #{result['message']}" if taskName == 'delete' && result['status'] != 0
-    result
-  end
-end
 
 def delegate_task(task, pluginmanager)
   providerName = nil # rubocop:disable UselessAssignment
