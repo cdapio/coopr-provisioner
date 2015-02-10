@@ -20,7 +20,6 @@ require_relative 'utils'
 
 class FogProviderJoyent < Provider
   include FogProvider
-  include Coopr::Logging
 
   # plugin defined resources
   @ssh_key_dir = 'ssh_keys'

@@ -22,7 +22,6 @@ require 'resolv'
 
 class FogProviderAWS < Provider
   include FogProvider
-  include Coopr::Logging
 
   # plugin defined resources
   @ssh_key_dir = 'ssh_keys'

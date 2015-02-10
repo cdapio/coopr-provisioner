@@ -17,7 +17,11 @@
 #
 
 # base class for all provider plugins.  This should be extended, not modified
+
+require_relative '../logging'
+
 class Provider
+  include Coopr::Logging
   attr_accessor :task, :flavor, :image, :hostname, :providerid, :result
   attr_reader :env
   def initialize(env, task)
