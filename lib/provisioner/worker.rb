@@ -67,6 +67,14 @@ module Coopr
       # Initialize PluginManager
       @pluginmanager = Coopr::Worker::PluginManager.new
 
+      validate
+    end
+
+    def validate
+      if @pluginmanager.providermap.empty? or @pluginmanager.automatormap.empty?
+        log.fatal 'Error: at least one provider plugin and one automator plugin must be installed'
+        exit(1)
+      end
     end
 
     # Cmdline entry point
@@ -126,14 +134,8 @@ Logging.configure(log_file)
 Logging.level = options[:log_level]
 Logging.process_name = options[:name] if options[:name]
 
-# load plugins
-pluginmanager = PluginManager.new
 
-# ensure we have at least one plugin of each type for task coverage
-if pluginmanager.providermap.empty? or pluginmanager.automatormap.empty?
-  log.fatal 'Error: at least one provider plugin and one automator plugin must be installed'
-  exit(1)
-end
+
 
 # the environment passed to plugins
 @plugin_env = options
