@@ -232,7 +232,7 @@ module Coopr
       host = Socket.gethostname.downcase
       myid = "#{host}.#{pid}"
 
-      log.info "Starting provisioner with id #{myid}, connecting to server #{coopr_uri}"
+      log.info "Starting provisioner with id #{myid}, connecting to server #{@config.get(PROVISIONER_SERVER_URI)}"
 
       loop {
         result = nil
