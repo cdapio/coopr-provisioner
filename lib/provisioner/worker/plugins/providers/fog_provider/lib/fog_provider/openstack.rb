@@ -174,7 +174,7 @@ class FogProviderOpenstack < Provider
       # Delete server
       log.debug 'Invoking server delete'
       begin
-        raise ArgumentError if providerid.nil? || providerid.empty?
+        fail ArgumentError if providerid.nil? || providerid.empty?
         server = connection.servers.get(providerid)
         server.destroy
       rescue ArgumentError
