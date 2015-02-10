@@ -16,12 +16,11 @@
 # limitations under the License.
 #
 
-# base class for all provider plugins.  This should be extended, not modified
-
 require_relative '../logging'
 
 module Coopr
   module Plugins
+    # Base class for all provider plugins.  This should be extended, not modified
     class Provider
       include Coopr::Logging
       attr_accessor :task, :flavor, :image, :hostname, :providerid, :result
