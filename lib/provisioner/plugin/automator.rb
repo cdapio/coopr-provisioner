@@ -19,7 +19,7 @@
 require_relative '../logging'
 
 module Coopr
-  module Plugins
+  module Plugin
     # Base class for all automator plugins.  This should be extended, not modified
     class Automator
       include Coopr::Logging

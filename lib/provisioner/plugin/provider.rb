@@ -19,7 +19,7 @@
 require_relative '../logging'
 
 module Coopr
-  module Plugins
+  module Plugin
     # Base class for all provider plugins.  This should be extended, not modified
     class Provider
       include Coopr::Logging
