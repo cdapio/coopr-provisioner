@@ -67,6 +67,18 @@ module Coopr
       # Initialize PluginManager
       @pluginmanager = Coopr::Worker::PluginManager.new
 
+      # TODO: re-evaluate if this is needed as it appears to only be used by shell automator
+      # Env passed to all plugins
+      # TODO: this generates a mixture of strings and symbols (only symbols used currently)
+      @plugin_env = @config.properties.merge(@options)
+      # TODO: plugins refer to the prior cmdline option names, should use constants instead
+      @plugin_env[:work_dir] = @config.get(PROVISIONER_WORK_DIR)
+
+      require 'pp'
+      puts "class of config: #{@plugin_env.class}"
+
+      pp @plugin_env
+
       validate
     end
 
@@ -113,6 +125,7 @@ module Coopr
       end
       exit(0)
     end
+
   end
 end
 
@@ -135,10 +148,6 @@ Logging.level = options[:log_level]
 Logging.process_name = options[:name] if options[:name]
 
 
-
-
-# the environment passed to plugins
-@plugin_env = options
 
 def _run_plugin(clazz, env, cwd, task)
   clusterId = task['clusterId']
