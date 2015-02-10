@@ -232,6 +232,8 @@ module Coopr
       host = Socket.gethostname.downcase
       myid = "#{host}.#{pid}"
 
+      $PROGRAM_NAME = "#{$PROGRAM_NAME} (tenant: #{@tenant}, provisioner: #{@provisioner_id}, worker: #{@name})"
+
       log.info "Starting provisioner with id #{myid}, connecting to server #{@config.get(PROVISIONER_SERVER_URI)}"
 
       loop {
