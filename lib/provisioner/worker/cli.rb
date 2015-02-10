@@ -36,7 +36,7 @@ module Coopr
             options[:tenant] = t
           end
           opts.on('-p', '--provisioner PROVISIONER', 'Provisioner ID') do |p|
-            options[:provisioner] = p
+            options[:provisioner_id] = p
           end
           opts.on('-n', '--name NAME', 'Worker name') do |n|
             options[:name] = n

@@ -23,13 +23,78 @@ require 'socket'
 require 'logger'
 require 'fileutils'
 
-require_relative 'utils.rb'
-require_relative 'pluginmanager.rb'
-require_relative 'provider.rb'
-require_relative 'automator.rb'
-require_relative '../rest-helper'
+require_relative 'worker/utils'
+require_relative 'worker/pluginmanager'
+require_relative 'worker/provider'
+require_relative 'worker/automator'
+require_relative 'worker/cli'
+require_relative 'rest-helper'
+
+require_relative 'config'
+require_relative 'logging'
+require_relative 'constants'
+
 
 $stdout.sync = true
+
+module Coopr
+  class Worker
+    include Logging
+
+    # Passed in options and configuration
+    attr_reader :options, :config
+
+    # Options that must be passed (cmdline) or set (by master)
+    attr_accessor :tenant, :file, :provisioner_id, :name, :register, :once
+
+    def initialize(options, config)
+      @options = options
+      @config = config
+
+      # Log configuration
+      log.debug 'Provisioner starting up'
+      config.properties.each do |k, v|
+        log.debug "  #{k}: #{v}"
+      end
+
+      # Process options, only in case of cmdline startup
+      log.debug 'Cmdline options' unless options.empty?
+      options.each do |k, v|
+        instance_variable_set("@#{k}", v)
+        log.debug "  #{k}: #{v}"
+      end
+
+    end
+
+    def self.run(options)
+      # Read configuration xml
+      config = Coopr::Config.new(options)
+      require 'pp'
+      pp config
+      config.load
+      # initialize logging
+      Coopr::Logging.configure(config.get(PROVISIONER_LOG_DIR) ? "#{config.get(PROVISIONER_LOG_DIR)}/provisioner.log" : nil)
+      Coopr::Logging.level = config.get(PROVISIONER_LOG_LEVEL)
+      Coopr::Logging.shift_age = config.get(PROVISIONER_LOG_ROTATION_SHIFT_AGE)
+      Coopr::Logging.shift_size = config.get(PROVISIONER_LOG_ROTATION_SHIFT_SIZE)
+
+      worker = Coopr::Worker.new(options, config)
+      if options[:register]
+        #worker.register_plugins
+      elsif options[:file]
+        #worker.run_task_from_file
+      else
+        #worker.work
+      end
+    end
+  end
+
+
+end
+
+
+
+__END__
 
 # Parse command line options.
 options = {}
