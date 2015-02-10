@@ -239,9 +239,9 @@ module Coopr
         response = nil
         task = nil
         begin
-          response = Coopr::RestHelper.post "#{coopr_uri}/v2/tasks/take", { 'provisionerId' => options[:provisioner], 'workerId' => myid, 'tenantId' => options[:tenant] }.to_json
+          response = Coopr::RestHelper.post "#{@config.get(PROVISIONER_SERVER_URI)}/v2/tasks/take", { 'provisionerId' => @provisioner_id, 'workerId' => myid, 'tenantId' => @tenant }.to_json
         rescue => e
-          log.error "Caught exception connecting to coopr server #{coopr_uri}/v2/tasks/take: #{e}"
+          log.error "Caught exception connecting to coopr server #{@config.get(PROVISIONER_SERVER_URI)}/v2/tasks/take: #{e}"
           sleep 10
           next
         end
@@ -251,7 +251,7 @@ module Coopr
             task = JSON.parse(response.to_str)
             log.debug "Received task from server <#{response.to_str}>"
           elsif response.code == 204
-            break if options[:once]
+            break if @once
             sleep 1
             next
           else
@@ -267,19 +267,19 @@ module Coopr
         sigterm = SignalHandler.new('TERM')
         sigterm.dont_interupt {
           begin
-            result = delegate_task(task, pluginmanager)
+            result = delegate_task(task, @pluginmanager) # TODO: we dont need to pass pluginmanager anymore
 
             result = Hash.new if result.nil? == true
             result['workerId'] = myid
             result['taskId'] = task['taskId']
-            result['provisionerId'] = options[:provisioner]
-            result['tenantId'] = options[:tenant]
+            result['provisionerId'] = @provisioner_id
+            result['tenantId'] = @tenant
 
             log.debug "Task <#{task['taskId']}> completed, updating results <#{result}>"
             begin
-              response = Coopr::RestHelper.post "#{coopr_uri}/v2/tasks/finish", result.to_json
+              response = Coopr::RestHelper.post "#{@config.get(PROVISIONER_SERVER_URI)}/v2/tasks/finish", result.to_json
             rescue => e
-              log.error "Caught exception posting back to coopr server #{coopr_uri}/v2/tasks/finish: #{e}"
+              log.error "Caught exception posting back to coopr server #{@config.get(PROVISIONER_SERVER_URI)}/v2/tasks/finish: #{e}"
             end
 
           rescue => e
@@ -287,8 +287,8 @@ module Coopr
             result['status'] = '1'
             result['workerId'] = myid
             result['taskId'] = task['taskId']
-            result['provisionerId'] = options[:provisioner]
-            result['tenantId'] = options[:tenant]
+            result['provisionerId'] = @provisioner_id
+            result['tenantId'] = @tenant
             if e.class.name == 'CommandExecutionError'
               log.error "#{e.class.name}: #{e.to_json}"
               result['stdout'] = e.stdout
@@ -299,14 +299,14 @@ module Coopr
             end
             log.error "Task <#{task['taskId']}> failed, updating results <#{result}>"
             begin
-              response = Coopr::RestHelper.post "#{coopr_uri}/v2/tasks/finish", result.to_json
+              response = Coopr::RestHelper.post "#{@config.get(PROVISIONER_SERVER_URI)}/v2/tasks/finish", result.to_json
             rescue => e
-              log.error "Caught exception posting back to server #{coopr_uri}/v2/tasks/finish: #{e}"
+              log.error "Caught exception posting back to server #{@config.get(PROVISIONER_SERVER_URI)}/v2/tasks/finish: #{e}"
             end
           end
         }
 
-        break if options[:once]
+        break if @once
         sleep 5
       }
 
