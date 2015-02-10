@@ -26,8 +26,8 @@ module Coopr
         options = {}
         OptionParser.new do |opts|
           opts.banner = 'Usage: '
-          opts.on('-u', '--uri URI', 'Coopr web server uri') do |u|
-            options[:uri] = u
+          opts.on('-c', '--config-file FILE', 'Site-specific config file to use') do |c|
+            options[:configfile] = c
           end
           opts.on('-f', '--file FILE', 'Full path to task json') do |f|
             options[:file] = f
@@ -45,24 +45,9 @@ module Coopr
           opts.on('-r', '--register', 'Register installed plugins with the server.  Requires --uri') do
             options[:register] = true
           end
-          opts.on('-L', '--log-level LEVEL', 'Log level') do |f|
-            options[:log_level] = f
-          end
-          opts.on('-l', '--log-dir DIRECTORY', 'Path to log directory') do |d|
-            options[:log_directory] = d
-          end
-          opts.on('-w', '--work-dir DIRECTORY', 'Path to work directory') do |d|
-            options[:work_dir] = d
-          end
           options[:once] = false
           opts.on('-o', '--once', 'Only poll and run a single task') do
             options[:once] = true
-          end
-          opts.on('--cert-path CERTPATH', 'Trust certificate path') do |c|
-            options[:cert_path] = c
-          end
-          opts.on('--cert-pass CERTPASS', 'Trust certificate password') do |p|
-            options[:cert_pass] = p
           end
         end.parse!(arguments)
         options
