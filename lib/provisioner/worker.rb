@@ -25,8 +25,8 @@ require 'fileutils'
 
 require_relative 'worker/utils'
 require_relative 'worker/pluginmanager'
-require_relative 'worker/provider'
-require_relative 'worker/automator'
+require_relative 'plugin/provider'
+require_relative 'plugin/automator'
 require_relative 'worker/cli'
 require_relative 'rest-helper'
 
