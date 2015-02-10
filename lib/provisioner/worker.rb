@@ -64,8 +64,12 @@ module Coopr
         log.debug "  #{k}: #{v}"
       end
 
+      # Initialize PluginManager
+      @pluginmanager = Coopr::Worker::PluginManager.new
+
     end
 
+    # Cmdline entry point
     def self.run(options)
       # Read configuration xml
       config = Coopr::Config.new(options)
@@ -80,89 +84,39 @@ module Coopr
 
       worker = Coopr::Worker.new(options, config)
       if options[:register]
-        #worker.register_plugins
+        worker.register_plugins
       elsif options[:file]
         #worker.run_task_from_file
       else
         #worker.work
       end
     end
+
+    # Register plugins with the server
+    def register_plugins
+      @pluginmanager.register_plugins(@config.get(PROVISIONER_SERVER_URI))
+      if @pluginmanager.load_errors?
+        log.error 'There was at least one provisioner plugin load failure'
+        exit(1)
+      end
+      if @pluginmanager.register_errors?
+        log.error 'There was at least one provisioner plugin register failure'
+        exit(1)
+      end
+      exit(0)
+    end
   end
-
-
 end
 
 
 
 __END__
 
-# Parse command line options.
-options = {}
-OptionParser.new do |opts|
-  opts.banner = 'Usage: '
-  opts.on('-u', '--uri URI', 'Coopr web server uri') do |u|
-    options[:uri] = u
-  end
-  opts.on('-f', '--file FILE', 'Full path to task json') do |f|
-    options[:file] = f
-  end
-  opts.on('-t', '--tenant TENANT', 'Tenant ID') do |t|
-    options[:tenant] = t
-  end
-  opts.on('-p', '--provisioner PROVISIONER', 'Provisioner ID') do |p|
-    options[:provisioner] = p
-  end
-  opts.on('-n', '--name NAME', 'Worker name') do |n|
-    options[:name] = n
-  end
-  options[:register] = false
-  opts.on('-r', '--register', 'Register installed plugins with the server.  Requires --uri') do
-    options[:register] = true
-  end
-  opts.on('-L', '--log-level LEVEL', 'Log level') do |f|
-    options[:log_level] = f
-  end
-  opts.on('-l', '--log-dir DIRECTORY', 'Path to log directory') do |d|
-    options[:log_directory] = d
-  end
-  opts.on('-w', '--work-dir DIRECTORY', 'Path to work directory') do |d|
-    options[:work_dir] = d
-  end
-  options[:once] = false
-  opts.on('-o', '--once', 'Only poll and run a single task') do
-    options[:once] = true
-  end
-  opts.on('--cert-path CERTPATH', 'Trust certificate path') do |c|
-    options[:cert_path] = c
-  end
-  opts.on('--cert-pass CERTPASS', 'Trust certificate password') do |p|
-    options[:cert_pass] = p
-  end
-end.parse!
+
 
 Coopr::RestHelper.cert_path = options[:cert_path]
 Coopr::RestHelper.cert_pass = options[:cert_pass]
 
-coopr_uri = options[:uri]
-if coopr_uri.nil? && !options[:file]
-  puts 'Either URI for coopr server or --file must be specified'
-  exit(1)
-end
-
-unless options[:work_dir]
-  puts '--work-dir option must be specified'
-  exit(1)
-end
-
-unless options[:tenant] || options[:register]
-  puts 'Either --tenant or --register options must be specified'
-  exit(1)
-end
-
-if coopr_uri.nil? && options[:register]
-  puts '--register option requires the --uri [server uri] option'
-  exit(1)
-end
 
 include Logging
 log_file = nil
@@ -254,19 +208,8 @@ def delegate_task(task, pluginmanager)
   result
 end
 
-# register plugins with the server if --register flag passed
-if options[:register]
-  pluginmanager.register_plugins(coopr_uri)
-  if pluginmanager.load_errors?
-    log.error 'There was at least one provisioner plugin load failure'
-    exit(1)
-  end
-  if pluginmanager.register_errors?
-    log.error 'There was at least one provisioner plugin register failure'
-    exit(1)
-  end
-  exit(0)
-end
+
+
 
 log.debug "provisioner starting with provider types: #{pluginmanager.providermap.keys}"
 log.debug "provisioner starting with automator types: #{pluginmanager.automatormap.keys}"
