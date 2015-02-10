@@ -102,7 +102,7 @@ module Coopr
       if options[:register]
         worker.register_plugins
       elsif options[:file]
-        #worker.run_task_from_file
+        worker.run_task_from_file
       else
         #worker.work
       end
@@ -190,6 +190,36 @@ module Coopr
       result
     end
 
+    # Run a single task read from file
+    def run_task_from_file
+      begin
+        result = nil
+        task = nil
+        log.info "Start Provisioner run for file #{options[:file]}"
+        task = JSON.parse(IO.read(options[:file]))
+
+        # While provisioning, don't allow the provisioner to terminate by disabling signal
+        sigterm = SignalHandler.new('TERM')
+        sigterm.dont_interupt {
+          result = delegate_task(task, pluginmanager)
+        }
+      rescue => e
+        log.error "Caught exception when running task from file #{options[:file]}"
+
+        result = {} if result.nil? == true
+        result['status'] = '1'
+        if e.class.name == 'CommandExecutionError'
+          log.error "#{e.class.name}: #{e.to_json}"
+          result['stdout'] = e.stdout
+          result['stderr'] = e.stderr
+        else
+          result['stdout'] = e.inspect
+          result['stderr'] = "#{e.inspect}\n#{e.backtrace.join("\n")}"
+        end
+        log.error "Provisioner run failed, result: #{result}"
+      end
+    end
+
   end
 end
 
@@ -219,33 +249,7 @@ log.debug "provisioner starting with provider types: #{pluginmanager.providermap
 log.debug "provisioner starting with automator types: #{pluginmanager.automatormap.keys}"
 
 if options[:file]
-  # run a single task read from file
-  begin
-    result = nil
-    task = nil
-    log.info "Start Provisioner run for file #{options[:file]}"
-    task = JSON.parse(IO.read(options[:file]))
 
-    # While provisioning, don't allow the provisioner to terminate by disabling signal
-    sigterm = SignalHandler.new('TERM')
-    sigterm.dont_interupt {
-      result = delegate_task(task, pluginmanager)
-    }
-  rescue => e
-    log.error "Caught exception when running task from file #{options[:file]}"
-
-    result = {} if result.nil? == true
-    result['status'] = '1'
-    if e.class.name == 'CommandExecutionError'
-      log.error "#{e.class.name}: #{e.to_json}"
-      result['stdout'] = e.stdout
-      result['stderr'] = e.stderr
-    else
-      result['stdout'] = e.inspect
-      result['stderr'] = "#{e.inspect}\n#{e.backtrace.join("\n")}"
-    end
-    log.error "Provisioner run failed, result: #{result}"
-  end
 else
   # run in server polling mode
 
