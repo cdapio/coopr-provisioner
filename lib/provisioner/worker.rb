@@ -170,7 +170,7 @@ module Coopr
       providerName = task['config']['provider']['providertype'] rescue nil
       automatorName = task['config']['service']['action']['type'] rescue nil
 
-      case taskName.downcase
+      case taskName
       when 'create', 'confirm', 'delete'
         clazz = Object.const_get(pluginmanager.getHandlerActionObjectForProvider(providerName))
         cwd = File.join(@config.get(PROVISIONER_WORK_DIR), @tenant, 'providertypes', providerName)
@@ -182,7 +182,7 @@ module Coopr
       when 'bootstrap'
         combinedresult = {}
         classes = []
-        if task['config'].key? 'automators' and !task['config']['automators'].empty?
+        if task['config'].key?('automators') and !task['config']['automators'].empty?
           # server must specify which bootstrap handlers need to run
           log.debug "Task #{task_id} running specified bootstrap handlers: #{task['config']['automators']}"
           task['config']['automators'].each do |automator|
@@ -220,6 +220,7 @@ module Coopr
 
         result = {} if result.nil? == true
         result['status'] = '1'
+        # Check if it's an ssh_exec exception for additional logging info
         if e.class.name == 'CommandExecutionError'
           log.error "#{e.class.name}: #{e.to_json}"
           result['stdout'] = e.stdout
@@ -250,7 +251,7 @@ module Coopr
           response = Coopr::RestHelper.post "#{@config.get(PROVISIONER_SERVER_URI)}/v2/tasks/take", { 'provisionerId' => @provisioner_id, 'workerId' => myid, 'tenantId' => @tenant }.to_json
         rescue => e
           log.error "Caught exception connecting to coopr server #{@config.get(PROVISIONER_SERVER_URI)}/v2/tasks/take: #{e}"
-          sleep 10
+          sleep 10  # TODO: make config option
           next
         end
 

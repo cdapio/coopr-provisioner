@@ -50,7 +50,7 @@ module Coopr
         # old: ./plugins/['providers']/[plugin-name]/*.json new: ./plugins/[plugin-name]/*.json
         (Dir["#{File.expand_path(File.dirname(__FILE__))}/plugins/*/*/*.json"] +
          Dir["#{File.expand_path(File.dirname(__FILE__))}/plugins/*/*.json"] # +
-        # Add this back once we figure out how to pass the work_dir to PluginManager
+        # TODO: Add this back once we figure out how to pass the work_dir to PluginManager
         # Dir["#{@plugin_env[:work_dir]}/plugins/*/*.json"]
         ).each do |jsonfile|
           begin
@@ -127,6 +127,7 @@ module Coopr
         begin
           log.debug "registering provider/automator type: #{name}"
           json = JSON.generate(json_obj)
+          # TODO: config options for registration user/tenant
           resp = Coopr::RestHelper.put("#{uri}", json, :'Coopr-UserID' => "admin", :'Coopr-TenantID' => "superadmin")
           if(resp.code == 200)
             log.info "Successfully registered #{name}"
