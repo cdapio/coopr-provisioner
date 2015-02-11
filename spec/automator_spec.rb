@@ -1,7 +1,7 @@
 require_relative 'spec_helper'
 require 'json'
 
-describe Automator do
+describe Coopr::Plugin::Automator do
   response = IO.read("#{File.dirname(__FILE__)}/task.json")
 
   # Set these up once
@@ -9,7 +9,7 @@ describe Automator do
     env = Hash.new
     %w(bootstrap install configure initialize start stop remove).each do |taskname|
       instance_variable_set("@task_#{taskname}", JSON.parse(response.gsub('BOOTSTRAP', taskname)))
-      instance_variable_set("@automator_#{taskname}", Automator.new(env, instance_variable_get("@task_#{taskname}")))
+      instance_variable_set("@automator_#{taskname}", Coopr::Plugin::Automator.new(env, instance_variable_get("@task_#{taskname}")))
     end
   end
 
@@ -18,7 +18,7 @@ describe Automator do
     context "when taskName is #{taskname}" do
       describe '#new' do
         it 'creates an instance of Automator' do
-          expect(instance_variable_get("@automator_#{taskname}")).to be_an_instance_of Automator
+          expect(instance_variable_get("@automator_#{taskname}")).to be_an_instance_of Coopr::Plugin::Automator
         end
         it 'creates task instance variable' do
           expect(instance_variable_get("@automator_#{taskname}").task).to eql instance_variable_get("@task_#{taskname}")

@@ -1,7 +1,7 @@
 require_relative 'spec_helper'
 require 'json'
 
-describe Provider do
+describe Coopr::Plugin::Provider do
   response = IO.read("#{File.dirname(__FILE__)}/task.json")
 
   # Set these up once
@@ -9,7 +9,7 @@ describe Provider do
     env = Hash.new
     %w(create confirm delete).each do |taskname|
       instance_variable_set("@task_#{taskname}", JSON.parse(response.gsub('BOOTSTRAP', taskname)))
-      instance_variable_set("@provider_#{taskname}", Provider.new(env, instance_variable_get("@task_#{taskname}")))
+      instance_variable_set("@provider_#{taskname}", Coopr::Plugin::Provider.new(env, instance_variable_get("@task_#{taskname}")))
     end
   end
 
@@ -18,7 +18,7 @@ describe Provider do
     context "when taskName is #{taskname}" do
       describe '#new' do
         it 'creates an instance of Provider' do
-          expect(instance_variable_get("@provider_#{taskname}")).to be_an_instance_of Provider
+          expect(instance_variable_get("@provider_#{taskname}")).to be_an_instance_of Coopr::Plugin::Provider
         end
         it 'creates task instance variable' do
           expect(instance_variable_get("@provider_#{taskname}").task).to eql instance_variable_get("@task_#{taskname}")
