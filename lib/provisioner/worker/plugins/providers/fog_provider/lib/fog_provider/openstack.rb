@@ -18,7 +18,7 @@
 
 require_relative 'utils'
 
-class FogProviderOpenstack < Provider
+class FogProviderOpenstack < Coopr::Plugin::Provider
   include FogProvider
 
   # plugin defined resources

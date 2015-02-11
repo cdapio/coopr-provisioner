@@ -21,7 +21,7 @@ require 'net/scp'
 require 'base64'
 require 'fileutils'
 
-class ChefSoloAutomator < Automator
+class ChefSoloAutomator < Coopr::Plugin::Automator
 
   attr_accessor :credentials, :cookbooks_path, :cookbooks_tar, :remote_cache_dir
 

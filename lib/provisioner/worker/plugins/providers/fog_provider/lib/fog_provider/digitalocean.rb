@@ -18,7 +18,7 @@
 
 require_relative 'utils'
 
-class FogProviderDigitalOcean < Provider
+class FogProviderDigitalOcean < Coopr::Plugin::Provider
   include FogProvider
 
   # plugin defined resources

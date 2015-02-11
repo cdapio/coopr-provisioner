@@ -20,7 +20,7 @@ require_relative 'utils'
 require 'readline'
 require 'resolv'
 
-class FogProviderAWS < Provider
+class FogProviderAWS < Coopr::Plugin::Provider
   include FogProvider
 
   # plugin defined resources

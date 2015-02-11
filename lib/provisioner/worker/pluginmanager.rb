@@ -16,8 +16,8 @@
 #
 require 'json'
 require 'rest_client'
-require_relative 'automator'
-require_relative 'provider'
+require_relative '../plugin/automator'
+require_relative '../plugin/provider'
 require_relative 'utils'
 require_relative '../rest-helper'
 
@@ -74,11 +74,12 @@ module Coopr
               Dir["#{File.dirname(jsonfile)}/*.rb"].each { |file| require file }
               # check ancestor to determine plugin type
               klass = Object.const_get(jsondata[providertype]['classname'])
-              if klass.ancestors.include? Object.const_get('Provider')
+              if klass.ancestors.include? Object.const_get('Coopr').const_get('Plugin').const_get('Provider')
                 raise "plugin \"#{p_name}\" attempting to load duplicate provider type \"#{providertype}\"" if @providermap.key?(providertype)
                 @providermap.merge!({providertype => jsondata[providertype]})
               else
-                raise "Declared provider \"#{providertype}\" implementation class \"#{jsondata[providertype]['classname']}\" must extend Provider class"
+                raise "Declared provider \"#{providertype}\" implementation class " \
+                  "\"#{jsondata[providertype]['classname']}\" must extend Coopr::Plugin::Provider class"
               end
             end
 
@@ -91,23 +92,20 @@ module Coopr
               Dir["#{File.dirname(jsonfile)}/*.rb"].each { |file| require file }
               # check ancestor to determine plugin type
               klass = Object.const_get(jsondata[automatortype]['classname'])
-              if klass.ancestors.include? Object.const_get('Automator')
+              if klass.ancestors.include? Object.const_get('Coopr').const_get('Plugin').const_get('Automator')
                 raise "plugin \"#{p_name}\" attempting to load duplicate automator type \"#{automatortype}\"" if @automatormap.key?(automatortype)
                 @automatormap.merge!({automatortype => jsondata[automatortype]})
               else
-                raise "Declared automator \"#{automatortype}\" implementation class \"#{jsondata[automatortype]['classname']}\" must extend Automator class"
+                raise "Declared automator \"#{automatortype}\" implementation class " \
+                  "\"#{jsondata[automatortype]['classname']}\" must extend Coopr::Plugin::Automator class"
               end
             end
           rescue JSON::ParserError => e
-            log.error "Could not load plugin, invalid json at #{jsonfile}"
-            log.error e.message
-            log.error e.backtrace.inspect
+            log.error "Could not load plugin, invalid json at #{jsonfile}: #{e.message}"
             @load_errors.push("Could not load plugin, invalid json at #{jsonfile}")
             next
           rescue => e
-            log.error "Could not load plugin at #{jsonfile}"
-            log.error e.message
-            log.error e.backtrace.inspect
+            log.error "Could not load plugin at #{jsonfile}: #{e.message}"
             @load_errors.push("Could not load plugin at #{jsonfile}")
             next
           end

@@ -18,7 +18,7 @@
 
 require_relative 'utils'
 
-class FogProviderRackspace < Provider
+class FogProviderRackspace < Coopr::Plugin::Provider
   include FogProvider
 
   # plugin defined resources
