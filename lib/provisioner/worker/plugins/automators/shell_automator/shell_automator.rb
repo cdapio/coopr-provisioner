@@ -21,6 +21,7 @@ require 'base64'
 require 'fileutils'
 
 class ShellAutomator < Automator
+
   attr_accessor :credentials, :scripts_dir, :scripts_tar, :remote_cache_dir
 
   # plugin defined resources

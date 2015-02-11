@@ -1,12 +1,12 @@
 require_relative 'spec_helper'
 require 'logger'
 
-include Logging
+include Coopr::Logging
 
-describe PluginManager do
+describe Coopr::Worker::PluginManager do
   # These run before each test
   before :each do
-    @pluginmanager = PluginManager.new
+    @pluginmanager = Coopr::Worker::PluginManager.new
   end
 
 # TODO: fix this

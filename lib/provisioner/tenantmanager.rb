@@ -116,10 +116,8 @@ module Coopr
       worker_launcher.provisioner = @provisioner_id
       worker_launcher.tenant = id
       worker_launcher.name = "worker-" + id + "-"  + (@workerpids.size + 1).to_s
-      worker_cmd = worker_launcher.cmd
-      log.debug "spawning #{worker_cmd}"
-      cpid = fork { 
-        exec(worker_cmd)
+      cpid = fork {
+        exec(worker_launcher.cmd)
       }
       @workerpids.push(cpid)
     end
