@@ -101,15 +101,11 @@ module Coopr
               end
             end
           rescue JSON::ParserError => e
-            log.error "Could not load plugin, invalid json at #{jsonfile}"
-            log.error e.message
-            log.error e.backtrace.inspect
+            log.error "Could not load plugin, invalid json at #{jsonfile}: #{e.message}"
             @load_errors.push("Could not load plugin, invalid json at #{jsonfile}")
             next
           rescue => e
-            log.error "Could not load plugin at #{jsonfile}"
-            log.error e.message
-            log.error e.backtrace.inspect
+            log.error "Could not load plugin at #{jsonfile}: #{e.message}"
             @load_errors.push("Could not load plugin at #{jsonfile}")
             next
           end
