@@ -39,6 +39,8 @@ module Coopr
         ipaddress = @task['config']['ipaddresses']['access_v4']
         fields = @task['config']['service']['action']['fields'] rescue nil
 
+        verify_ssh_host_key(ipaddress, 'rsa')
+
         case task['taskName'].downcase
         when 'bootstrap'
           bootstrap('hostname' => hostname, 'ipaddress' => ipaddress, 'sshauth' => sshauth)
@@ -64,6 +66,20 @@ module Coopr
         else
           fail "unhandled automator task type: #{task['taskName']}"
         end
+      end
+
+      def verify_ssh_host_key(host, type = 'rsa')
+        log.debug "Verifying SSH host key for #{@task['config']['hostname']}/#{host}"
+        if @task['config']['keys'][type]
+          message = "SSH host key verification failed for #{@task['config']['hostname']}/#{host}"
+          fail message unless @task['config']['keys'][type] == ssh_keyscan(host, type)
+          return true
+        else
+          message = "SSH Host key not stored for #{@task['config']['hostname']}... Skipping verification"
+          log.warn message
+          return true
+        end
+        return false
       end
 
       def bootstrap(inputmap)
