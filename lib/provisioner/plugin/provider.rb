@@ -17,6 +17,7 @@
 #
 
 require_relative '../logging'
+require_relative 'utils'
 
 module Coopr
   module Plugin
