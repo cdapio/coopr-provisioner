@@ -57,7 +57,7 @@ module Coopr
       #   end
 
       # Log configuration
-      log.debug 'Provisioner is starting up'
+      log.debug 'Worker is starting up with configuration:'
       config.properties.each do |k, v|
         log.debug "  #{k}: #{v}"
       end
@@ -207,7 +207,7 @@ module Coopr
       begin
         result = nil
         task = nil
-        log.info "Start Provisioner run for file #{@file}"
+        log.info "Start Worker run for file #{@file}"
         task = JSON.parse(IO.read(@file))
 
         # While provisioning, don't allow the provisioner to terminate by disabling signal
@@ -229,7 +229,7 @@ module Coopr
           result['stdout'] = e.inspect
           result['stderr'] = "#{e.inspect}\n#{e.backtrace.join("\n")}"
         end
-        log.error "Provisioner run failed, result: #{result}"
+        log.error "Worker run failed, result: #{result}"
       end
     end
 
@@ -241,7 +241,7 @@ module Coopr
 
       $PROGRAM_NAME = "#{$PROGRAM_NAME} (tenant: #{@tenant}, provisioner: #{@provisioner_id}, worker: #{@name})"
 
-      log.info "Starting provisioner with id #{myid}, connecting to server #{@config.get(PROVISIONER_SERVER_URI)}"
+      log.info "Starting worker with id #{myid}, connecting to server #{@config.get(PROVISIONER_SERVER_URI)}"
 
       loop {
         result = nil
@@ -272,7 +272,7 @@ module Coopr
           log.error "Caught exception processing response from coopr server: #{e.inspect}"
         end
 
-        # While provisioning, don't allow the provisioner to terminate by disabling signal
+        # While provisioning, don't allow the worker to terminate by disabling signal
         sigterm = Coopr::Worker::SignalHandler.new('TERM')
         sigterm.dont_interupt {
           begin

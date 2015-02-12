@@ -29,7 +29,7 @@ module Coopr
         @enqueued     = []
         Signal.trap(signal) do
           if @interuptable
-            log.info 'Gracefully shutting down provisioner...'
+            log.info 'Gracefully shut down worker...'
             exit 0
           else
             @enqueued.push(signal)
