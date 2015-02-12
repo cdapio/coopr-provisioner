@@ -153,7 +153,7 @@ module Coopr
       end
     end
 
-    def delegate_task(task, pluginmanager)
+    def delegate_task(task)
       providerName = nil # rubocop:disable UselessAssignment
       automatorName = nil # rubocop:disable UselessAssignment
       clazz = nil # rubocop:disable UselessAssignment
@@ -172,11 +172,11 @@ module Coopr
 
       case taskName
       when 'create', 'confirm', 'delete'
-        clazz = Object.const_get(pluginmanager.getHandlerActionObjectForProvider(providerName))
+        clazz = Object.const_get(@pluginmanager.getHandlerActionObjectForProvider(providerName))
         cwd = File.join(@config.get(PROVISIONER_WORK_DIR), @tenant, 'providertypes', providerName)
         result = _run_plugin(clazz, @plugin_env, cwd, task)
       when 'install', 'configure', 'initialize', 'start', 'stop', 'remove'
-        clazz = Object.const_get(pluginmanager.getHandlerActionObjectForAutomator(automatorName))
+        clazz = Object.const_get(@pluginmanager.getHandlerActionObjectForAutomator(automatorName))
         cwd = File.join(@config.get(PROVISIONER_WORK_DIR), @tenant, 'automatortypes', automatorName)
         result = _run_plugin(clazz, @plugin_env, cwd, task)
       when 'bootstrap'
@@ -186,7 +186,7 @@ module Coopr
           # server must specify which bootstrap handlers need to run
           log.debug "Task #{task_id} running specified bootstrap handlers: #{task['config']['automators']}"
           task['config']['automators'].each do |automator|
-            clazz = Object.const_get(pluginmanager.getHandlerActionObjectForAutomator(automator))
+            clazz = Object.const_get(@pluginmanager.getHandlerActionObjectForAutomator(automator))
             cwd = File.join(@config.get(PROVISIONER_WORK_DIR), @tenant, 'automatortypes', automator)
             result = _run_plugin(clazz, @plugin_env, cwd, task)
             combinedresult.merge!(result)
@@ -213,7 +213,7 @@ module Coopr
         # While provisioning, don't allow the provisioner to terminate by disabling signal
         sigterm = Coopr::Worker::SignalHandler.new('TERM')
         sigterm.dont_interupt {
-          result = delegate_task(task, @pluginmanager) # TODO: we dont need to pass pluginmanager anymore
+          result = delegate_task(task)
         }
       rescue => e
         log.error "Caught exception when running task from file #{@file}"
@@ -276,7 +276,7 @@ module Coopr
         sigterm = Coopr::Worker::SignalHandler.new('TERM')
         sigterm.dont_interupt {
           begin
-            result = delegate_task(task, @pluginmanager) # TODO: we dont need to pass pluginmanager anymore
+            result = delegate_task(task)
 
             result = Hash.new if result.nil? == true
             result['workerId'] = myid
