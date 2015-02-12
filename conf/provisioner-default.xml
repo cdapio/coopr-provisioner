@@ -94,7 +94,7 @@
   <property>
     <name>provisioner.worker.poll.error.interval</name>
     <value>10</value>
-    <description>interval in seconds to wait after an unsuccessfully polling the server for tasks</description>
+    <description>interval in seconds to wait after unsuccessfully polling the server for tasks</description>
   </property>
 </configuration>
 
