@@ -238,6 +238,9 @@ module Coopr
       pid = Process.pid
       host = Socket.gethostname.downcase
       myid = "#{host}.#{pid}"
+      poll_interval = @config.get(PROVISIONER_WORKER_POLL_INTERVAL).to_i || 1
+      poll_error_interval = @config.get(PROVISIONER_WORKER_POLL_ERROR_INTERVAL).to_i || 10
+
 
       $PROGRAM_NAME = "#{$PROGRAM_NAME} (tenant: #{@tenant}, provisioner: #{@provisioner_id}, worker: #{@name})"
 
@@ -251,7 +254,8 @@ module Coopr
           response = Coopr::RestHelper.post "#{@config.get(PROVISIONER_SERVER_URI)}/v2/tasks/take", { 'provisionerId' => @provisioner_id, 'workerId' => myid, 'tenantId' => @tenant }.to_json
         rescue => e
           log.error "Caught exception connecting to coopr server #{@config.get(PROVISIONER_SERVER_URI)}/v2/tasks/take: #{e}"
-          sleep 10  # TODO: make config option
+          puts "cant connect"
+          sleep poll_error_interval
           next
         end
 
@@ -261,11 +265,13 @@ module Coopr
             log.debug "Received task from server <#{response.to_str}>"
           elsif response.code == 204
             break if @once
-            sleep 1
+            puts "no work"
+            sleep poll_interval
             next
           else
             log.error "Received error code #{response.code} from coopr server: #{response.to_str}"
-            sleep 10
+            puts "error from server"
+            sleep poll_error_interval
             next
           end
         rescue => e

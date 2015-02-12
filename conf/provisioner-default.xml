@@ -66,5 +66,15 @@
     <value>info</value>
     <description>log level, one of debug, info, warn, error, fatal</description>
   </property>
+  <property>
+    <name>provisioner.worker.poll.interval</name>
+    <value>1</value>
+    <description>interval in seconds to poll server for tasks</description>
+  </property>
+  <property>
+    <name>provisioner.worker.poll.error.interval</name>
+    <value>10</value>
+    <description>interval in seconds to wait after an unsuccessfully polling the server for tasks</description>
+  </property>
 </configuration>
 
