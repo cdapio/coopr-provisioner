@@ -19,6 +19,8 @@
 require 'net/scp'
 require 'base64'
 require 'fileutils'
+require 'rubygems/package'
+require 'zlib'
 
 class ShellAutomator < Coopr::Plugin::Automator
 
@@ -59,11 +61,42 @@ class ShellAutomator < Coopr::Plugin::Automator
   #   file: full path of destination tar.gz
   #   path: full path to directory, parent dir will be used as cwd
   def generate_tar(file, path)
-    return if File.exist?(file) && ((Time.now - File.stat(file).mtime).to_i < 600)
+    return if File.exist?(file) && ((Time.now - File.stat(file).mtime).to_i < 600) # increase this to 600 when ready to push
     log.debug "Generating #{file} from #{path}"
-    `tar -chzf "#{file}.new" -C "#{File.dirname(path)}" #{File.basename(path)}`
-    `mv "#{file}.new" "#{file}"`
+    newfile = gzip(tar(path))
+    File.new("#{file}.new", 'w').write newfile.read
+    # to do: add a test for tarball creation (if !File.exist?("#{file}.new") => rescue?)
+    `mv "#{file}.new" "#{file}"` ## move newly generated tarball to correct file name
     log.debug "Generation complete: #{file}"
+  end
+
+  def tar(path)
+    tarfile = StringIO.new('')
+    path_dir = File.dirname(path)
+    path_base = File.basename(path)
+    Gem::Package::TarWriter.new(tarfile) do |tar|
+      Dir[path, File.join(path_dir, "#{path_base}/**/*")].each do |file|
+        mode = File.stat(file).mode
+        relative_file = file.sub(/^#{Regexp.escape path_dir}\/?/, '')
+        if File.directory?(file)
+          tar.mkdir relative_file, mode
+        else
+          tar.add_file relative_file, mode do |tf|
+            File.open(file, 'rb') { |f| tf.write f.read }
+          end
+        end
+      end
+    end
+    tarfile.rewind
+    tarfile
+  end
+
+  def gzip(tarfile)
+    gz = StringIO.new('')
+    z = Zlib::GzipWriter.new(gz)
+    z.write tarfile.string
+    z.close # this is necessary!
+    StringIO.new gz.string
   end
 
   def write_ssh_file
@@ -270,6 +303,7 @@ class ShellAutomator < Coopr::Plugin::Automator
   def remove(inputmap)
     runshell(inputmap)
   end
+ 
 
 end
 

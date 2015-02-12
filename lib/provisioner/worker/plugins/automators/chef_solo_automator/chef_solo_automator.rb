@@ -20,6 +20,8 @@ require 'json'
 require 'net/scp'
 require 'base64'
 require 'fileutils'
+require 'rubygems/package'
+require 'zlib'
 
 class ChefSoloAutomator < Coopr::Plugin::Automator
 
@@ -51,11 +53,42 @@ class ChefSoloAutomator < Coopr::Plugin::Automator
     # rubocop:disable GuardClause
     if !File.exist?(chef_primitive_tar) || ((Time.now - File.stat(chef_primitive_tar).mtime).to_i > 600)
       log.debug "Generating #{chef_primitive_tar} from #{chef_primitive_path}"
-      `tar -chzf "#{chef_primitive_tar}.new" #{chef_primitive}`
+      newfile = gzip(tar(chef_primitive_path))
+      File.new("#{chef_primitive_tar}.new", 'w').write newfile.read
+      # to do: add a test for tarball creation (if !File.exist?("#{chef_primitive_tar}.new") => rescue?)
       `mv "#{chef_primitive_tar}.new" "#{chef_primitive_tar}"`
       log.debug "Generation complete: #{chef_primitive_tar}"
     end
     # rubocop:enable GuardClause
+  end
+
+  def tar(path)
+    tarfile = StringIO.new('')
+    path_dir = File.dirname(path)
+    path_base = File.basename(path)
+    Gem::Package::TarWriter.new(tarfile) do |tar|
+      Dir[path, File.join(path_dir, "#{path_base}/**/*")].each do |file|
+        mode = File.stat(file).mode
+        relative_file = file.sub(/^#{Regexp.escape path_dir}\/?/, '')
+        if File.directory?(file)
+          tar.mkdir relative_file, mode
+        else
+          tar.add_file relative_file, mode do |tf|
+            File.open(file, 'rb') { |f| tf.write f.read }
+          end
+        end
+      end
+    end
+    tarfile.rewind
+    tarfile
+  end
+
+  def gzip(tarfile)
+    gz = StringIO.new('')
+    z = Zlib::GzipWriter.new(gz)
+    z.write tarfile.string
+    z.close # this is necessary!
+    StringIO.new gz.string
   end
 
   def write_ssh_file
