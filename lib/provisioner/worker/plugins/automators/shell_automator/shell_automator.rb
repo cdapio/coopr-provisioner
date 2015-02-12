@@ -66,7 +66,7 @@ class ShellAutomator < Coopr::Plugin::Automator
     newfile = gzip(tar(path))
     File.new("#{file}.new", 'w').write newfile.read
     # to do: add a test for tarball creation (if !File.exist?("#{file}.new") => rescue?)
-    `mv "#{file}.new" "#{file}"` ## move newly generated tarball to correct file name
+    `mv "#{file}.new" "#{file}"`
     log.debug "Generation complete: #{file}"
   end
 
