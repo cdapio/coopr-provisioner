@@ -49,9 +49,9 @@ module Coopr
       end
 
       def ssh_keyscan(host, type = 'rsa')
-        _type = type == 'dsa' ? 'dss' : type
+        keytype = type == 'dsa' ? 'dss' : type
         # TODO: find a way to do this in Ruby
-        key = `ssh-keyscan -t #{type} #{host} 2>&1 | grep #{_type}`.split(' ')
+        key = `ssh-keyscan -t #{type} #{host} 2>&1 | grep #{keytype}`.split(' ')
         return key[2]
       end
 
