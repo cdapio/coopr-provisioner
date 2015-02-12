@@ -38,7 +38,7 @@ $stdout.sync = true
 
 module Coopr
   class Worker
-    include Logging
+    include Coopr::Logging
 
     # Passed in options and configuration
     attr_reader :options, :config
@@ -57,7 +57,7 @@ module Coopr
       #   end
 
       # Log configuration
-      log.debug 'Provisioner starting up'
+      log.debug 'Provisioner is starting up'
       config.properties.each do |k, v|
         log.debug "  #{k}: #{v}"
       end
@@ -211,7 +211,7 @@ module Coopr
         task = JSON.parse(IO.read(@file))
 
         # While provisioning, don't allow the provisioner to terminate by disabling signal
-        sigterm = SignalHandler.new('TERM')
+        sigterm = Coopr::Worker::SignalHandler.new('TERM')
         sigterm.dont_interupt {
           result = delegate_task(task, @pluginmanager) # TODO: we dont need to pass pluginmanager anymore
         }
@@ -273,7 +273,7 @@ module Coopr
         end
 
         # While provisioning, don't allow the provisioner to terminate by disabling signal
-        sigterm = SignalHandler.new('TERM')
+        sigterm = Coopr::Worker::SignalHandler.new('TERM')
         sigterm.dont_interupt {
           begin
             result = delegate_task(task, @pluginmanager) # TODO: we dont need to pass pluginmanager anymore

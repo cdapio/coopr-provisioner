@@ -18,39 +18,46 @@
 
 require 'net/scp'
 
-class SignalHandler
-  def initialize(signal)
-    @interuptable = false
-    @enqueued     = []
-    trap(signal) do
-      if @interuptable
-        log.info 'Gracefully shutting down provisioner...'
-        exit 0
-      else
-        @enqueued.push(signal)
+require_relative '../logging'
+
+module Coopr
+  class Worker
+    class SignalHandler
+      include Coopr::Logging
+      def initialize(signal)
+        @interuptable = false
+        @enqueued     = []
+        Signal.trap(signal) do
+          if @interuptable
+            log.info 'Gracefully shutting down provisioner...'
+            exit 0
+          else
+            @enqueued.push(signal)
+          end
+        end
+      end
+
+      # If this is called with a block then the block will be run with
+      # the signal temporarily ignored. Without the block, we'll just set
+      # the flag and the caller can call `allow_interuptions` themselves.
+      def dont_interupt
+        @interuptable = false
+        @enqueued     = []
+        # rubocop:disable GuardClause
+        if block_given?
+          yield
+          allow_interuptions
+        end
+        # rubocop:enable GuardClause
+      end
+
+      def allow_interuptions
+        @interuptable = true
+        # Send the temporarily ignored signals to ourself
+        # see http://www.ruby-doc.org/core/classes/Process.html#M001286
+        @enqueued.each { |signal| Process.kill(signal, Process.pid) }
       end
     end
-  end
-
-  # If this is called with a block then the block will be run with
-  # the signal temporarily ignored. Without the block, we'll just set
-  # the flag and the caller can call `allow_interuptions` themselves.
-  def dont_interupt
-    @interuptable = false
-    @enqueued     = []
-    # rubocop:disable GuardClause
-    if block_given?
-      yield
-      allow_interuptions
-    end
-    # rubocop:enable GuardClause
-  end
-
-  def allow_interuptions
-    @interuptable = true
-    # Send the temporarily ignored signals to ourself
-    # see http://www.ruby-doc.org/core/classes/Process.html#M001286
-    @enqueued.each { |signal| Process.kill(signal, Process.pid) }
   end
 end
 
