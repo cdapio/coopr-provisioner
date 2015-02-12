@@ -51,7 +51,7 @@ module Coopr
       @config = config
       pid = Process.pid
       host = Socket.gethostname.downcase
-      @worker_id = "#{host}.#{pid}
+      @worker_id = "#{host}.#{pid}"
 
       # Logging module is already configured via the master provisioner or self.run
       # TODO: reimplement functionality to log each worker to a different file
