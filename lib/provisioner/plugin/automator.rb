@@ -43,22 +43,22 @@ module Coopr
         when 'bootstrap'
           bootstrap('hostname' => hostname, 'ipaddress' => ipaddress, 'sshauth' => sshauth)
           return @result
-        when "install"
+        when 'install'
           install({'hostname' => hostname, 'ipaddress' => ipaddress, 'sshauth' => sshauth, 'fields' => fields})
           return @result
-        when "configure"
+        when 'configure'
           configure({'hostname' => hostname, 'ipaddress' => ipaddress, 'sshauth' => sshauth, 'fields' => fields})
           return @result
-        when "initialize"
+        when 'initialize'
           init({'hostname' => hostname, 'ipaddress' => ipaddress, 'sshauth' => sshauth, 'fields' => fields})
           return @result
-        when "start"
+        when 'start'
           start({'hostname' => hostname, 'ipaddress' => ipaddress, 'sshauth' => sshauth, 'fields' => fields})
           return @result
-        when "stop"
+        when 'stop'
           stop({'hostname' => hostname, 'ipaddress' => ipaddress, 'sshauth' => sshauth, 'fields' => fields})
           return @result
-        when "remove"
+        when 'remove'
           remove({'hostname' => hostname, 'ipaddress' => ipaddress, 'sshauth' => sshauth, 'fields' => fields})
           return @result
         else
