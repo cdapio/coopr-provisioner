@@ -23,7 +23,7 @@ require 'socket'
 require 'logger'
 require 'fileutils'
 
-require_relative 'worker/utils'
+require_relative 'worker/signalhandler'
 require_relative 'worker/pluginmanager'
 require_relative 'plugin/provider'
 require_relative 'plugin/automator'

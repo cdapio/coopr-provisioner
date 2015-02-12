@@ -18,7 +18,7 @@ require 'json'
 require 'rest_client'
 require_relative '../plugin/automator'
 require_relative '../plugin/provider'
-require_relative 'utils'
+require_relative 'signalhandler'
 require_relative '../rest-helper'
 
 require_relative '../logging'
