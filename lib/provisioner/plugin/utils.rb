@@ -48,6 +48,13 @@ module Coopr
         end
       end
 
+      def ssh_keyscan(host, type = 'rsa')
+        _type = type == 'dsa' ? 'dss' : type
+        # TODO: find a way to do this in Ruby
+        key = `ssh-keyscan -t #{type} #{host} 2>&1 | grep #{_type}`.split(' ')
+        return key[2]
+      end
+
       # Utility method to run a command over ssh
       def ssh_exec!(ssh, command, message = command, pty = false)
         stdout_data = ''
