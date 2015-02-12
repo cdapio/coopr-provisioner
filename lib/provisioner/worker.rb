@@ -240,7 +240,7 @@ module Coopr
     end
 
     # Poll Coopr Server for a task, retries until it gets some response
-    def poll_server
+    def _poll_server
       server_uri = @config.get(PROVISIONER_SERVER_URI)
       poll_error_interval = @config.get(PROVISIONER_WORKER_POLL_ERROR_INTERVAL).to_i || 10
       postdata = { 'provisionerId' => @provisioner_id, 'workerId' => @worker_id, 'tenantId' => @tenant }.to_json
@@ -255,13 +255,13 @@ module Coopr
       }
     end
 
-    # Poll Coopr Server for a task, retries until a task is successfully received
-    def _poll_server_and_wait_for_task
+    # Poll Coopr Server for a task, retries until a task is successfully retrieved
+    def _poll_server_and_retrieve_task
       poll_interval = @config.get(PROVISIONER_WORKER_POLL_INTERVAL).to_i || 1
       poll_error_interval = @config.get(PROVISIONER_WORKER_POLL_ERROR_INTERVAL).to_i || 10
       loop {
         begin
-          response = _poll_server_for_response
+          response = _poll_server
           if response.code == 200 && response.to_str && response.to_str != ''
             task = JSON.parse(response.to_str)
             break task
@@ -291,8 +291,8 @@ module Coopr
       loop {
         result = nil
 
-        # Poll Coopr Server until a task is received
-        task = _poll_server_and_wait_for_task
+        # Poll Coopr Server until a task is retrieved
+        task = _poll_server_and_retrieve_task
 
         # While running task, trap and queue TERM signal to prevent shutdown until task is complete
         sigterm = Coopr::Worker::SignalHandler.new('TERM')
