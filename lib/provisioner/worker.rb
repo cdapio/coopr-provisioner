@@ -23,7 +23,7 @@ require 'socket'
 require 'logger'
 require 'fileutils'
 
-require_relative 'worker/utils'
+require_relative 'worker/signalhandler'
 require_relative 'worker/pluginmanager'
 require_relative 'plugin/provider'
 require_relative 'plugin/automator'
@@ -38,7 +38,7 @@ $stdout.sync = true
 
 module Coopr
   class Worker
-    include Logging
+    include Coopr::Logging
 
     # Passed in options and configuration
     attr_reader :options, :config
@@ -57,7 +57,7 @@ module Coopr
       #   end
 
       # Log configuration
-      log.debug 'Provisioner starting up'
+      log.debug 'Worker is starting up with configuration:'
       config.properties.each do |k, v|
         log.debug "  #{k}: #{v}"
       end
@@ -207,11 +207,11 @@ module Coopr
       begin
         result = nil
         task = nil
-        log.info "Start Provisioner run for file #{@file}"
+        log.info "Start Worker run for file #{@file}"
         task = JSON.parse(IO.read(@file))
 
         # While provisioning, don't allow the provisioner to terminate by disabling signal
-        sigterm = SignalHandler.new('TERM')
+        sigterm = Coopr::Worker::SignalHandler.new('TERM')
         sigterm.dont_interupt {
           result = delegate_task(task, @pluginmanager) # TODO: we dont need to pass pluginmanager anymore
         }
@@ -229,7 +229,7 @@ module Coopr
           result['stdout'] = e.inspect
           result['stderr'] = "#{e.inspect}\n#{e.backtrace.join("\n")}"
         end
-        log.error "Provisioner run failed, result: #{result}"
+        log.error "Worker run failed, result: #{result}"
       end
     end
 
@@ -241,7 +241,7 @@ module Coopr
 
       $PROGRAM_NAME = "#{$PROGRAM_NAME} (tenant: #{@tenant}, provisioner: #{@provisioner_id}, worker: #{@name})"
 
-      log.info "Starting provisioner with id #{myid}, connecting to server #{@config.get(PROVISIONER_SERVER_URI)}"
+      log.info "Starting worker with id #{myid}, connecting to server #{@config.get(PROVISIONER_SERVER_URI)}"
 
       loop {
         result = nil
@@ -272,8 +272,8 @@ module Coopr
           log.error "Caught exception processing response from coopr server: #{e.inspect}"
         end
 
-        # While provisioning, don't allow the provisioner to terminate by disabling signal
-        sigterm = SignalHandler.new('TERM')
+        # While provisioning, don't allow the worker to terminate by disabling signal
+        sigterm = Coopr::Worker::SignalHandler.new('TERM')
         sigterm.dont_interupt {
           begin
             result = delegate_task(task, @pluginmanager) # TODO: we dont need to pass pluginmanager anymore
