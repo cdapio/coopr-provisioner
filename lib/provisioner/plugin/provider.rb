@@ -23,6 +23,7 @@ module Coopr
     # Base class for all provider plugins.  This should be extended, not modified
     class Provider
       include Coopr::Logging
+      include Coopr::Plugin::Utils
       attr_accessor :task, :flavor, :image, :hostname, :providerid, :result
       attr_reader :env
       def initialize(env, task)
