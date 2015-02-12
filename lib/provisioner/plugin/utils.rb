@@ -48,6 +48,7 @@ module Coopr
         end
       end
 
+      # Gets a host's SSH host key
       def ssh_keyscan(host, type = 'rsa')
         keytype = type == 'dsa' ? 'dss' : type
         # TODO: find a way to do this in Ruby
