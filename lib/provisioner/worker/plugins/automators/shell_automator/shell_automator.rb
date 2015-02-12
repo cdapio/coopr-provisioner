@@ -61,7 +61,7 @@ class ShellAutomator < Coopr::Plugin::Automator
   #   file: full path of destination tar.gz
   #   path: full path to directory, parent dir will be used as cwd
   def generate_tar(file, path)
-    return if File.exist?(file) && ((Time.now - File.stat(file).mtime).to_i < 600) # increase this to 600 when ready to push
+    return if File.exist?(file) && ((Time.now - File.stat(file).mtime).to_i < 600)
     log.debug "Generating #{file} from #{path}"
     newfile = gzip(tar(path))
     File.new("#{file}.new", 'w').write newfile.read
