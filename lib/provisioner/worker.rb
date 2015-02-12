@@ -49,6 +49,12 @@ module Coopr
     def initialize(options, config)
       @options = options
       @config = config
+      pid = Process.pid
+      host = Socket.gethostname.downcase
+      @worker_id = "#{host}.#{pid}"
+
+      # Set logging process name field
+      Logging.process_name = @worker_id
 
       # Logging module is already configured via the master provisioner or self.run
       # TODO: reimplement functionality to log each worker to a different file
@@ -233,68 +239,84 @@ module Coopr
       end
     end
 
-    # Run in continuous server polling mode
-    def work
-      pid = Process.pid
-      host = Socket.gethostname.downcase
-      myid = "#{host}.#{pid}"
-
-      $PROGRAM_NAME = "#{$PROGRAM_NAME} (tenant: #{@tenant}, provisioner: #{@provisioner_id}, worker: #{@name})"
-
-      log.info "Starting worker with id #{myid}, connecting to server #{@config.get(PROVISIONER_SERVER_URI)}"
-
+    # Poll Coopr Server for a task, retries until it gets some response
+    def _poll_server
+      server_uri = @config.get(PROVISIONER_SERVER_URI)
+      poll_error_interval = @config.get(PROVISIONER_WORKER_POLL_ERROR_INTERVAL).to_i || 10
+      postdata = { 'provisionerId' => @provisioner_id, 'workerId' => @worker_id, 'tenantId' => @tenant }.to_json
       loop {
-        result = nil
-        response = nil
-        task = nil
         begin
-          response = Coopr::RestHelper.post "#{@config.get(PROVISIONER_SERVER_URI)}/v2/tasks/take", { 'provisionerId' => @provisioner_id, 'workerId' => myid, 'tenantId' => @tenant }.to_json
+          response = Coopr::RestHelper.post "#{server_uri}/v2/tasks/take", postdata
+          break response
         rescue => e
-          log.error "Caught exception connecting to coopr server #{@config.get(PROVISIONER_SERVER_URI)}/v2/tasks/take: #{e}"
-          sleep 10  # TODO: make config option
-          next
+          log.error "Unable to connect to Coopr Server #{server_uri}/v2/tasks/take: #{e}"
+          sleep poll_error_interval
         end
+      }
+    end
 
+    # Poll Coopr Server for a task, retries until a task is successfully retrieved
+    def _poll_server_and_retrieve_task
+      poll_interval = @config.get(PROVISIONER_WORKER_POLL_INTERVAL).to_i || 1
+      poll_error_interval = @config.get(PROVISIONER_WORKER_POLL_ERROR_INTERVAL).to_i || 10
+      loop {
         begin
+          response = _poll_server
           if response.code == 200 && response.to_str && response.to_str != ''
             task = JSON.parse(response.to_str)
-            log.debug "Received task from server <#{response.to_str}>"
+            break task
           elsif response.code == 204
-            break if @once
-            sleep 1
+            sleep poll_interval
             next
           else
             log.error "Received error code #{response.code} from coopr server: #{response.to_str}"
-            sleep 10
-            next
           end
         rescue => e
           log.error "Caught exception processing response from coopr server: #{e.inspect}"
         end
+        sleep poll_error_interval
+      }
+    end
 
-        # While provisioning, don't allow the worker to terminate by disabling signal
+    # Run in continuous server polling mode
+    def work
+      poll_interval = @config.get(PROVISIONER_WORKER_POLL_INTERVAL).to_i || 1
+      poll_error_interval = @config.get(PROVISIONER_WORKER_POLL_ERROR_INTERVAL).to_i || 10
+      server_uri = @config.get(PROVISIONER_SERVER_URI)
+
+      $PROGRAM_NAME = "#{$PROGRAM_NAME} (tenant: #{@tenant}, provisioner: #{@provisioner_id}, worker: #{@name})"
+
+      log.info "Starting worker with id #{@worker_id}, connecting to server #{@config.get(PROVISIONER_SERVER_URI)}"
+
+      loop {
+        result = nil
+
+        # Poll Coopr Server until a task is retrieved
+        task = _poll_server_and_retrieve_task
+
+        # While running task, trap and queue TERM signal to prevent shutdown until task is complete
         sigterm = Coopr::Worker::SignalHandler.new('TERM')
         sigterm.dont_interupt {
           begin
             result = delegate_task(task)
 
             result = Hash.new if result.nil? == true
-            result['workerId'] = myid
+            result['workerId'] = @worker_id
             result['taskId'] = task['taskId']
             result['provisionerId'] = @provisioner_id
             result['tenantId'] = @tenant
 
             log.debug "Task <#{task['taskId']}> completed, updating results <#{result}>"
             begin
-              response = Coopr::RestHelper.post "#{@config.get(PROVISIONER_SERVER_URI)}/v2/tasks/finish", result.to_json
+              response = Coopr::RestHelper.post "#{server_uri}/v2/tasks/finish", result.to_json
             rescue => e
-              log.error "Caught exception posting back to coopr server #{@config.get(PROVISIONER_SERVER_URI)}/v2/tasks/finish: #{e}"
+              log.error "Caught exception posting back to coopr server #{server_uri}/v2/tasks/finish: #{e}"
             end
 
           rescue => e
             result = Hash.new if result.nil? == true
             result['status'] = '1'
-            result['workerId'] = myid
+            result['workerId'] = @worker_id
             result['taskId'] = task['taskId']
             result['provisionerId'] = @provisioner_id
             result['tenantId'] = @tenant
@@ -308,9 +330,9 @@ module Coopr
             end
             log.error "Task <#{task['taskId']}> failed, updating results <#{result}>"
             begin
-              response = Coopr::RestHelper.post "#{@config.get(PROVISIONER_SERVER_URI)}/v2/tasks/finish", result.to_json
+              response = Coopr::RestHelper.post "#{server_uri}/v2/tasks/finish", result.to_json
             rescue => e
-              log.error "Caught exception posting back to server #{@config.get(PROVISIONER_SERVER_URI)}/v2/tasks/finish: #{e}"
+              log.error "Caught exception posting back to server #{server_uri}/v2/tasks/finish: #{e}"
             end
           end
         }
