@@ -25,42 +25,21 @@ module Coopr
 
     def initialize(config)
       @config = config || {}
-      @cert_path = config.get(TRUST_CERT_PATH)
-      @cert_pass = config.get(TRUST_CERT_PASS)
     end
 
     def cmd
-      work_cmd
+      prod_cmd
     end
 
     def prod_cmd
       cmd = "#{File.join(RbConfig::CONFIG['bindir'], RbConfig::CONFIG['ruby_install_name'])}"
-      cmd += " #{File.dirname(__FILE__)}/worker/provisioner.rb"
-      cmd += " --uri #{@config.get(PROVISIONER_SERVER_URI)}" if @config.get(PROVISIONER_SERVER_URI)
-      cmd += " --log-dir #{@config.get(PROVISIONER_LOG_DIR)}" if @config.get(PROVISIONER_LOG_DIR)
-      cmd += " --log-level #{@config.get(PROVISIONER_LOG_LEVEL)}" if @config.get(PROVISIONER_LOG_LEVEL)
-      cmd += " --work-dir #{@config.get(PROVISIONER_WORK_DIR)}" if @config.get(PROVISIONER_WORK_DIR)
+      cmd += " #{File.dirname(__FILE__)}/../../bin/worker"
+      cmd += " --config-file #{@config.site_file}" unless @config.site_file.nil?
       cmd += " --provisioner #{@provisioner}" unless @provisioner.nil?
       cmd += " --tenant #{@tenant}" unless @tenant.nil?
       cmd += " --name #{@name}" unless @name.nil?
       cmd += " --register" if @register
-      cmd += " --cert-path #{@cert_path}" if @cert_path
-      cmd += " --cert-pass #{@cert_pass}" if @cert_pass
       cmd
-    end
-
-    def work_cmd
-      # Instantiate new worker, passing options (nil in this context) and @config
-      worker = Coopr::Worker.new({}, @config)
-      # Set instance vars
-      worker.provisioner_id = @provisioner
-      worker.tenant = @tenant
-      worker.name = @name
-      if @register
-        worker.register_plugins
-      else
-        worker.work
-      end
     end
 
     def test_cmd

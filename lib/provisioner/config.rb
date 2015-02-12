@@ -20,7 +20,7 @@ require 'rexml/document'
 module Coopr 
   # class which reads and stores configuration settings from a property file
   class Config
-    attr_reader :properties, :default_file, :descriptions
+    attr_reader :properties, :default_file, :descriptions, :site_file
 
     def initialize(options)
       @properties = {} # name => value

@@ -17,12 +17,14 @@
 #
 
 require_relative '../logging'
+require_relative 'utils'
 
 module Coopr
   module Plugin
     # Base class for all automator plugins.  This should be extended, not modified
     class Automator
       include Coopr::Logging
+      include Coopr::Plugin::Utils
       attr_accessor :task, :flavor, :image, :hostname, :providerid, :result
       attr_reader :env
       def initialize(env, task)
