@@ -122,3 +122,41 @@ def ssh_exec!(ssh, command, message = command, pty = false)
 
   [stdout_data, stderr_data, exit_code, exit_signal]
 end
+
+# modified from http://old.thoughtsincomputation.com/posts/tar-and-a-few-feathers-in-ruby
+# Creates a tar file in memory recursively
+# from the given path.
+#
+# Returns a StringIO whose underlying String
+# is the contents of the tar file.
+def tar_with_resourcename(path)
+  tarfile = StringIO.new('')
+  path_dir = File.dirname(path)
+  path_base = File.basename(path)
+  Gem::Package::TarWriter.new(tarfile) do |tar|
+    Dir[path, File.join(path_dir, "#{path_base}/**/*")].each do |file|
+      mode = File.stat(file).mode
+      relative_file = file.sub(/^#{Regexp.escape path_dir}\/?/, '')
+      if File.directory?(file)
+        tar.mkdir relative_file, mode
+      else
+        tar.add_file relative_file, mode do |tf|
+          File.open(file, 'rb') { |f| tf.write f.read }
+        end
+      end
+    end
+  end
+  tarfile.rewind
+  tarfile
+end
+
+# gzips the underlying string in the given StringIO,
+# returning a new StringIO representing the
+# compressed file.
+def gzip(tarfile)
+  gz = StringIO.new('')
+  z = Zlib::GzipWriter.new(gz)
+  z.write tarfile.string
+  z.close # this is necessary!
+  StringIO.new gz.string
+end

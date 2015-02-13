@@ -62,35 +62,6 @@ class ChefSoloAutomator < Coopr::Plugin::Automator
     # rubocop:enable GuardClause
   end
 
-  def tar(path)
-    tarfile = StringIO.new('')
-    path_dir = File.dirname(path)
-    path_base = File.basename(path)
-    Gem::Package::TarWriter.new(tarfile) do |tar|
-      Dir[path, File.join(path_dir, "#{path_base}/**/*")].each do |file|
-        mode = File.stat(file).mode
-        relative_file = file.sub(/^#{Regexp.escape path_dir}\/?/, '')
-        if File.directory?(file)
-          tar.mkdir relative_file, mode
-        else
-          tar.add_file relative_file, mode do |tf|
-            File.open(file, 'rb') { |f| tf.write f.read }
-          end
-        end
-      end
-    end
-    tarfile.rewind
-    tarfile
-  end
-
-  def gzip(tarfile)
-    gz = StringIO.new('')
-    z = Zlib::GzipWriter.new(gz)
-    z.write tarfile.string
-    z.close # this is necessary!
-    StringIO.new gz.string
-  end
-
   def write_ssh_file
     @ssh_keyfile = @task['config']['provider']['provisioner']['ssh_keyfile']
     unless @ssh_keyfile.nil?
