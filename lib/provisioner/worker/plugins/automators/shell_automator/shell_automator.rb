@@ -64,9 +64,9 @@ class ShellAutomator < Coopr::Plugin::Automator
     return if File.exist?(file) && ((Time.now - File.stat(file).mtime).to_i < 600)
     log.debug "Generating #{file} from #{path}"
     newfile = gzip(tar_with_resourcename(path))
-    File.new("#{file}.new", 'w').write newfile.read
+    File.new("#{file}.new", 'w').write(newfile.read)
     fail "unable to generate #{file}.new" unless File.exist?("#{file}.new")
-    `mv "#{file}.new" "#{file}"`
+    FileUtils.mv("#{file}.new", file)
     log.debug "Generation complete: #{file}"
   end
 
