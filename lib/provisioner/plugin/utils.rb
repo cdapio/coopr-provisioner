@@ -54,7 +54,7 @@ module Coopr
         # TODO: find a way to do this in Ruby
         key = `ssh-keyscan -t #{type} #{host} 2>&1 | grep #{keytype}`.split(' ')
         # Bad key type == "unknown key type #{type}"
-        fail "Unknown SSH Key Type: #{type}" if key[2] == 'type'
+        fail "Unknown SSH Key Type: #{type}" if key[2] == 'type' || key[2].nil?
         return key[2]
       end
 
