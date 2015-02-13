@@ -65,7 +65,7 @@ class ShellAutomator < Coopr::Plugin::Automator
     log.debug "Generating #{file} from #{path}"
     newfile = gzip(tar_with_resourcename(path))
     File.new("#{file}.new", 'w').write newfile.read
-    # to do: add a test for tarball creation (if !File.exist?("#{file}.new") => rescue?)
+    fail "unable to generate #{file}.new" unless File.exist?("#{file}.new")
     `mv "#{file}.new" "#{file}"`
     log.debug "Generation complete: #{file}"
   end

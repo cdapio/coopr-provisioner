@@ -55,7 +55,7 @@ class ChefSoloAutomator < Coopr::Plugin::Automator
       log.debug "Generating #{chef_primitive_tar} from #{chef_primitive_path}"
       newfile = gzip(tar(chef_primitive_path))
       File.new("#{chef_primitive_tar}.new", 'w').write newfile.read
-      # to do: add a test for tarball creation (if !File.exist?("#{chef_primitive_tar}.new") => rescue?)
+      fail "unable to generate #{chef_primitive_tar}.new" unless File.exist?("#{chef_primitive_tar}.new")
       `mv "#{chef_primitive_tar}.new" "#{chef_primitive_tar}"`
       log.debug "Generation complete: #{chef_primitive_tar}"
     end
