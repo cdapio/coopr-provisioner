@@ -22,7 +22,6 @@ require 'resolv'
 # top level class for interacting with Google via Fog
 class FogProviderGoogle < Coopr::Plugin::Provider
   include FogProvider
-  #include Coopr::Logging
 
   # plugin defined resources
   @p12_key_dir = 'api_keys'
