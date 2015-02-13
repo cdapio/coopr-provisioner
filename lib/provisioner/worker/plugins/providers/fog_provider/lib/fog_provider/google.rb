@@ -303,7 +303,7 @@ class FogProviderGoogle < Coopr::Plugin::Provider
       @result['status'] = 0
     rescue Fog::Errors::Error => e
       log.error('Unable to delete specified components: ' + e.inspect)
-      @result['stderr'] = "Unable to delete specified components: ' + e.inspect"
+      @result['stderr'] = "Unable to delete specified components: #{e.inspect}"
     rescue => e
       log.error('Unexpected Error Occurred in FogProviderGoogle.delete: ' + e.inspect)
       @result['stderr'] = "Unexpected Error Occurred in FogProviderGoogle.delete: #{e.inspect}"
