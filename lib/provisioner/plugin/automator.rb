@@ -79,7 +79,6 @@ module Coopr
           log.warn message
           return true
         end
-        return false
       end
 
       def bootstrap(inputmap)
