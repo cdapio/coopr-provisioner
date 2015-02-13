@@ -105,7 +105,7 @@ class FogProviderJoyent < Coopr::Plugin::Provider
         'access_v4' => bootstrap_ip,
         'bind_v4' => bootstrap_ip
       }
-      @result['keys'] = {
+      @result['ssh_host_keys'] = {
         'rsa' => ssh_keyscan(bootstrap_ip)
       }
       # do we need sudo bash?
