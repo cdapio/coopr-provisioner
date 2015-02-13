@@ -39,30 +39,45 @@ module Coopr
         ipaddress = @task['config']['ipaddresses']['access_v4']
         fields = @task['config']['service']['action']['fields'] rescue nil
 
+        verify_ssh_host_key(ipaddress, 'rsa')
+
         case task['taskName'].downcase
         when 'bootstrap'
           bootstrap('hostname' => hostname, 'ipaddress' => ipaddress, 'sshauth' => sshauth)
           return @result
-        when "install"
+        when 'install'
           install({'hostname' => hostname, 'ipaddress' => ipaddress, 'sshauth' => sshauth, 'fields' => fields})
           return @result
-        when "configure"
+        when 'configure'
           configure({'hostname' => hostname, 'ipaddress' => ipaddress, 'sshauth' => sshauth, 'fields' => fields})
           return @result
-        when "initialize"
+        when 'initialize'
           init({'hostname' => hostname, 'ipaddress' => ipaddress, 'sshauth' => sshauth, 'fields' => fields})
           return @result
-        when "start"
+        when 'start'
           start({'hostname' => hostname, 'ipaddress' => ipaddress, 'sshauth' => sshauth, 'fields' => fields})
           return @result
-        when "stop"
+        when 'stop'
           stop({'hostname' => hostname, 'ipaddress' => ipaddress, 'sshauth' => sshauth, 'fields' => fields})
           return @result
-        when "remove"
+        when 'remove'
           remove({'hostname' => hostname, 'ipaddress' => ipaddress, 'sshauth' => sshauth, 'fields' => fields})
           return @result
         else
           fail "unhandled automator task type: #{task['taskName']}"
+        end
+      end
+
+      def verify_ssh_host_key(host, type = 'rsa')
+        log.debug "Verifying SSH host key for #{@task['config']['hostname']}/#{host}"
+        if @task['config']['ssh_host_keys'][type]
+          message = "SSH host key verification failed for #{@task['config']['hostname']}/#{host}"
+          fail message unless @task['config']['ssh_host_keys'][type] == ssh_keyscan(host, type)
+          return true
+        else
+          message = "SSH Host key not stored for #{@task['config']['hostname']}... Skipping verification"
+          log.warn message
+          return true
         end
       end
 

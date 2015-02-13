@@ -48,6 +48,16 @@ module Coopr
         end
       end
 
+      # Gets a host's SSH host key
+      def ssh_keyscan(host, type = 'rsa')
+        keytype = type == 'dsa' ? 'dss' : type
+        # TODO: find a way to do this in Ruby
+        key = `ssh-keyscan -t #{type} #{host} 2>&1 | grep #{keytype}`.split(' ')
+        # Bad key type == "unknown key type #{type}"
+        fail "Unknown SSH Key Type: #{type}" if key[2] == 'type' || key[2].nil?
+        return key[2]
+      end
+
       # Utility method to run a command over ssh
       def ssh_exec!(ssh, command, message = command, pty = false)
         stdout_data = ''
