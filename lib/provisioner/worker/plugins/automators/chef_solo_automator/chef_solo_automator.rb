@@ -111,6 +111,9 @@ class ChefSoloAutomator < Coopr::Plugin::Automator
       node_services_data = Hash.new { |h, k| h[k] = Hash.new(&h.default_proc) }
     end
 
+    # Deep merge the service data into the cluster config data.  service data takes precedence
+    clusterdata.deeper_merge!(servicedata)
+
     # merge data together into expected layout for json_attributes
     clusterdata['nodes'] = nodesdata
     servicedata['coopr']['cluster'] = clusterdata

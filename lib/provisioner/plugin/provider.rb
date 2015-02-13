@@ -40,6 +40,7 @@ module Coopr
           return @result
         when "confirm"
           confirm({'providerid' => task['config']['providerid'], 'fields' => task['config']['provider']['provisioner']})
+
           return @result
         when "delete"
           delete({'providerid' => task['config']['providerid'], 'fields' => task['config']['provider']['provisioner']})

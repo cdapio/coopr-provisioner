@@ -17,6 +17,7 @@
 #
 
 require 'net/scp'
+require 'deep_merge/rails_compat'
 
 require_relative '../logging'
 
