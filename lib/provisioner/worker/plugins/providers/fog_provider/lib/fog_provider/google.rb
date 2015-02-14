@@ -263,8 +263,7 @@ class FogProviderGoogle < Coopr::Plugin::Provider
       # delete server, if it exists
       unless server.nil?
         begin
-          server.destroy
-          server.wait_for(120) { !ready? }
+          server.destroy(false) # async = false
         rescue Fog::Errors::NotFound
           # ok, can be thrown by wait_for
           log.debug 'Server no longer found'
@@ -281,20 +280,10 @@ class FogProviderGoogle < Coopr::Plugin::Provider
         existing_disks.each do |disk|
           log.debug "Issuing delete for disk #{disk.name}"
           begin
-            disk.destroy
+            disk.destroy(false) # async = false
           rescue Fog::Errors::NotFound
-            log.debug 'Disk already deleted'
+            log.debug 'Disk not found'
           end
-        end
-
-        # confirm all disks deleted
-        existing_disks.each do |disk|
-          begin
-            disk.wait_for(120) { !ready? }
-          rescue Fog::Errors::NotFound
-            log.debug "Disk #{disk.name} no longer found"
-          end
-          log.debug "Disk #{disk.name} deleted"
         end
       end
 
