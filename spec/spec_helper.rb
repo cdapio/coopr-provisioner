@@ -1,6 +1,6 @@
 # encoding: UTF-8
 #
-# Copyright © 2012-2014 Cask Data, Inc.
+# Copyright © 2012-2015 Cask Data, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -21,4 +21,4 @@ require 'rack/test'
 require_relative '../lib/provisioner/plugin/automator'
 require_relative '../lib/provisioner/worker/pluginmanager'
 require_relative '../lib/provisioner/plugin/provider'
-require_relative '../lib/provisioner/worker/utils'
+require_relative '../lib/provisioner/worker/signalhandler'

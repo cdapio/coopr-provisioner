@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
 # encoding: UTF-8
 #
-# Copyright © 2012-2014 Cask Data, Inc.
+# Copyright © 2012-2015 Cask Data, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -23,7 +23,7 @@ require 'socket'
 require 'logger'
 require 'fileutils'
 
-require_relative 'worker/utils'
+require_relative 'worker/signalhandler'
 require_relative 'worker/pluginmanager'
 require_relative 'plugin/provider'
 require_relative 'plugin/automator'
@@ -38,7 +38,7 @@ $stdout.sync = true
 
 module Coopr
   class Worker
-    include Logging
+    include Coopr::Logging
 
     # Passed in options and configuration
     attr_reader :options, :config
@@ -49,6 +49,12 @@ module Coopr
     def initialize(options, config)
       @options = options
       @config = config
+      pid = Process.pid
+      host = Socket.gethostname.downcase
+      @worker_id = "#{host}.#{pid}"
+
+      # Set logging process name field
+      Logging.process_name = @worker_id
 
       # Logging module is already configured via the master provisioner or self.run
       # TODO: reimplement functionality to log each worker to a different file
@@ -57,7 +63,7 @@ module Coopr
       #   end
 
       # Log configuration
-      log.debug 'Provisioner starting up'
+      log.debug 'Worker is starting up with configuration:'
       config.properties.each do |k, v|
         log.debug "  #{k}: #{v}"
       end
@@ -153,7 +159,7 @@ module Coopr
       end
     end
 
-    def delegate_task(task, pluginmanager)
+    def delegate_task(task)
       providerName = nil # rubocop:disable UselessAssignment
       automatorName = nil # rubocop:disable UselessAssignment
       clazz = nil # rubocop:disable UselessAssignment
@@ -172,11 +178,11 @@ module Coopr
 
       case taskName
       when 'create', 'confirm', 'delete'
-        clazz = Object.const_get(pluginmanager.getHandlerActionObjectForProvider(providerName))
+        clazz = Object.const_get(@pluginmanager.getHandlerActionObjectForProvider(providerName))
         cwd = File.join(@config.get(PROVISIONER_WORK_DIR), @tenant, 'providertypes', providerName)
         result = _run_plugin(clazz, @plugin_env, cwd, task)
       when 'install', 'configure', 'initialize', 'start', 'stop', 'remove'
-        clazz = Object.const_get(pluginmanager.getHandlerActionObjectForAutomator(automatorName))
+        clazz = Object.const_get(@pluginmanager.getHandlerActionObjectForAutomator(automatorName))
         cwd = File.join(@config.get(PROVISIONER_WORK_DIR), @tenant, 'automatortypes', automatorName)
         result = _run_plugin(clazz, @plugin_env, cwd, task)
       when 'bootstrap'
@@ -186,7 +192,7 @@ module Coopr
           # server must specify which bootstrap handlers need to run
           log.debug "Task #{task_id} running specified bootstrap handlers: #{task['config']['automators']}"
           task['config']['automators'].each do |automator|
-            clazz = Object.const_get(pluginmanager.getHandlerActionObjectForAutomator(automator))
+            clazz = Object.const_get(@pluginmanager.getHandlerActionObjectForAutomator(automator))
             cwd = File.join(@config.get(PROVISIONER_WORK_DIR), @tenant, 'automatortypes', automator)
             result = _run_plugin(clazz, @plugin_env, cwd, task)
             combinedresult.merge!(result)
@@ -207,13 +213,13 @@ module Coopr
       begin
         result = nil
         task = nil
-        log.info "Start Provisioner run for file #{@file}"
+        log.info "Start Worker run for file #{@file}"
         task = JSON.parse(IO.read(@file))
 
         # While provisioning, don't allow the provisioner to terminate by disabling signal
-        sigterm = SignalHandler.new('TERM')
+        sigterm = Coopr::Worker::SignalHandler.new('TERM')
         sigterm.dont_interupt {
-          result = delegate_task(task, @pluginmanager) # TODO: we dont need to pass pluginmanager anymore
+          result = delegate_task(task)
         }
       rescue => e
         log.error "Caught exception when running task from file #{@file}"
@@ -229,72 +235,89 @@ module Coopr
           result['stdout'] = e.inspect
           result['stderr'] = "#{e.inspect}\n#{e.backtrace.join("\n")}"
         end
-        log.error "Provisioner run failed, result: #{result}"
+        log.error "Worker run failed, result: #{result}"
       end
     end
 
-    # Run in continuous server polling mode
-    def work
-      pid = Process.pid
-      host = Socket.gethostname.downcase
-      myid = "#{host}.#{pid}"
-
-      $PROGRAM_NAME = "#{$PROGRAM_NAME} (tenant: #{@tenant}, provisioner: #{@provisioner_id}, worker: #{@name})"
-
-      log.info "Starting provisioner with id #{myid}, connecting to server #{@config.get(PROVISIONER_SERVER_URI)}"
-
+    # Poll Coopr Server for a task, retries until it gets some response
+    def _poll_server
+      server_uri = @config.get(PROVISIONER_SERVER_URI)
+      poll_error_interval = @config.get(PROVISIONER_WORKER_POLL_ERROR_INTERVAL).to_i || 10
+      postdata = { 'provisionerId' => @provisioner_id, 'workerId' => @worker_id, 'tenantId' => @tenant }.to_json
       loop {
-        result = nil
-        response = nil
-        task = nil
         begin
-          response = Coopr::RestHelper.post "#{@config.get(PROVISIONER_SERVER_URI)}/v2/tasks/take", { 'provisionerId' => @provisioner_id, 'workerId' => myid, 'tenantId' => @tenant }.to_json
+          response = Coopr::RestHelper.post "#{server_uri}/v2/tasks/take", postdata
+          break response
         rescue => e
-          log.error "Caught exception connecting to coopr server #{@config.get(PROVISIONER_SERVER_URI)}/v2/tasks/take: #{e}"
-          sleep 10  # TODO: make config option
-          next
+          log.error "Unable to connect to Coopr Server #{server_uri}/v2/tasks/take: #{e}"
+          sleep poll_error_interval
         end
+      }
+    end
 
+    # Poll Coopr Server for a task, retries until a task is successfully retrieved
+    def _poll_server_and_retrieve_task
+      poll_interval = @config.get(PROVISIONER_WORKER_POLL_INTERVAL).to_i || 1
+      poll_error_interval = @config.get(PROVISIONER_WORKER_POLL_ERROR_INTERVAL).to_i || 10
+      loop {
         begin
+          response = _poll_server
           if response.code == 200 && response.to_str && response.to_str != ''
             task = JSON.parse(response.to_str)
             log.debug "Received task from server <#{response.to_str}>"
+            break task
           elsif response.code == 204
-            break if @once
-            sleep 1
+            sleep poll_interval
             next
           else
             log.error "Received error code #{response.code} from coopr server: #{response.to_str}"
-            sleep 10
-            next
           end
         rescue => e
           log.error "Caught exception processing response from coopr server: #{e.inspect}"
         end
+        sleep poll_error_interval
+      }
+    end
 
-        # While provisioning, don't allow the provisioner to terminate by disabling signal
-        sigterm = SignalHandler.new('TERM')
+    # Run in continuous server polling mode
+    def work
+      poll_interval = @config.get(PROVISIONER_WORKER_POLL_INTERVAL).to_i || 1
+      poll_error_interval = @config.get(PROVISIONER_WORKER_POLL_ERROR_INTERVAL).to_i || 10
+      server_uri = @config.get(PROVISIONER_SERVER_URI)
+
+      $PROGRAM_NAME = "#{$PROGRAM_NAME} (tenant: #{@tenant}, provisioner: #{@provisioner_id}, worker: #{@name})"
+
+      log.info "Starting worker with id #{@worker_id}, connecting to server #{@config.get(PROVISIONER_SERVER_URI)}"
+
+      loop {
+        result = nil
+
+        # Poll Coopr Server until a task is retrieved
+        task = _poll_server_and_retrieve_task
+
+        # While running task, trap and queue TERM signal to prevent shutdown until task is complete
+        sigterm = Coopr::Worker::SignalHandler.new('TERM')
         sigterm.dont_interupt {
           begin
-            result = delegate_task(task, @pluginmanager) # TODO: we dont need to pass pluginmanager anymore
+            result = delegate_task(task)
 
             result = Hash.new if result.nil? == true
-            result['workerId'] = myid
+            result['workerId'] = @worker_id
             result['taskId'] = task['taskId']
             result['provisionerId'] = @provisioner_id
             result['tenantId'] = @tenant
 
             log.debug "Task <#{task['taskId']}> completed, updating results <#{result}>"
             begin
-              response = Coopr::RestHelper.post "#{@config.get(PROVISIONER_SERVER_URI)}/v2/tasks/finish", result.to_json
+              response = Coopr::RestHelper.post "#{server_uri}/v2/tasks/finish", result.to_json
             rescue => e
-              log.error "Caught exception posting back to coopr server #{@config.get(PROVISIONER_SERVER_URI)}/v2/tasks/finish: #{e}"
+              log.error "Caught exception posting back to coopr server #{server_uri}/v2/tasks/finish: #{e}"
             end
 
           rescue => e
             result = Hash.new if result.nil? == true
             result['status'] = '1'
-            result['workerId'] = myid
+            result['workerId'] = @worker_id
             result['taskId'] = task['taskId']
             result['provisionerId'] = @provisioner_id
             result['tenantId'] = @tenant
@@ -308,9 +331,9 @@ module Coopr
             end
             log.error "Task <#{task['taskId']}> failed, updating results <#{result}>"
             begin
-              response = Coopr::RestHelper.post "#{@config.get(PROVISIONER_SERVER_URI)}/v2/tasks/finish", result.to_json
+              response = Coopr::RestHelper.post "#{server_uri}/v2/tasks/finish", result.to_json
             rescue => e
-              log.error "Caught exception posting back to server #{@config.get(PROVISIONER_SERVER_URI)}/v2/tasks/finish: #{e}"
+              log.error "Caught exception posting back to server #{server_uri}/v2/tasks/finish: #{e}"
             end
           end
         }

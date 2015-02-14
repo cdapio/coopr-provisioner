@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
 # encoding: UTF-8
 #
-# Copyright © 2012-2014 Cask Data, Inc.
+# Copyright © 2012-2015 Cask Data, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -116,8 +116,10 @@ module Coopr
       worker_launcher.provisioner = @provisioner_id
       worker_launcher.tenant = id
       worker_launcher.name = "worker-" + id + "-"  + (@workerpids.size + 1).to_s
+      worker_cmd = worker_launcher.cmd
+      log.debug "Spawning worker with command: #{worker_cmd}"
       cpid = fork {
-        exec(worker_launcher.cmd)
+        exec(worker_cmd)
       }
       @workerpids.push(cpid)
     end
