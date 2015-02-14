@@ -288,7 +288,7 @@ class FogProviderGoogle < Coopr::Plugin::Provider
           begin
             disk.destroy(false) # async = false
           rescue Fog::Errors::NotFound
-            log.debug 'Disk not found'
+            log.debug "Disk #{disk.name} not found"
           end
         end
       end
