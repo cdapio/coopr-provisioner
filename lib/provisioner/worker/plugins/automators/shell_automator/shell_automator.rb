@@ -19,6 +19,8 @@
 require 'net/scp'
 require 'base64'
 require 'fileutils'
+require 'rubygems/package'
+require 'zlib'
 
 class ShellAutomator < Coopr::Plugin::Automator
 
@@ -61,8 +63,10 @@ class ShellAutomator < Coopr::Plugin::Automator
   def generate_tar(file, path)
     return if File.exist?(file) && ((Time.now - File.stat(file).mtime).to_i < 600)
     log.debug "Generating #{file} from #{path}"
-    `tar -chzf "#{file}.new" -C "#{File.dirname(path)}" #{File.basename(path)}`
-    `mv "#{file}.new" "#{file}"`
+    newfile = gzip(tar_with_resourcename(path))
+    File.new("#{file}.new", 'w').write(newfile.read)
+    fail "unable to generate #{file}.new" unless File.exist?("#{file}.new")
+    FileUtils.mv("#{file}.new", file)
     log.debug "Generation complete: #{file}"
   end
 
