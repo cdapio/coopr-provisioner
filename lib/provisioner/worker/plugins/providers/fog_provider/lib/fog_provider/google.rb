@@ -22,13 +22,18 @@ require 'resolv'
 # top level class for interacting with Google via Fog
 class FogProviderGoogle < Coopr::Plugin::Provider
   include FogProvider
-  #include Coopr::Logging
 
   # plugin defined resources
   @p12_key_dir = 'api_keys'
   @ssh_key_dir = 'ssh_keys'
+
+  # Set Fog timeouts
+  @server_confirm_timeout = 600
+  @disk_confirm_timeout = 120
+
   class << self
     attr_accessor :p12_key_dir, :ssh_key_dir
+    attr_accessor :server_confirm_timeout, :disk_confirm_timeout
   end
 
   def create(inputmap)
@@ -120,7 +125,7 @@ class FogProviderGoogle < Coopr::Plugin::Provider
       # Wait until the server is ready
       fail "Server #{server.name} is in ERROR state" if server.state == 'ERROR'
       log.debug "Waiting for server to come up: #{providerid}"
-      server.wait_for(600) { ready? }
+      server.wait_for(self.class.server_confirm_timeout) { ready? }
 
       # Get domain name by dropping first dot
       domainname = @task['config']['hostname'].split('.').drop(1).join('.')
@@ -264,8 +269,7 @@ class FogProviderGoogle < Coopr::Plugin::Provider
       # delete server, if it exists
       unless server.nil?
         begin
-          server.destroy
-          server.wait_for(120) { !ready? }
+          server.destroy(false) # async = false
         rescue Fog::Errors::NotFound
           # ok, can be thrown by wait_for
           log.debug 'Server no longer found'
@@ -282,20 +286,10 @@ class FogProviderGoogle < Coopr::Plugin::Provider
         existing_disks.each do |disk|
           log.debug "Issuing delete for disk #{disk.name}"
           begin
-            disk.destroy
+            disk.destroy(false) # async = false
           rescue Fog::Errors::NotFound
-            log.debug 'Disk already deleted'
+            log.debug "Disk #{disk.name} not found"
           end
-        end
-
-        # confirm all disks deleted
-        existing_disks.each do |disk|
-          begin
-            disk.wait_for(120) { !ready? }
-          rescue Fog::Errors::NotFound
-            log.debug "Disk #{disk.name} no longer found"
-          end
-          log.debug "Disk #{disk.name} deleted"
         end
       end
 
@@ -303,7 +297,7 @@ class FogProviderGoogle < Coopr::Plugin::Provider
       @result['status'] = 0
     rescue Fog::Errors::Error => e
       log.error('Unable to delete specified components: ' + e.inspect)
-      @result['stderr'] = "Unable to delete specified components: ' + e.inspect"
+      @result['stderr'] = "Unable to delete specified components: #{e.inspect}"
     rescue => e
       log.error('Unexpected Error Occurred in FogProviderGoogle.delete: ' + e.inspect)
       @result['stderr'] = "Unexpected Error Occurred in FogProviderGoogle.delete: #{e.inspect}"
@@ -369,7 +363,7 @@ class FogProviderGoogle < Coopr::Plugin::Provider
 
   def confirm_disk(name)
     disk = connection.disks.get(name)
-    disk.wait_for(120) { disk.ready? }
+    disk.wait_for(self.class.disk_confirm_timeout) { disk.ready? }
     disk.reload
     disk
   end

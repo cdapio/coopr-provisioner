@@ -264,6 +264,7 @@ module Coopr
           response = _poll_server
           if response.code == 200 && response.to_str && response.to_str != ''
             task = JSON.parse(response.to_str)
+            log.debug "Received task from server <#{response.to_str}>"
             break task
           elsif response.code == 204
             sleep poll_interval
