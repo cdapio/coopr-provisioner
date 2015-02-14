@@ -70,7 +70,7 @@ module Coopr
 
       def verify_ssh_host_key(host, type = 'rsa')
         log.debug "Verifying SSH host key for #{@task['config']['hostname']}/#{host}"
-        if @task['config']['ssh_host_keys'][type]
+        if @task['config'].key?('ssh_host_keys') && @task['config']['ssh_host_keys'].key?(type)
           message = "SSH host key verification failed for #{@task['config']['hostname']}/#{host}"
           fail message unless @task['config']['ssh_host_keys'][type] == ssh_keyscan(host, type)
           return true
