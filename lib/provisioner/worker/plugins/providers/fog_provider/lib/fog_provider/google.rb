@@ -26,8 +26,14 @@ class FogProviderGoogle < Coopr::Plugin::Provider
   # plugin defined resources
   @p12_key_dir = 'api_keys'
   @ssh_key_dir = 'ssh_keys'
+
+  # Set Fog timeouts
+  @server_confirm_timeout = 600
+  @disk_confirm_timeout = 120
+
   class << self
     attr_accessor :p12_key_dir, :ssh_key_dir
+    attr_accessor :server_confirm_timeout, :disk_confirm_timeout
   end
 
   def create(inputmap)
@@ -119,7 +125,7 @@ class FogProviderGoogle < Coopr::Plugin::Provider
       # Wait until the server is ready
       fail "Server #{server.name} is in ERROR state" if server.state == 'ERROR'
       log.debug "Waiting for server to come up: #{providerid}"
-      server.wait_for(600) { ready? }
+      server.wait_for(self.class.server_confirm_timeout) { ready? }
 
       # Get domain name by dropping first dot
       domainname = @task['config']['hostname'].split('.').drop(1).join('.')
@@ -357,7 +363,7 @@ class FogProviderGoogle < Coopr::Plugin::Provider
 
   def confirm_disk(name)
     disk = connection.disks.get(name)
-    disk.wait_for(120) { disk.ready? }
+    disk.wait_for(self.class.disk_confirm_timeout) { disk.ready? }
     disk.reload
     disk
   end
