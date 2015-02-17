@@ -130,7 +130,7 @@ class FogProviderAWS < Coopr::Plugin::Provider
         'bind_v4' => bind_ip
       }
       @result['hostname'] = hostname
-      @result['ssh_host_keys'] = {
+      @result['result']['ssh_host_keys'] = {
         'rsa' => ssh_keyscan(bootstrap_ip)
       }
       # do we need sudo bash?
