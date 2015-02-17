@@ -53,10 +53,8 @@ class ChefSoloAutomator < Coopr::Plugin::Automator
     # rubocop:disable GuardClause
     if !File.exist?(chef_primitive_tar) || ((Time.now - File.stat(chef_primitive_tar).mtime).to_i > 600)
       log.debug "Generating #{chef_primitive_tar} from #{chef_primitive_path}"
-      newfile = gzip(tar(chef_primitive_path))
-      File.new("#{chef_primitive_tar}.new", 'w').write(newfile.read)
-      fail "unable to generate #{chef_primitive_tar}.new" unless File.exist?("#{chef_primitive_tar}.new")
-      FileUtils.mv("#{chef_primitive_tar}.new", chef_primitive_tar)
+      `tar -chzf "#{chef_primitive_tar}.new" #{chef_primitive}`
+      `mv "#{chef_primitive_tar}.new" "#{chef_primitive_tar}"`
       log.debug "Generation complete: #{chef_primitive_tar}"
     end
     # rubocop:enable GuardClause
