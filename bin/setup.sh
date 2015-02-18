@@ -53,8 +53,8 @@ wait_for_plugin_registration () {
 }
 
 load_bundled_data ( ) {
-  __skriptz=$(ls -1 ${COOPR_HOME}/provisioner/lib/worker/plugins/*/*/load-bundled-data.sh 2>&1)
-  if [ ${__skriptz} != "" ]; then
+  __skriptz=$(ls -1 ${COOPR_HOME}/provisioner/lib/provisioner/worker/plugins/*/*/load-bundled-data.sh 2>&1)
+  if [ "${__skriptz}" != "" ]; then
     for __i in ${__skriptz}; do
       ${__i} || return 1
     done
