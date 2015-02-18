@@ -30,7 +30,7 @@ done
 # load archives
 cd ${ARCHIVES_DIR}
 for d in $(ls -p -1 | grep "/$" | sed "s,/$,,") ; do
-  ${DATA_UPLOADER} --quiet --uri ${COOPR_SERVER_URI} --tenant ${COOPR_TENANT} \
+  ${COOPR_RUBY} ${DATA_UPLOADER} --quiet --uri ${COOPR_SERVER_URI} --tenant ${COOPR_TENANT} \
     --user ${COOPR_API_USER} stage ${d} automatortypes/shell/archives/${d}
   ret=$?
   [[ ${ret} -ne 0 ]] && failed="${failed} ${d}"
