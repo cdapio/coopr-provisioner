@@ -240,6 +240,13 @@ class FogProviderAWS < Coopr::Plugin::Provider
           ssh_exec!(ssh, "#{sudo} sed -i -e 's:/mnt:/data:' /etc/fstab", 'Updating /etc/fstab for /data')
         end
       end
+
+      # disable SELinux
+      Net::SSH.start(bootstrap_ip, @task['config']['ssh-auth']['user'], @credentials) do |ssh|
+        cmd = "if test -x /usr/sbin/sestatus ; then #{sudo} /usr/sbin/sestatus | grep disabled || ( test -x /usr/sbin/setenforce && #{sudo} /usr/sbin/setenforce Permissive ) ; fi"
+        ssh_exec!(ssh, cmd, 'Disabling SELinux')
+      end
+
       # Return 0
       @result['status'] = 0
     rescue Fog::Errors::TimeoutError
