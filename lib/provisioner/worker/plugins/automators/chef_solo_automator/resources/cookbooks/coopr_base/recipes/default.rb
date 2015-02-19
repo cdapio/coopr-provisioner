@@ -38,5 +38,10 @@ unless node['base'].key?('no_users') && node['base']['no_users'].to_s == 'true'
   %w(chef-solo-search users::sysadmins).each do |cb|
     include_recipe cb
   end
-  include_recipe 'sudo' unless node['base'].key?('no_sudo') && node['base']['no_sudo'].to_s == 'true'
+  begin
+    search('users', 'groups:sysadmins AND NOT action:remove')
+    include_recipe 'sudo' unless node['base'].key?('no_sudo') && node['base']['no_sudo'].to_s == 'true'
+  rescue
+    Chef::Log.warn('No users defined in group sysadmins, skipping sudo')
+  end
 end
