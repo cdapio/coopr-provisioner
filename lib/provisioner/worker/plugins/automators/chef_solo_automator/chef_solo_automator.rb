@@ -159,7 +159,11 @@ class ChefSoloAutomator < Coopr::Plugin::Automator
     begin
       Net::SSH.start(ipaddress, sshauth['user'], @credentials) do |ssh|
         ssh_exec!(ssh, "#{sudo} mkdir -p #{@@remote_cache_dir}", 'Create remote cache dir')
-        ssh_exec!(ssh, "#{sudo} mkdir -p #{@@remote_chef_dir}", 'Create remote Chef dir')
+        # Create remote directories for all chef primitives, as some recipes can fail if for example data_bags directory is missing
+        @@chef_primitives.each do |chef_primitive|
+          ssh_exec!(ssh, "#{sudo} mkdir -p #{@@remote_chef_dir}/#{chef_primitive}", 'Create remote Chef dir for #{chef_primitive}')
+        end
+
         ssh_exec!(ssh, "#{sudo} chown -R #{sshauth['user']} #{@@remote_cache_dir}", "Changing cache dir owner to #{sshauth['user']}")
         ssh_exec!(ssh, "#{sudo} chown -R #{sshauth['user']} #{@@remote_chef_dir}", "Changing Chef dir owner to #{sshauth['user']}")
       end
