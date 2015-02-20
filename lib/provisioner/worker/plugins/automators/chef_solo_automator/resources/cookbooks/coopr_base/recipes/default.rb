@@ -34,6 +34,8 @@ end
 include_recipe 'ulimit::default'
 
 # Add users in the sysadmins group and give them sudo access
+# WARNING - Any user management done here must include any users defined in the Coopr Providers, or not interfere with
+#   their sudo permissions
 unless node['base'].key?('no_users') && node['base']['no_users'].to_s == 'true'
   %w(chef-solo-search users::sysadmins).each do |cb|
     include_recipe cb
