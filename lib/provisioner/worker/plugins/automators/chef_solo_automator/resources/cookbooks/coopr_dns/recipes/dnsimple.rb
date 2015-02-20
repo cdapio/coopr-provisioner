@@ -17,34 +17,6 @@
 # limitations under the License.
 #
 
-# Install some pre-requisites
-case node['platform_family']
-when 'debian'
-  zpkg = 'libz-dev'
-when 'rhel'
-  zpkg = 'zlib-devel'
-end
-
-r = package( zpkg ) { action :nothing }
-r.run_action( :install )
-
-%w(build-essential dnsimple).each do |recipe|
-  include_recipe recipe
-end
-
-# Get credentials
-if node['dnsimple']['username'] && node['dnsimple']['password']
-  dnsimple = node['dnsimple']
-else
-  begin
-    bag = node['coopr_dns']['dnsimple']['databag_name']
-    item = node['coopr_dns']['dnsimple']['databag_item']
-    dnsimple = data_bag_item(bag, item)
-  rescue
-    Chef::Application.fatal!('You must specify either a data bag or username/password!')
-  end
-end
-
 # Setup some variables
 fqdn = node['coopr']['hostname'] ? node['coopr']['hostname'] : node['fqdn']
 hostname = fqdn.split('.').first
@@ -64,6 +36,34 @@ end
 subdomain_whitelist = node['coopr_dns']['subdomain_whitelist']
 
 if subdomain_whitelist.nil? || subdomain_whitelist.include?(subdomain)
+  # Install some pre-requisites
+  case node['platform_family']
+  when 'debian'
+    zpkg = 'libz-dev'
+  when 'rhel'
+    zpkg = 'zlib-devel'
+  end
+
+  r = package( zpkg ) { action :nothing }
+  r.run_action( :install )
+
+  %w(build-essential dnsimple).each do |recipe|
+    include_recipe recipe
+  end
+
+  # Get credentials
+  if node['dnsimple']['username'] && node['dnsimple']['password']
+    dnsimple = node['dnsimple']
+  else
+    begin
+      bag = node['coopr_dns']['dnsimple']['databag_name']
+      item = node['coopr_dns']['dnsimple']['databag_item']
+      dnsimple = data_bag_item(bag, item)
+    rescue
+      Chef::Application.fatal!('You must specify either a data bag or username/password!')
+    end
+  end
+
   # Create DNS entries for access_v4
   dnsimple_record hostname do
     content access_v4
