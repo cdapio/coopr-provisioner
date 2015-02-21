@@ -238,7 +238,7 @@
           "google_data_disk_size_gb": {
             "label": "Data disk size in GB",
             "type": "text",
-            "default": 10,
+            "default": 200,
             "override": true,
             "tip": "Size of the persistent data disk to be created and mounted"
           },
