@@ -41,21 +41,24 @@ node.default['hadoop']['distribution_version'] =
 case node['hadoop']['distribution']
 when 'hdp'
   case node['hadoop']['distribution_version']
-  when '2.0.5.0', '2.0.6.0', '2.0.6.1', '2.0.10.0', '2.0.11.0'
+  when '2.0.5.0', '2.0.6.0', '2.0.6.1', '2.0.10.0', '2.0.11.0', '2.0.12.0'
     hdp_version = '2.0.4.0'
     hdp_update_version = node['hadoop']['distribution_version']
   when '2.0'
     hdp_version = '2.0.4.0'
-    hdp_update_version = '2.0.11.0'
+    hdp_update_version = '2.0.12.0'
   when '2.1.1.0', '2.0.4.0'
     hdp_version = node['hadoop']['distribution_version']
     hdp_update_version = nil
-  when '2.1.5.0', '2.1.4.0', '2.1.3.0', '2.1.2.1', '2.1.2.0'
+  when '2.1.2.0', '2.1.2.1', '2.1.3.0', '2.1.4.0', '2.1.5.0', '2.1.7.0'
     hdp_version = '2.1.1.0'
     hdp_update_version = node['hadoop']['distribution_version']
-  when '2.1', '2'
+  when '2.1'
     hdp_version = '2.1.1.0'
-    hdp_update_version = '2.1.5.0'
+    hdp_update_version = '2.1.7.0'
+  when '2.2.0.0', '2.2', '2'
+    hdp_version = '2.2.0.0'
+    hdp_update_version = nil
   else
     Chef::Application.fatal!('This cookbook only supports HDP 2.x')
   end
@@ -138,6 +141,9 @@ when 'hdp'
 
 when 'cdh'
   cdh_release = node['hadoop']['distribution_version'].to_i
+  if node['hadoop']['distribution_version'].to_f >= 5.3 && node['java']['jdk_version'] < 7
+    Chef::Application.fatal!('CDH 5.3 and above require Java 7 or higher')
+  end
   case node['platform_family']
   when 'rhel'
     yum_base_url = "http://archive.cloudera.com/cdh#{cdh_release}/redhat"
