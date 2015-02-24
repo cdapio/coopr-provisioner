@@ -24,6 +24,7 @@ node['coopr']['cluster']['nodes'].each do |n, v|
     hostname v.hostname
     aliases [ short_host ]
     unique true
+    priority 62
     action :create
   end
   next unless v.key?('ipaddresses') && v['ipaddresses'].key?('bind_v4')
@@ -31,6 +32,7 @@ node['coopr']['cluster']['nodes'].each do |n, v|
   hostsfile_entry v['ipaddresses']['bind_v4'] do
     hostname v.hostname
     aliases [ short_host ]
+    priority 61
     action :create
   end
 end
