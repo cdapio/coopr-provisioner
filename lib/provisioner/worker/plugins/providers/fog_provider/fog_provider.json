@@ -100,6 +100,12 @@
             "default": true,
             "tip": "Associate public IP (VPC only)"
           },
+          "provider_hostname": {
+            "label": "Set hostname to provider-generated public DNS hostname (overrides DNS suffix)",
+            "type": "checkbox",
+            "override": true,
+            "tip": "Set hostname to provider-generated public DNS hostname (overrides DNS suffix)",
+          },
           "availability_zone": {
             "label": "Availability Zone",
             "type": "text",
@@ -258,7 +264,13 @@
             "default": "us-central1-a",
             "override": true,
             "tip": "Zone"
-          }
+          },
+          "provider_hostname": {
+            "label": "Set hostname to provider-specific public DNS hostname (overrides DNS suffix)",
+            "type": "checkbox",
+            "override": true,
+            "tip": "Set hostname to provider-specific public DNS hostname (overrides DNS suffix)",
+          },
         },
         "required": [
           [

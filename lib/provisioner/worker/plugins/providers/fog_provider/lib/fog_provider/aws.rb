@@ -90,9 +90,9 @@ class FogProviderAWS < Coopr::Plugin::Provider
       domainname = @task['config']['hostname'].split('.').drop(1).join('.')
 
       hostname =
-        if !server.dns_name.nil? && domainname == 'local'
+        if !server.dns_name.nil? && @provider_hostname
           server.dns_name
-        elsif !server.public_ip_address.nil? && domainname == 'local'
+        elsif !server.public_ip_address.nil? && @provider_hostname
           Resolv.getname(server.public_ip_address)
         else
           @task['config']['hostname']

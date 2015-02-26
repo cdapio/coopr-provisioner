@@ -131,7 +131,7 @@ class FogProviderGoogle < Coopr::Plugin::Provider
       domainname = @task['config']['hostname'].split('.').drop(1).join('.')
 
       hostname =
-        if server.public_ip_address && domainname == 'local'
+        if server.public_ip_address && @provider_hostname
           Resolv.getname(server.public_ip_address)
         else
           @task['config']['hostname']
