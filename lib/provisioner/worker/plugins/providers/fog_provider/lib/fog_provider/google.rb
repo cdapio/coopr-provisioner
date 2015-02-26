@@ -157,7 +157,7 @@ class FogProviderGoogle < Coopr::Plugin::Provider
         'access_v4' => bootstrap_ip,
         'bind_v4' => bind_ip
       }
-      @result['hostname'] = hostname
+      @result['hostname'] = hostname if @provider_hostname
       @result['result']['ssh_host_keys'] = {
         'rsa' => ssh_keyscan(bootstrap_ip)
       }
