@@ -101,10 +101,10 @@
             "tip": "Associate public IP (VPC only)"
           },
           "provider_hostname": {
-            "label": "Use provider-specific hostname (overrides DNS suffix)",
+            "label": "Set hostname to provider-generated public DNS hostname (overrides DNS suffix)",
             "type": "checkbox",
             "override": true,
-            "tip": "Use provider-specific hostname (overrides DNS suffix)",
+            "tip": "Set hostname to provider-generated public DNS hostname (overrides DNS suffix)",
           },
           "availability_zone": {
             "label": "Availability Zone",
@@ -266,10 +266,10 @@
             "tip": "Zone"
           },
           "provider_hostname": {
-            "label": "Use provider-specific hostname (overrides DNS suffix)",
+            "label": "Set hostname to provider-specific public DNS hostname (overrides DNS suffix)",
             "type": "checkbox",
             "override": true,
-            "tip": "Use provider-specific hostname (overrides DNS suffix)",
+            "tip": "Set hostname to provider-specific public DNS hostname (overrides DNS suffix)",
           },
         },
         "required": [
