@@ -131,7 +131,7 @@ class FogProviderGoogle < Coopr::Plugin::Provider
       domainname = @task['config']['hostname'].split('.').drop(1).join('.')
 
       hostname =
-        if server.public_ip_address && domainname == 'local'
+        if server.public_ip_address && @provider_hostname
           Resolv.getname(server.public_ip_address)
         else
           @task['config']['hostname']
@@ -157,7 +157,7 @@ class FogProviderGoogle < Coopr::Plugin::Provider
         'access_v4' => bootstrap_ip,
         'bind_v4' => bind_ip
       }
-      @result['hostname'] = hostname if @provider_hostname
+      @result['hostname'] = hostname
       @result['result']['ssh_host_keys'] = {
         'rsa' => ssh_keyscan(bootstrap_ip)
       }
