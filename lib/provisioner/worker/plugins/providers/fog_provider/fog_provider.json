@@ -104,7 +104,7 @@
             "label": "Set hostname to provider-generated public DNS hostname (overrides DNS suffix)",
             "type": "checkbox",
             "override": true,
-            "tip": "Set hostname to provider-generated public DNS hostname (overrides DNS suffix)",
+            "tip": "Set hostname to provider-generated public DNS hostname (overrides DNS suffix)"
           },
           "availability_zone": {
             "label": "Availability Zone",
@@ -269,8 +269,8 @@
             "label": "Set hostname to provider-specific public DNS hostname (overrides DNS suffix)",
             "type": "checkbox",
             "override": true,
-            "tip": "Set hostname to provider-specific public DNS hostname (overrides DNS suffix)",
-          },
+            "tip": "Set hostname to provider-specific public DNS hostname (overrides DNS suffix)"
+          }
         },
         "required": [
           [
