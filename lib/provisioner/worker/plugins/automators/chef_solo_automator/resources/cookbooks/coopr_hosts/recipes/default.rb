@@ -19,20 +19,10 @@
 
 node['coopr']['cluster']['nodes'].each do |n, v|
   short_host = v.hostname.split('.').first
-  next unless v.key?('ipaddresses') && v['ipaddresses'].key?('access_v4')
-  hostsfile_entry v['ipaddresses']['access_v4'] do
-    hostname v.hostname
-    aliases [ short_host ]
-    unique true
-    priority 62
-    action :create
-  end
   next unless v.key?('ipaddresses') && v['ipaddresses'].key?('bind_v4')
-  next if v['ipaddresses']['bind_v4'] == v['ipaddresses']['access_v4']
   hostsfile_entry v['ipaddresses']['bind_v4'] do
     hostname v.hostname
     aliases [ short_host ]
-    priority 61
     action :create
   end
 end
