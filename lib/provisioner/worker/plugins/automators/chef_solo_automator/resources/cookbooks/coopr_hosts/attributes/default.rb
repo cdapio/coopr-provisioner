@@ -1,8 +1,8 @@
 #
 # Cookbook Name:: coopr_hosts
-# Recipe:: default
+# Attributes:: default
 #
-# Copyright © 2013-2014 Cask Data, Inc.
+# Copyright © 2013-2015 Cask Data, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,19 +16,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-START = 60
-node['coopr']['cluster']['nodes'].each do |n, v|
-  short_host = v.hostname.split('.').first
-  arr = node['coopr_hosts']['address_types'] || []
-  arr.each do |addr|
-    next unless v.key?('ipaddresses') && v['ipaddresses'].key?(addr)
-    pri = START + (arr.length - arr.index(addr))
-    hostsfile_entry v['ipaddresses'][addr] do
-      hostname v.hostname
-      aliases [short_host]
-      unique true
-      priority pri
-      action :create
-    end
-  end
-end
+
+# Possible combinations: [], ['access_v4'], ['bind_v4'], ['access_v4','bind_v4'], ['bind_v4','access_v4']
+default['coopr_hosts']['address_types'] = ['bind_v4']
