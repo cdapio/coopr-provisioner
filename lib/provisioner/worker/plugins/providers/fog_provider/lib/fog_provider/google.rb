@@ -100,6 +100,16 @@ class FogProviderGoogle < Coopr::Plugin::Provider
     rescue => e
       log.error('Unexpected Error Occurred in FogProviderGoogle.create: ' + e.inspect)
       @result['stderr'] = "Unexpected Error Occurred in FogProviderGoogle.create: #{e.inspect}"
+      # delete any disks created
+      @disks.each do |orphan_disk|
+        begin
+          delete_disk(orphan_disk)
+        rescue => e
+          msg = "Unable to delete disk associated with failed server. Please check your account for orphan disk: #{orphan_disk.name}"
+          log.error(msg)
+          @result['stderr'] += "\n#{msg}"
+        end
+      end
     else
       log.debug "Create finished successfully: #{@result}"
     ensure
@@ -284,12 +294,7 @@ class FogProviderGoogle < Coopr::Plugin::Provider
 
         # issue destroy to all attached disks
         existing_disks.each do |disk|
-          log.debug "Issuing delete for disk #{disk.name}"
-          begin
-            disk.destroy(false) # async = false
-          rescue Fog::Errors::NotFound
-            log.debug "Disk #{disk.name} not found"
-          end
+          delete_disk(disk)
         end
       end
 
@@ -366,6 +371,15 @@ class FogProviderGoogle < Coopr::Plugin::Provider
     disk.wait_for(self.class.disk_confirm_timeout) { disk.ready? }
     disk.reload
     disk
+  end
+
+  def delete_disk(disk)
+    log.debug "Issuing delete for disk #{disk.name}"
+    begin
+      disk.destroy(false) # async = false
+    rescue Fog::Errors::NotFound
+      log.debug "Disk #{disk.name} not found"
+    end
   end
 
   def validate!
