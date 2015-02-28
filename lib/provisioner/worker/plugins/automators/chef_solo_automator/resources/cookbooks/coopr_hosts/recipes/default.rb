@@ -16,6 +16,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+
+# The hostsfile cookbook has a default level of 60 for IPv4 addresses...
+# see: https://github.com/customink-webops/hostsfile/blob/v2.4.2/libraries/entry.rb#L158
 START = 60
 node['coopr']['cluster']['nodes'].each do |n, v|
   short_host = v.hostname.split('.').first
