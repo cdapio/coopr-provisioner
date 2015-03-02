@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
 # encoding: UTF-8
 #
-# Copyright © 2012-2014 Cask Data, Inc.
+# Copyright © 2012-2015 Cask Data, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,7 +16,24 @@
 # limitations under the License.
 #
 
+require 'base64'
+require 'fileutils'
+
 module FogProvider
+  # Write ssh_file to identityfile
+  def write_ssh_file
+    @ssh_keyfile = @task['config']['provider']['provisioner']['ssh_keyfile']
+    unless @ssh_keyfile.nil?
+      # TODO we should not write to task object directly
+      # @task is not auto-vivified
+      @task['config'] = {} unless @task.key?('config')
+      @task['config']['ssh-auth'] = {} unless @task['config'].key?('ssh-auth')
+      @task['config']['ssh-auth']['identityfile'] = File.join(Dir.pwd, self.class.ssh_key_dir, @task['taskId'])
+      log.debug "Writing out @ssh_keyfile to #{@task['config']['ssh-auth']['identityfile']}"
+      decode_string_to_file(@ssh_keyfile, @task['config']['ssh-auth']['identityfile'])
+    end
+  end
+
   # used by ssh validation in confirm stage
   def set_credentials(sshauth)
     @credentials = {}
@@ -87,5 +104,10 @@ module FogProvider
     block_b = IPAddr.new '172.16.0.0/12'
     block_c = IPAddr.new '192.168.0.0/16'
     (block_a.include?(ip) || block_b.include?(ip) || block_c.include?(ip))
+  end
+
+  def decode_string_to_file(string, outfile, mode = 0600)
+    FileUtils.mkdir_p(File.dirname(outfile))
+    File.open(outfile, 'wb', mode) { |f| f.write(Base64.decode64(string)) }
   end
 end
