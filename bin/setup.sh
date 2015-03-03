@@ -26,21 +26,14 @@ export COOPR_RUBY=${COOPR_RUBY:-${COOPR_HOME}/provisioner/embedded/bin/ruby}
 
 export COOPR_PROVISIONER_PLUGIN_DIR=${COOPR_HOME}/provisioner/lib/worker/plugins
 
-if [ -r "${TRUST_CERT_PATH}" ] && [ -n "${TRUST_CERT_PASSWORD}" ]; then
-  export CERT_PARAMETER="--cert ${TRUST_CERT_PATH}:${TRUST_CERT_PASSWORD}"
-fi
-
-if [ "${COOPR_PROTOCOL}" == "https" ]; then
-  export CURL_PARAMETER="--insecure"
-fi
-
 wait_for_plugin_registration () {
   RETRIES=0
-  until [[ $(curl ${CURL_PARAMETER} --silent --request GET \
+  until [[ $(curl --silent --request GET \
     --output /dev/null --write-out "%{http_code}" \
     --header "Coopr-UserID:${COOPR_API_USER}" \
     --header "Coopr-TenantID:${COOPR_TENANT}" \
-    ${CERT_PARAMETER} \
+    --header "Coopr-ApiKey:${COOPR_API_KEY}" \
+    --insecure \
     ${COOPR_SERVER_URI}/v2/plugins/automatortypes/chef-solo 2> /dev/null) -eq 200 || ${RETRIES} -gt 60 ]]; do
     sleep 2
     let "RETRIES++"
@@ -73,13 +66,13 @@ wait_for_plugin_registration || exit 1
 load_bundled_data || exit 1
 
 # Request sync
-curl ${CURL_PARAMETER} --silent --request POST \
+curl --silent --request POST \
   --header "Content-Type:application/json" \
   --header "Coopr-UserID:${COOPR_API_USER}" \
   --header "Coopr-ApiKey:${COOPR_API_KEY}" \
   --header "Coopr-TenantID:${COOPR_TENANT}" \
   --connect-timeout ${TIMEOUT} \
-  ${CERT_PARAMETER} \
+  --insecure \
   ${COOPR_SERVER_URI}/v2/plugins/sync
 __ret=${?}
 [[ ${__ret} -ne 0 ]] && exit 1
