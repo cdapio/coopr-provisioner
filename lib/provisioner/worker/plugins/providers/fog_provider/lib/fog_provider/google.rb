@@ -31,6 +31,9 @@ class FogProviderGoogle < Coopr::Plugin::Provider
   @server_confirm_timeout = 600
   @disk_confirm_timeout = 120
 
+  # Root disk size in GB
+  @root_disk_size = 10
+
   class << self
     attr_accessor :p12_key_dir, :ssh_key_dir
     attr_accessor :server_confirm_timeout, :disk_confirm_timeout
@@ -59,7 +62,7 @@ class FogProviderGoogle < Coopr::Plugin::Provider
 
       # disks are managed separately, so CREATE must first create and confirm the disk to be used
       # handle boot disk
-      create_disk(@providerid, nil, @zone_name, @image)
+      create_disk(@providerid, @root_disk_size, @zone_name, @image)
       disk = confirm_disk(@providerid)
 
       @disks = [disk]
@@ -100,6 +103,7 @@ class FogProviderGoogle < Coopr::Plugin::Provider
     rescue => e
       log.error('Unexpected Error Occurred in FogProviderGoogle.create: ' + e.inspect)
       @result['stderr'] = "Unexpected Error Occurred in FogProviderGoogle.create: #{e.inspect}"
+
       # delete any disks created
       @disks.each do |orphan_disk|
         begin
@@ -341,7 +345,7 @@ class FogProviderGoogle < Coopr::Plugin::Provider
     server_def
   end
 
-  def create_disk(name, size_gb = 10, zone_name, source_image)
+  def create_disk(name, size_gb, zone_name, source_image)
     args = {}
     args[:name] = name
     args[:size_gb] = size_gb
@@ -352,7 +356,7 @@ class FogProviderGoogle < Coopr::Plugin::Provider
     disk = connection.disks.get(name)
     unless disk.nil?
       # disk of requested name exists already
-      existing_size_gb = disk.size_gb
+      existing_size_gb = disk.size_gb.to_i
       existing_zone_name = disk.zone_name.nil? ? nil : disk.zone_name.split('/').last
       existing_source_image = disk.source_image.nil? ? nil : disk.source_image.split('/').last
       if size_gb == existing_size_gb && zone_name == existing_zone_name && source_image == existing_source_image
