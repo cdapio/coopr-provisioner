@@ -356,7 +356,7 @@ class FogProviderGoogle < Coopr::Plugin::Provider
     disk = connection.disks.get(name)
     unless disk.nil?
       # disk of requested name exists already
-      existing_size_gb = disk.size_gb.to_i
+      existing_size_gb = disk.size_gb.nil? ? nil : disk.size_gb.to_i
       existing_zone_name = disk.zone_name.nil? ? nil : disk.zone_name.split('/').last
       existing_source_image = disk.source_image.nil? ? nil : disk.source_image.split('/').last
       if size_gb == existing_size_gb && zone_name == existing_zone_name && source_image == existing_source_image
