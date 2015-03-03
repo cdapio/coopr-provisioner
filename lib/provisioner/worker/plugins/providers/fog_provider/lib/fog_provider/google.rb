@@ -103,7 +103,6 @@ class FogProviderGoogle < Coopr::Plugin::Provider
     rescue => e
       log.error('Unexpected Error Occurred in FogProviderGoogle.create: ' + e.inspect)
       @result['stderr'] = "Unexpected Error Occurred in FogProviderGoogle.create: #{e.inspect}"
-
       # delete any disks created
       @disks.each do |orphan_disk|
         begin
