@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
 # encoding: UTF-8
 #
-# Copyright © 2012-2014 Cask Data, Inc.
+# Copyright © 2012-2015 Cask Data, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -52,6 +52,7 @@ class FogProviderGoogle < Coopr::Plugin::Provider
       fields.each do |k, v|
         instance_variable_set('@' + k, v)
       end
+      write_p12_file
       # validate credentials
       validate!
       # Create the server
@@ -89,7 +90,13 @@ class FogProviderGoogle < Coopr::Plugin::Provider
           'root'
         end
       @result['result']['ssh-auth']['user'] = sshuser
-      @result['result']['ssh-auth']['identityfile'] = File.join(Dir.pwd, self.class.ssh_key_dir, @ssh_key_resource)
+      identityfile =
+        if @ssh_key_resource
+          File.join(Dir.pwd, self.class.ssh_key_dir, @ssh_key_resource)
+        else
+          File.join(Dir.pwd, self.class.ssh_key_dir, @task['taskId'])
+        end
+      @result['result']['ssh-auth']['identityfile'] = identityfile
       @result['status'] = 0
     # We assume that no work was done when we get Unauthorized
     rescue Excon::Errors::Unauthorized
@@ -113,6 +120,7 @@ class FogProviderGoogle < Coopr::Plugin::Provider
     else
       log.debug "Create finished successfully: #{@result}"
     ensure
+      File.delete(@p12_file) if @p12_file && File.exist?(@p12_file)
       @result['status'] = 1 if @result['status'].nil? || (@result['status'].is_a?(Hash) && @result['status'].empty?)
     end
   end
@@ -125,6 +133,9 @@ class FogProviderGoogle < Coopr::Plugin::Provider
       fields.each do |k, v|
         instance_variable_set('@' + k, v)
       end
+      write_p12_file
+      write_ssh_file
+      @ssh_file = @task['config']['ssh-auth']['identityfile'] unless @ssh_keyfile.nil?
       # validate credentials
       validate!
       # Confirm server
@@ -241,6 +252,8 @@ class FogProviderGoogle < Coopr::Plugin::Provider
     else
       log.debug "Confirm finished successfully: #{@result}"
     ensure
+      File.delete(@p12_file) if @p12_file && File.exist?(@p12_file)
+      File.delete(@ssh_file) if @ssh_file && File.exist?(@ssh_file)
       @result['status'] = 1 if @result['status'].nil? || (@result['status'].is_a?(Hash) && @result['status'].empty?)
     end
   end
@@ -253,6 +266,7 @@ class FogProviderGoogle < Coopr::Plugin::Provider
       fields.each do |k, v|
         instance_variable_set('@' + k, v)
       end
+      write_p12_file
       # validate credentials
       validate!
       # delete server
@@ -309,6 +323,7 @@ class FogProviderGoogle < Coopr::Plugin::Provider
     else
       log.debug "Delete finished sucessfully: #{@result}"
     ensure
+      File.delete(@p12_file) if @p12_file && File.exist?(@p12_file)
       @result['status'] = 1 if @result['status'].nil? || (@result['status'].is_a?(Hash) && @result['status'].empty?)
     end
   end
@@ -316,13 +331,18 @@ class FogProviderGoogle < Coopr::Plugin::Provider
   def connection
     # Create connection
     # rubocop:disable UselessAssignment
-    p12_key = File.join(self.class.p12_key_dir, @api_key_resource)
+    p12 =
+      if @api_key_resource
+        File.join(self.class.p12_key_dir, @api_key_resource)
+      else
+        File.join(Dir.pwd, self.class.p12_key_dir, @task['taskId'])
+      end
     @connection ||= begin
       connection = Fog::Compute.new(
         provider: 'google',
         google_project: @google_project,
         google_client_email: @google_client_email,
-        google_key_location: p12_key
+        google_key_location: p12
       )
     end
     # rubocop:enable UselessAssignment
@@ -382,16 +402,31 @@ class FogProviderGoogle < Coopr::Plugin::Provider
     end
   end
 
+  def write_p12_file
+    # Write API credentials
+    unless @api_keyfile.nil?
+      @p12_file = File.join(Dir.pwd, self.class.p12_key_dir, @task['taskId'])
+      log.debug "Writing out @api_keyfile to #{@p12_file}"
+      decode_string_to_file(@api_keyfile, @p12_file)
+    end
+  end
+
   def validate!
     errors = []
     unless @google_client_email =~ /.*gserviceaccount.com$/
       errors << 'Invalid service account email address. It must be in the gserviceaccount.com domain'
     end
-    ssh_key = File.join(self.class.ssh_key_dir, @ssh_key_resource)
-    p12_key = File.join(self.class.p12_key_dir, @api_key_resource)
-    [ssh_key, p12_key].each do |key|
-      next if File.readable?(key)
-      errors << "Cannot read named key from resource directory: #{key}. Please ensure you have uploaded a key via the UI or API"
+    if @api_key_resource
+      ssh_key = File.join(self.class.ssh_key_dir, @ssh_key_resource)
+      p12_key = File.join(self.class.p12_key_dir, @api_key_resource)
+      [ssh_key, p12_key].each do |key|
+        next if File.readable?(key)
+        errors << "Cannot read named key from resource directory: #{key}. Please ensure you have uploaded a key via the UI or API"
+      end
+    else
+      unless File.readable?(@p12_file)
+        errors << "Cannot read key from file: #{@p12_file}. Please ensure you have submitted a key with your request"
+      end
     end
     fail 'Credential validation failed!' if errors.each { |e| log.error(e) }.any?
   end
