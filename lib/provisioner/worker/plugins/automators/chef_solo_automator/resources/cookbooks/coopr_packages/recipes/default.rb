@@ -25,3 +25,14 @@ pf = node['platform_family']
     end
   end
 end
+
+case pf
+when 'debian'
+  execute 'update-apt-packages' do
+    command 'apt-get update && apt-get upgrade -y && apt-get install -y unattended-upgrades'
+  end
+when 'rhel'
+  execute 'update-yum-packages' do
+    command 'yum makecache && yum upgrade -y'
+  end
+end

@@ -21,14 +21,8 @@
 case node['platform_family']
 when 'debian'
   include_recipe 'apt::default'
-  execute 'update-apt-packages' do
-    command 'apt-get update && apt-get upgrade -y && apt-get install -y unattended-upgrades'
-  end
 when 'rhel'
   include_recipe 'yum-epel::default' if node['base']['use_epel'].to_s == 'true'
-  execute 'update-yum-packages' do
-    command 'yum makecache && yum upgrade -y'
-  end
 end
 
 # We always run our dns, firewall, hosts, and packages cookbooks
