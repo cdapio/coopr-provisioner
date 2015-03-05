@@ -132,7 +132,7 @@ class FogProviderJoyent < Coopr::Plugin::Provider
       Net::SSH.start(bootstrap_ip, @task['config']['ssh-auth']['user'], @credentials) do |ssh|
         ssh_exec!(ssh, 'ping -c1 www.opscode.com', 'Validating external connectivity and DNS resolution via ping')
         ssh_exec!(ssh, "#{sudo} hostname #{@task['config']['hostname']}", 'Temporarily setting hostname')
-        # let us check and make sure firstboot is done running
+        # Check and make sure firstboot is done running
         beginning = Time.now
         ssh_exec!(ssh, 'cproc="smartdc/firstboot"; uproc="cloud-init"; for i in {1..240}; do if pgrep $cproc > /dev/null || pgrep $uproc > /dev/null; then sleep 1; else break; fi; done', 'Waiting until ${cproc} or ${uproc} are done running')
         log.debug "firstboot & cloud-init process check took #{Time.now - beginning} seconds"
@@ -172,19 +172,17 @@ class FogProviderJoyent < Coopr::Plugin::Provider
             data_mounted = true
           rescue
             log.debug 'Disk /dev/vdb is not mounted to /data'
-            log.debug "data_mounted = #{data_mounted}"
           end
           # If data_mounted = true, we're done
           unless data_mounted
             # disk isn't mounted at /data, could be mounted elsewhere (e.g. /mnt)
             begin
               # Are we mounted? # if we are, set unmount to true
+              unmount = false
               ssh_exec!(ssh, 'if mount | grep "^/dev/vdb " ; then echo "Disk /dev/vdb is mounted" ; else /bin/false ; fi', 'Confirm /dev/vdb is mounted')
               unmount = true
             rescue
-              mounted = false
               log.debug 'Disk /dev/vdb is not mounted'
-              unmount = false
             end
             if unmount
               begin
