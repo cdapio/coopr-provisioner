@@ -32,7 +32,7 @@ done
 # load data_bags
 cd ${DATA_BAGS_DIR}
 for d in $(ls -p -1 | grep "/$" | sed "s,/$,,") ; do
-  ${DATA_UPLOADER} --quiet --uri ${COOPR_SERVER_URI} --tenant ${COOPR_TENANT} \
+  ${COOPR_RUBY} ${DATA_UPLOADER} --quiet --uri ${COOPR_SERVER_URI} --tenant ${COOPR_TENANT} \
     --user ${COOPR_API_USER} stage ${d} automatortypes/chef-solo/data_bags/${d}
   ret=$?
   [[ ${ret} -ne 0 ]] && failed="${failed} ${d}"
@@ -42,7 +42,7 @@ done
 # load roles
 cd ${ROLES_DIR}
 for f in $(ls -1 {*.rb,*.json} 2>/dev/null) ; do
-  ${DATA_UPLOADER} --quiet --uri ${COOPR_SERVER_URI} --tenant ${COOPR_TENANT} \
+  ${COOPR_RUBY} ${DATA_UPLOADER} --quiet --uri ${COOPR_SERVER_URI} --tenant ${COOPR_TENANT} \
     --user ${COOPR_API_USER} stage ${f} automatortypes/chef-solo/roles/${f}
   ret=$?
   [[ ${ret} -ne 0 ]] && failed="${failed} ${f}"

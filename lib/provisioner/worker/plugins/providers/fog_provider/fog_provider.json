@@ -100,6 +100,12 @@
             "default": true,
             "tip": "Associate public IP (VPC only)"
           },
+          "provider_hostname": {
+            "label": "Set hostname to provider-generated public DNS hostname (overrides DNS suffix)",
+            "type": "checkbox",
+            "override": true,
+            "tip": "Set hostname to provider-generated public DNS hostname (overrides DNS suffix)"
+          },
           "availability_zone": {
             "label": "Availability Zone",
             "type": "text",
@@ -238,7 +244,7 @@
           "google_data_disk_size_gb": {
             "label": "Data disk size in GB",
             "type": "text",
-            "default": 10,
+            "default": 200,
             "override": true,
             "tip": "Size of the persistent data disk to be created and mounted"
           },
@@ -251,6 +257,8 @@
               "asia-east1-c",
               "europe-west1-a",
               "europe-west1-b",
+              "europe-west1-c",
+              "europe-west1-d",
               "us-central1-a",
               "us-central1-b",
               "us-central1-f"
@@ -258,6 +266,12 @@
             "default": "us-central1-a",
             "override": true,
             "tip": "Zone"
+          },
+          "provider_hostname": {
+            "label": "Set hostname to provider-specific public DNS hostname (overrides DNS suffix)",
+            "type": "checkbox",
+            "override": true,
+            "tip": "Set hostname to provider-specific public DNS hostname (overrides DNS suffix)"
           }
         },
         "required": [

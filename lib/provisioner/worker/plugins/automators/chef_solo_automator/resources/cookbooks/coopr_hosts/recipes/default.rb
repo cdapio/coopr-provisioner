@@ -17,20 +17,21 @@
 # limitations under the License.
 #
 
+# The hostsfile cookbook has a default level of 60 for IPv4 addresses...
+# see: https://github.com/customink-webops/hostsfile/blob/v2.4.2/libraries/entry.rb#L158
+START = 60
 node['coopr']['cluster']['nodes'].each do |n, v|
   short_host = v.hostname.split('.').first
-  next unless v.key?('ipaddresses') && v['ipaddresses'].key?('access_v4')
-  hostsfile_entry v['ipaddresses']['access_v4'] do
-    hostname v.hostname
-    aliases [ short_host ]
-    unique true
-    action :create
-  end
-  next unless v.key?('ipaddresses') && v['ipaddresses'].key?('bind_v4')
-  next if v['ipaddresses']['bind_v4'] == v['ipaddresses']['access_v4']
-  hostsfile_entry v['ipaddresses']['bind_v4'] do
-    hostname v.hostname
-    aliases [ short_host ]
-    action :create
+  arr = node['coopr_hosts']['address_types'] || []
+  arr.each do |addr|
+    next unless v.key?('ipaddresses') && v['ipaddresses'].key?(addr)
+    pri = START + (arr.length - arr.index(addr))
+    hostsfile_entry v['ipaddresses'][addr] do
+      hostname v.hostname
+      aliases [short_host]
+      unique true
+      priority pri
+      action :create
+    end
   end
 end

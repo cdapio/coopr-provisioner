@@ -1,9 +1,8 @@
 #
-# Author:: Seth Chisamore (<schisamo@chef.io>)
-# Cookbook Name:: windows
-# Resource:: reboot
+# Cookbook Name:: coopr_hosts
+# Attributes:: default
 #
-# Copyright:: 2011, Chef Software, Inc.
+# Copyright © 2013-2015 Cask Data, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -18,12 +17,5 @@
 # limitations under the License.
 #
 
-actions :request, :cancel
-
-attribute :timeout, :kind_of => Integer, :name_attribute => true
-attribute :reason, :kind_of => String, :default => ''
-
-def initialize(name,run_context=nil)
-  super
-  @action = :request
-end
+# Possible combinations: [], ['access_v4'], ['bind_v4'], ['access_v4','bind_v4'], ['bind_v4','access_v4']
+default['coopr_hosts']['address_types'] = ['bind_v4']

@@ -90,9 +90,9 @@ class FogProviderAWS < Coopr::Plugin::Provider
       domainname = @task['config']['hostname'].split('.').drop(1).join('.')
 
       hostname =
-        if !server.dns_name.nil? && domainname == 'local'
+        if !server.dns_name.nil? && @provider_hostname
           server.dns_name
-        elsif !server.public_ip_address.nil? && domainname == 'local'
+        elsif !server.public_ip_address.nil? && @provider_hostname
           Resolv.getname(server.public_ip_address)
         else
           @task['config']['hostname']
@@ -130,7 +130,7 @@ class FogProviderAWS < Coopr::Plugin::Provider
         'bind_v4' => bind_ip
       }
       @result['hostname'] = hostname
-      @result['ssh_host_keys'] = {
+      @result['result']['ssh_host_keys'] = {
         'rsa' => ssh_keyscan(bootstrap_ip)
       }
       # do we need sudo bash?
@@ -240,6 +240,13 @@ class FogProviderAWS < Coopr::Plugin::Provider
           ssh_exec!(ssh, "#{sudo} sed -i -e 's:/mnt:/data:' /etc/fstab", 'Updating /etc/fstab for /data')
         end
       end
+
+      # disable SELinux
+      Net::SSH.start(bootstrap_ip, @task['config']['ssh-auth']['user'], @credentials) do |ssh|
+        cmd = "if test -x /usr/sbin/sestatus ; then #{sudo} /usr/sbin/sestatus | grep disabled || ( test -x /usr/sbin/setenforce && #{sudo} /usr/sbin/setenforce Permissive ) ; fi"
+        ssh_exec!(ssh, cmd, 'Disabling SELinux')
+      end
+
       # Return 0
       @result['status'] = 0
     rescue Fog::Errors::TimeoutError
