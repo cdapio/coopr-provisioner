@@ -1,9 +1,9 @@
 name              'build-essential'
 maintainer        'Chef Software, Inc.'
-maintainer_email  'cookbooks@getchef.com'
+maintainer_email  'cookbooks@chef.io'
 license           'Apache 2.0'
 description       'Installs C compiler / build tools'
-version           '2.1.3'
+version           '2.2.0'
 recipe            'build-essential', 'Installs packages required for compiling C software from source.'
 
 supports 'amazon'
@@ -21,3 +21,9 @@ supports 'suse'
 supports 'ubuntu'
 
 suggests 'pkgutil' # Solaris 2
+
+attribute 'build-essential/compile_time',
+  display_name: 'Build Essential Compile Time Execution',
+  description: 'Execute resources at compile time.',
+  default: 'false',
+  recipes: ['build-essential::default']
