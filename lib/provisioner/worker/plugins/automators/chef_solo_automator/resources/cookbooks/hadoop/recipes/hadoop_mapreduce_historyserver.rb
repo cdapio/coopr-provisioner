@@ -37,6 +37,45 @@ ruby_block "package-#{pkg}" do
   end
 end
 
+am_staging_dir =
+  if node['hadoop'].key?('mapred_site') && node['hadoop']['mapred_site'].key?('yarn.app.mapreduce.am.staging-dir')
+    node['hadoop']['mapred_site']['yarn.app.mapreduce.am.staging-dir']
+  else
+    '/tmp/hadoop-yarn/staging'
+  end
+
+jhs_intermediate_done_dir =
+  if node['hadoop'].key?('mapred_site') && node['hadoop']['mapred_site'].key?('mapreduce.jobhistory.intermediate-done-dir')
+    node['hadoop']['mapred_site']['mapreduce.jobhistory.intermediate-done-dir']
+  else
+    "#{am_staging_dir}/history/done_intermediate"
+  end
+
+jhs_done_dir =
+  if node['hadoop'].key?('mapred_site') && node['hadoop']['mapred_site'].key?('mapreduce.jobhistory.done-dir')
+    node['hadoop']['mapred_site']['mapreduce.jobhistory.done-dir']
+  else
+    "#{am_staging_dir}/history/done"
+  end
+
+execute 'mapreduce-jobhistory-intermediate-done-dir' do
+  command "hdfs dfs -mkdir -p #{jhs_intermediate_done_dir} && hdfs dfs -chown mapred:hadoop #{jhs_intermediate_done_dir} && hdfs dfs -chmod 1777 #{jhs_intermediate_done_dir}"
+  timeout 300
+  user 'hdfs'
+  group 'hdfs'
+  not_if "hdfs dfs -test -d #{jhs_intermediate_done_dir}", :user => 'hdfs'
+  action :nothing
+end
+
+execute 'mapreduce-jobhistory-done-dir' do
+  command "hdfs dfs -mkdir -p #{jhs_done_dir} && hdfs dfs -chown mapred:hadoop #{jhs_done_dir} && hdfs dfs -chmod 1777 #{jhs_done_dir}"
+  timeout 300
+  user 'hdfs'
+  group 'hdfs'
+  not_if "hdfs dfs -test -d #{jhs_intermediate_done_dir}", :user => 'hdfs'
+  action :nothing
+end
+
 service pkg do
   status_command "service #{pkg} status"
   supports [:restart => true, :reload => false, :status => true]
