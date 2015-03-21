@@ -199,7 +199,7 @@ class ShellAutomator < Coopr::Plugin::Automator
     begin
       Net::SSH.start(ipaddress, sshauth['user'], @credentials) do |ssh|
         ssh_exec!(ssh, "#{sudo} mkdir -p #{@remote_cache_dir}", "Creating remote cache dir")
-        ssh_exec!(ssh,"#{sudo} chmod a+x #{remote_coopr_dir}","Granting execute permissions on #{remote_coopr_dir}")
+        ssh_exec!(ssh,"#{sudo} chmod a+x #{@remote_coopr_dir}","Granting execute permissions on #{@remote_coopr_dir}")
         ssh_exec!(ssh, "#{sudo} chown -R #{sshauth['user']} #{@remote_cache_dir}", "Changing cache dir owner to #{sshauth['user']}")
       end
     rescue Net::SSH::AuthenticationFailed
