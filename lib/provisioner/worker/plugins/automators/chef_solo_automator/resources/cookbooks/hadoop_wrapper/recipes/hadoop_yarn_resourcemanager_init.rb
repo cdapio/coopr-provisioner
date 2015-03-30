@@ -32,12 +32,10 @@ ruby_block 'initaction-create-yarn-remote-app-log-dir' do
   block do
     resources('execute[yarn-remote-app-log-dir]').run_action(:run)
   end
-  not_if "hdfs dfs -ls #{dfs}#{node['hadoop']['yarn_site']['yarn.nodemanager.remote-app-log-dir']}", :user => 'hdfs'
 end
 
 ruby_block 'initaction-create-yarn-app-mapreduce-am-staging-dir' do
   block do
     resources('execute[yarn-app-mapreduce-am-staging-dir]').run_action(:run)
   end
-  not_if "hdfs dfs -ls #{dfs}#{node['hadoop']['mapred_site']['yarn.app.mapreduce.am.staging-dir']}", :user => 'hdfs'
 end

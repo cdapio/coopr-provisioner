@@ -2,7 +2,7 @@
 # Cookbook Name:: hadoop_wrapper
 # Recipe:: hive_metastore_init
 #
-# Copyright © 2013 Cask Data, Inc.
+# Copyright © 2013-2015 Cask Data, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -21,13 +21,10 @@ include_recipe 'hadoop_wrapper::default'
 include_recipe 'hadoop::default'
 include_recipe 'hadoop::hive_metastore'
 
-dfs = node['hadoop']['core_site']['fs.defaultFS']
-
 ruby_block 'initaction-create-hive-hdfs-warehousedir' do
   block do
     resources('execute[hive-hdfs-warehousedir]').run_action(:run)
   end
-  not_if "hdfs dfs -test -d #{dfs}/#{node['hive']['hive_site']['hive.metastore.warehouse.dir']}", :user => 'hdfs'
 end
 
 scratch_dir =
@@ -42,6 +39,5 @@ unless scratch_dir == '/tmp/hive-${user.name}'
     block do
       resources('execute[hive-hdfs-scratchdir]').run_action(:run)
     end
-    not_if "hdfs dfs -test -d #{dfs}/#{node['hive']['hive_site']['hive.exec.scratchdir']}", :user => 'hdfs'
   end
 end
