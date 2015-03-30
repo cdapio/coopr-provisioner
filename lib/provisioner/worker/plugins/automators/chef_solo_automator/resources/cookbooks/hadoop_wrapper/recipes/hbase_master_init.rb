@@ -26,7 +26,6 @@ if node['hbase']['hbase_site']['hbase.rootdir'] =~ %r{^/|^hdfs://} && node['hbas
     block do
       resources('execute[hbase-hdfs-rootdir]').run_action(:run)
     end
-    not_if "hdfs dfs -test -d #{node['hbase']['hbase_site']['hbase.rootdir']}", :user => 'hdfs'
   end
 end
 
@@ -35,6 +34,5 @@ if node['hbase']['hbase_site'].key?('hbase.bulkload.staging.dir')
     block do
       resources('execute[hbase-bulkload-stagingdir]').run_action(:run)
     end
-    not_if "hdfs dfs -test -d #{node['hbase']['hbase_site']['hbase.bulkload.staging.dir']}", :user => 'hdfs'
   end
 end
