@@ -1,6 +1,7 @@
 #
-# Author:: Sander van Zoest (<svanzoest@onehealth.com>)
+# Author:: Sander van Zoest (<sander.vanzoest@viverae.com>)
 # Copyright:: Copyright (c) 2014 OneHealth Solutions, Inc.
+# Copyright:: Copyright (c) 2014 Viverae, Inc.
 # License:: Apache License, Version 2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -52,12 +53,13 @@ Ohai.plugin(:Sysctl) do
     sys Mash.new
   end
 
-# :aix, :darwin, :freebsd, :hpux, :linux, :openbsd, :netbsd, :solaris2, :windows
-#  or any other value from RbConfig::CONFIG['host_os']
+  # :aix, :darwin, :freebsd, :hpux, :linux, :openbsd, :netbsd, :solaris2, :windows
+  #  or any other value from RbConfig::CONFIG['host_os']
 
   collect_data(:linux) do
     sys Mash.new
-    get_sysctls
+    # this is for the benefit of CentOS 5.10 as sysctl is not in it's path
+    get_sysctls 'sysctl -A || /sbin/sysctl -A'
   end
 
   collect_data(:darwin) do

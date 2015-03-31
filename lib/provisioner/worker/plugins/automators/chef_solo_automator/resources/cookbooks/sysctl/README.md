@@ -1,4 +1,7 @@
-# sysctl [![Build Status](https://travis-ci.org/onehealth-cookbooks/sysctl.png?branch=master)](https://travis-ci.org/onehealth-cookbooks/sysctl)
+sysctl cookbook
+===============
+[![Build Status](https://travis-ci.org/viverae-cookbooks/sysctl.png?branch=master)](https://travis-ci.org/viverae-cookbooks/sysctl)
+[![Gitter](https://badges.gitter.im/Join Chat.svg)](https://gitter.im/viverae-cookbooks/sysctl?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 Description
 ===========
@@ -17,7 +20,7 @@ Platforms
 Usage
 =======
 
-There are two main ways to interact with the cookbook. This is via chef [attributes](http://docs.opscode.com/essentials_cookbook_attribute_files.html) or via the provided [LWRP](http://docs.opscode.com/lwrp.html).
+There are two main ways to interact with the cookbook. This is via chef [attributes](http://docs.chef.io/attributes.html) or via the provided [LWRP](http://docs.chef.io/lwrp.html).
 
 # Cookbook Attributes
 
@@ -51,6 +54,8 @@ Set vm.swapiness to 20 via attributes
 
 The `sysctl_param` LWRP can be called from wrapper and application cookbooks to immediately set the kernel parameter and cue the kernel parameter to be written out to the configuration file.
 
+This also requires that your run_list include the `sysctl::default` recipe in order to persist the settings.
+
 ### sysctl_param
 
 Actions
@@ -69,6 +74,8 @@ Attributes
 Set vm.swapiness to 20 via sysctl_param LWRP
 
 ```` ruby
+    include_recipe 'sysctl::default'
+
     sysctl_param 'vm.swappiness' do
       value 20
     end
@@ -120,7 +127,7 @@ bundle exec kitchen test default-ubuntu-1404
 bundle exec kitchen test default-centos-65
 ```
 
-The above will do ruby style ([rubocop](https://github.com/bbatsov/rubocop)) and cookbook style ([foodcritic](http://www.foodcritic.io/)) checks followed rspec unit tests ensuring proper cookbook operation.Integration tests will be run next on two separate linux platforms (Ubuntu 14.04 LTS Precise 64-bit and CentOS 6.5). Please run the tests on any pull requests that you are about to submit and write tests for defects or new features to ensure backwards compatibility and a stable cookbook that we can all rely upon.
+The above will do ruby style ([rubocop](https://github.com/bbatsov/rubocop)) and cookbook style ([foodcritic](http://www.foodcritic.io/)) checks followed by rspec unit tests ensuring proper cookbook operation. Integration tests will be run next on two separate linux platforms (Ubuntu 14.04 LTS Precise 64-bit and CentOS 6.5). Please run the tests on any pull requests that you are about to submit and write tests for defects or new features to ensure backwards compatibility and a stable cookbook that we can all rely upon.
 
 ## Running tests continuously with guard
 
@@ -148,3 +155,4 @@ There are a lot of different documents that talk about system control parameters
 * [Tuning TCP For The Web at Velocity 2013 (video)](http://vimeo.com/70369211), [slides](http://cdn.oreillystatic.com/en/assets/1/event/94/Tuning%20TCP%20For%20The%20Web%20Presentation.pdf)
 * [Adventures in Linux TCP Tuning (Nov 2013)](http://thesimplecomputer.info/adventures-in-linux-tcp-tuning-page2/)
 * [Part 1: Lessons learned tuning TCP and Nginx in EC2 (Jan 2014)](http://engineering.chartbeat.com/2014/01/02/part-1-lessons-learned-tuning-tcp-and-nginx-in-ec2/)
+* [How to harden a new server with Chef](http://lollyrock.com/articles/how-to-harden-a-new-server/) about the [TelekomLabs Hardening Framework](http://telekomlabs.github.io/) (May 2014)

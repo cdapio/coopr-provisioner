@@ -20,10 +20,21 @@
 template '/etc/rc.d/init.d/procps' do
   source 'procps.init-rhel.erb'
   mode '0755'
-  only_if { platform_family?('rhel', 'pld') }
+  only_if { platform_family?('rhel', 'fedora', 'pld') }
 end
 
 service 'procps' do
   supports :restart => true, :reload => true, :status => false
+  case node['platform']
+  when 'freebsd'
+    service_name 'sysctl'
+  when 'arch', 'exherbo'
+    service_name 'systemd-sysctl'
+    provider Chef::Provider::Service::Systemd
+  when 'ubuntu'
+    if node['platform_version'].to_f >= 9.10
+      provider Chef::Provider::Service::Upstart
+    end
+  end
   action :enable
 end
