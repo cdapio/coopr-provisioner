@@ -2,7 +2,7 @@
 # Cookbook Name:: apt
 # Provider:: repository
 #
-# Copyright 2010-2011, Opscode, Inc.
+# Copyright 2010-2011, Chef Software, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -42,7 +42,7 @@ end
 
 # run command and extract gpg ids
 def extract_fingerprints_from_cmd(cmd)
-  so = Mixlib::ShellOut.new(cmd)
+  so = Mixlib::ShellOut.new(cmd, env: { 'LANG' => 'en_US' })
   so.run_command
   so.stdout.split(/\n/).map do |t|
     if z = t.match(/^ +Key fingerprint = ([0-9A-F ]+)/)
@@ -104,7 +104,7 @@ def get_ppa_key(ppa_owner, ppa_repo)
   default_keyserver = 'keyserver.ubuntu.com'
 
   require 'open-uri'
-  api_query = sprintf("#{launchpad_ppa_api}/signing_key_fingerprint", ppa_owner, ppa_repo)
+  api_query = format("#{launchpad_ppa_api}/signing_key_fingerprint", ppa_owner, ppa_repo)
   begin
     key_id = open(api_query).read.delete('"')
   rescue OpenURI::HTTPError => e
@@ -133,7 +133,7 @@ def get_ppa_url(ppa)
 
   get_ppa_key(ppa_owner, ppa_repo)
 
-  sprintf(repo_schema, ppa_owner, ppa_repo)
+  format(repo_schema, ppa_owner, ppa_repo)
 end
 
 action :add do
@@ -194,7 +194,7 @@ action :add do
 end
 
 action :remove do
-  if ::File.exists?("/etc/apt/sources.list.d/#{new_resource.name}.list")
+  if ::File.exist?("/etc/apt/sources.list.d/#{new_resource.name}.list")
     Chef::Log.info "Removing #{new_resource.name} repository from /etc/apt/sources.list.d/"
     file "/etc/apt/sources.list.d/#{new_resource.name}.list" do
       action :delete
