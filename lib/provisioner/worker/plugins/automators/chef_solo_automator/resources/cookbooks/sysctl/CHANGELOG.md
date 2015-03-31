@@ -1,18 +1,24 @@
 Sysctl
 ======
 
+v0.6.2 (2014-12-06)
+-------------------
+* Fix rubocop error and packaging error
+
+v0.6.1 (2014-12-06)
+-------------------
+* [GH-14] Update to chefspec 4.1 , rubocop 27, foodcritic 4
+          Update matchers.rb for deprecated chefspec method.
+* [GH-13] OneHealth was acquired by Viverae, update Gitter
+* [GH-12] Update documentation to reflect inclusion of default recipe for LWRP
+* Added initial FreeBSD support
+* [GH-7] Added systemd based distros support
+
 v0.6.0 (2014-05-19)
 -------------------
 
 * Rename `sysctl::persist` to `sysctl::apply` to more clearly reflect usage
 * [GH-5] Improve immediate setting of attribute parameters during `sysctl::apply` run
-
-
-v0.5.7 
-------
-
-* [GH-5] Fix immediate application of sysctl.params attributes using the `sysctl::apply` recipe.
-* Rename `sysctl::persist` to `sysctl::apply`
 
 v0.5.6 (2014-05-16)
 -------------------
