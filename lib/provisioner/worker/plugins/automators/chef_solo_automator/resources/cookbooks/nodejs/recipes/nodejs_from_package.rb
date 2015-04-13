@@ -20,6 +20,8 @@
 # limitations under the License.
 #
 
+node.force_override['nodejs']['install_method'] = 'package' # ~FC019
+
 include_recipe 'nodejs::repo' if node['nodejs']['install_repo']
 
 unless node['nodejs']['packages']
