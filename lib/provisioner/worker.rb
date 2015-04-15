@@ -218,9 +218,9 @@ module Coopr
 
         # While provisioning, don't allow the provisioner to terminate by disabling signal
         sigterm = Coopr::Worker::SignalHandler.new('TERM')
-        sigterm.dont_interupt {
+        sigterm.dont_interupt do
           result = delegate_task(task)
-        }
+        end
       rescue => e
         log.error "Caught exception when running task from file #{@file}"
 
@@ -244,7 +244,7 @@ module Coopr
       server_uri = @config.get(PROVISIONER_SERVER_URI)
       poll_error_interval = @config.get(PROVISIONER_WORKER_POLL_ERROR_INTERVAL).to_i || 10
       postdata = { 'provisionerId' => @provisioner_id, 'workerId' => @worker_id, 'tenantId' => @tenant }.to_json
-      loop {
+      loop do
         begin
           response = Coopr::RestHelper.post "#{server_uri}/v2/tasks/take", postdata
           break response
@@ -252,14 +252,14 @@ module Coopr
           log.error "Unable to connect to Coopr Server #{server_uri}/v2/tasks/take: #{e}"
           sleep poll_error_interval
         end
-      }
+      end
     end
 
     # Poll Coopr Server for a task, retries until a task is successfully retrieved
     def _poll_server_and_retrieve_task
       poll_interval = @config.get(PROVISIONER_WORKER_POLL_INTERVAL).to_i || 1
       poll_error_interval = @config.get(PROVISIONER_WORKER_POLL_ERROR_INTERVAL).to_i || 10
-      loop {
+      loop do
         begin
           response = _poll_server
           if response.code == 200 && response.to_str && response.to_str != ''
@@ -276,7 +276,7 @@ module Coopr
           log.error "Caught exception processing response from coopr server: #{e.inspect}"
         end
         sleep poll_error_interval
-      }
+      end
     end
 
     # Run in continuous server polling mode
@@ -289,7 +289,7 @@ module Coopr
 
       log.info "Starting worker with id #{@worker_id}, connecting to server #{@config.get(PROVISIONER_SERVER_URI)}"
 
-      loop {
+      loop do
         result = nil
 
         # Poll Coopr Server until a task is retrieved
@@ -297,7 +297,7 @@ module Coopr
 
         # While running task, trap and queue TERM signal to prevent shutdown until task is complete
         sigterm = Coopr::Worker::SignalHandler.new('TERM')
-        sigterm.dont_interupt {
+        sigterm.dont_interupt do
           begin
             result = delegate_task(task)
 
@@ -336,11 +336,11 @@ module Coopr
               log.error "Caught exception posting back to server #{server_uri}/v2/tasks/finish: #{e}"
             end
           end
-        }
+        end
 
         break if @once
         sleep 5
-      }
+      end
     end
   end
 end

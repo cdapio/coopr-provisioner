@@ -72,8 +72,7 @@ module Coopr
 
     # define two ResourceSpecs as equal if @resources hash has same contents
     def ==(other)
-      @resources == other.resources && @resource_formats == other.resource_formats \
-                    && @resource_permissions == other.resource_permissions
+      @resources == other.resources && @resource_formats == other.resource_formats \ && @resource_permissions == other.resource_permissions
     end
   end
 end
