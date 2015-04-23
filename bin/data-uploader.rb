@@ -271,7 +271,7 @@ module Coopr
         Gem::Package::TarWriter.new(tarfile) do |tar|
           Dir[path, File.join(path_dir, "#{path_base}/**/*")].each do |file|
             mode = File.stat(file).mode
-            relative_file = file.sub(/^#{Regexp.escape path_dir}\/?/, '')
+            relative_file = file.sub(%r{^#{Regexp.escape path_dir}/?}, '')
 
             if File.directory?(file)
               tar.mkdir relative_file, mode

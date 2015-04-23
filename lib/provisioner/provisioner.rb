@@ -130,7 +130,7 @@ module Coopr
     end
 
     def spawn_sinatra_thread
-      @sinatra_thread = Thread.new {
+      @sinatra_thread = Thread.new do
         # set reference to provisioner
         Api.set :provisioner, self
         # set bind settings
@@ -140,7 +140,7 @@ module Coopr
         Api.set :port, bind_port
         # let sinatra take over from here
         Api.run!
-      }
+      end
 
     end
 
@@ -154,9 +154,9 @@ module Coopr
     end
 
     def spawn_signal_thread
-      @signal_thread = Thread.new {
+      @signal_thread = Thread.new do
         log.info "started signal processing thread"
-        loop {
+        loop do
           log.debug "reaping #{@signals.size} signals: #{@signals}" unless @signals.empty?
           signals_processed = {}
           unless @signals.empty?
@@ -183,14 +183,14 @@ module Coopr
             signals_processed[sig] = true
           end
           sleep 1
-        }
-      }
+        end
+      end
     end
 
     def spawn_heartbeat_thread
-      @heartbeat_thread = Thread.new {
+      @heartbeat_thread = Thread.new do
         log.info "starting heartbeat thread"
-        loop {
+        loop do
           register_with_server unless @registered
           uri = "#{@server_uri}/v2/provisioners/#{provisioner_id}/heartbeat"
           begin
@@ -208,14 +208,14 @@ module Coopr
             log.error "Caught exception sending heartbeat to coopr server #{uri}: #{e.message}"
           end
           sleep 10
-        }
-      }
+        end
+      end
     end
 
     def spawn_resource_thread
-      @resource_thread = Thread.new {
+      @resource_thread = Thread.new do
         log.info "starting resource thread"
-        loop {
+        loop do
           @tenantmanagers.each do |id, tmgr|
             if tmgr.resource_sync_needed? && tmgr.num_workers == 0
               # handle stacked sync calls, last one wins
@@ -228,8 +228,8 @@ module Coopr
             end
           end
           sleep 1
-        }
-      }
+        end
+      end
     end
 
     def register_with_server
