@@ -319,7 +319,8 @@ begin
     ldr.sync
   end
 rescue ArgumentError => e
-  puts op # prints usage
+  puts "Argument Error: #{e.message}"
+  puts "run with  -h or --help to get usage help"
   exit 1
 rescue => e
   puts "Error: #{e.message} #{e.backtrace}"
