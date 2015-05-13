@@ -153,7 +153,13 @@ module Coopr
         uri = %W( #{@options[:uri]} v2/plugins #{@options[:plugin_type]} #{@options[:plugin_name]}).join('/')
         resp = Coopr::RestHelper.get(uri, @headers)
         if resp.code == 200
-          resp_plugin = JSON.parse(resp.to_str)
+          begin
+            resp_plugin = JSON.parse(resp.to_str)
+          rescue JSON::ParserError => e
+            fail "Error parsing response from server #{@options[:uri]}: #{e.class}. " \
+                 "content-type #{resp.headers[:content_type]}\n" \
+                 "Are you connecting to the right server:port?\n"
+          end
           if resp_plugin.key?('resourceTypes') && resp_plugin['resourceTypes'].key?(@options[:resource_type])
             resp_resource = resp_plugin['resourceTypes'][@options[:resource_type]]
             if resp_resource.key?('format')
