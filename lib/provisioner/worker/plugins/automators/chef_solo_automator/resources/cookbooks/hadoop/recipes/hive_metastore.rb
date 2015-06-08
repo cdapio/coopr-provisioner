@@ -21,20 +21,22 @@ include_recipe 'hadoop::hive'
 include_recipe 'hadoop::_system_tuning'
 pkg = 'hive-metastore'
 
-package pkg do
-  action :nothing
-end
+hive_sql =
+  if node['hive'].key?('hive_site') && node['hive']['hive_site'].key?('javax.jdo.option.ConnectionURL')
+    node['hive']['hive_site']['javax.jdo.option.ConnectionURL'].split(':')[1]
+  else
+    'derby'
+  end
 
-# Hack to prevent auto-start of services, see COOK-26
-ruby_block "package-#{pkg}" do
-  block do
-    begin
-      Chef::Resource::RubyBlock.send(:include, Hadoop::Helpers)
-      policy_rcd('disable') if node['platform_family'] == 'debian'
-      resources("package[#{pkg}]").run_action(:install)
-    ensure
-      policy_rcd('enable') if node['platform_family'] == 'debian'
-    end
+node.default['hadoop']['sql_connector'] = hive_sql
+include_recipe 'hadoop::_sql_connectors'
+
+java_share_dir = '/usr/share/java'
+jars = node['hadoop']['sql_jars']
+
+jars.each do |jar|
+  link "#{hadoop_lib_dir}/hive/lib/#{jar}.jar" do
+    to "#{java_share_dir}/#{jar}.jar"
   end
 end
 
@@ -77,13 +79,47 @@ execute 'hive-hdfs-warehousedir' do
   action :nothing
 end
 
-template "/etc/init.d/#{pkg}" do
-  source "#{pkg}.erb"
+hive_log_dir =
+  if node['hive'].key?('hive_env') && node['hive']['hive_env'].key?('hive_log_dir')
+    node['hive']['hive_env']['hive_log_dir']
+  else
+    '/var/log/hive'
+  end
+
+# Create /etc/default configuration
+template "/etc/default/#{pkg}" do
+  source 'generic-env.sh.erb'
   mode '0755'
   owner 'root'
   group 'root'
   action :create
-  only_if { node['hadoop']['distribution'] == 'hdp' }
+  variables :options => {
+    'hive_home' => "#{hadoop_lib_dir}/hive",
+    'hive_pid_dir' => '/var/run/hive',
+    'hive_log_dir' => hive_log_dir,
+    'hive_ident_string' => 'hive',
+    'hive_conf_dir' => '/etc/hive/conf'
+  }
+end
+
+template "/etc/init.d/#{pkg}" do
+  source 'hadoop-init.erb'
+  mode '0755'
+  owner 'root'
+  group 'root'
+  action :create
+  variables :options => {
+    'desc' => 'Hive MetaStore',
+    'name' => pkg,
+    'process' => 'java',
+    'binary' => "#{hadoop_lib_dir}/hive/bin/hive",
+    'args' => '--config ${CONF_DIR} --service metastore > ${LOG_FILE} 2>&1 < /dev/null & "\'echo $! \'"> ${PID_FILE}',
+    'confdir' => '${HIVE_CONF_DIR}',
+    'user' => 'hive',
+    'home' => "#{hadoop_lib_dir}/hive",
+    'pidfile' => "${HIVE_PID_DIR}/#{pkg}.pid",
+    'logfile' => "${HIVE_LOG_DIR}/#{pkg}.log"
+  }
 end
 
 service pkg do

@@ -1,6 +1,6 @@
 #
 # Cookbook Name:: hadoop
-# Recipe:: flume_agent
+# Recipe:: _compression_libs
 #
 # Copyright © 2013-2015 Cask Data, Inc.
 #
@@ -17,32 +17,30 @@
 # limitations under the License.
 #
 
-include_recipe 'hadoop::flume'
+include_recipe 'hadoop::repo'
 
-pkg =
-  if node['hadoop']['distribution'] == 'cdh'
-    'flume-ng-agent'
-  else
-    'flume-agent'
-  end
+pkgs = []
 
-package pkg do
-  action :nothing
+# Everybody gets snappy
+case node['platform_family']
+when 'debian'
+  pkgs += ['libsnappy1', 'libsnappy-dev']
+when 'rhel'
+  pkgs += ['snappy', 'snappy-devel']
 end
 
-# Hack to prevent auto-start of services, see COOK-26
-ruby_block "package-#{pkg}" do
-  block do
-    begin
-      policy_rcd('disable') if node['platform_family'] == 'debian'
-      resources("package[#{pkg}]").run_action(:install)
-    ensure
-      policy_rcd('enable') if node['platform_family'] == 'debian'
-    end
+# HDP 2.2+ has lzo
+if node['hadoop']['distribution'] == 'hdp' && node['hadoop']['distribution_version'].to_f >= 2.2
+  case node['platform_family']
+  when 'debian'
+    pkgs += ['liblzo2-2', 'liblzo2-dev', 'hadooplzo']
+  when 'rhel'
+    pkgs += ['lzo', 'lzo-devel', 'hadooplzo', 'hadooplzo-native']
   end
 end
 
-service 'flume-agent' do
-  supports [:restart => true, :reload => false, :status => true]
-  action :nothing
+pkgs.each do |pkg|
+  package pkg do
+    action :install
+  end
 end
