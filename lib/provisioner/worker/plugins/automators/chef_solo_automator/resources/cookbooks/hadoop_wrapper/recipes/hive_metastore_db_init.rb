@@ -36,7 +36,7 @@ if node['hive'].key?('hive_site') && node['hive']['hive_site'].key?('javax.jdo.o
     if node['hive'].key?('hive_site') && node['hive']['hive_site'].key?('javax.jdo.option.ConnectionPassword')
       node['hive']['hive_site']['javax.jdo.option.ConnectionPassword']
     end
-  sql_dir = '/usr/lib/hive/scripts/metastore/upgrade'
+  sql_dir = "#{hadoop_lib_dir}/hive/scripts/metastore/upgrade"
 
   case db_type
   when 'mysql'
