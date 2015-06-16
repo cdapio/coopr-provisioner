@@ -17,7 +17,7 @@
 # limitations under the License.
 #
 
-require 'rest_client'
+require 'rest-client'
 require 'openssl'
 
 module Coopr

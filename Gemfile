@@ -25,9 +25,10 @@ group :dependencies do
   gem 'logger'
   gem 'mime-types', '< 3.0'
   gem 'net-scp'
-  gem 'rest_client', '~> 1.7'
-  gem 'sinatra', '~> 1.4'
-  gem 'thin', '~> 1.6'
+  gem 'rest-client', '~> 1.7'
+  gem 'sinatra', "~> 1.4"
+  gem 'thin', "~> 1.6"
+  gem "deep_merge", '~> 1.0', :require => 'deep_merge/rails_compat'
 end
 
 group :test do

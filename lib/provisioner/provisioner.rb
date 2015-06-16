@@ -22,7 +22,7 @@ gem 'json', '~> 1.7.7' # activesupport
 require 'thin'
 require 'sinatra/base'
 require 'json'
-require 'rest_client'
+require 'rest-client'
 require 'socket'
 require 'resolv'
 

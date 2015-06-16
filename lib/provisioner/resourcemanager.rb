@@ -20,7 +20,7 @@
 require_relative 'logging'
 
 require 'pathname'
-require 'rest_client'
+require 'rest-client'
 require 'tmpdir'
 require 'fileutils'
 require 'rubygems/package'

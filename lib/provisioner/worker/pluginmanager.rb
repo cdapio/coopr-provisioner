@@ -17,7 +17,7 @@
 #
 
 require 'json'
-require 'rest_client'
+require 'rest-client'
 require_relative '../plugin/automator'
 require_relative '../plugin/provider'
 require_relative 'signalhandler'
