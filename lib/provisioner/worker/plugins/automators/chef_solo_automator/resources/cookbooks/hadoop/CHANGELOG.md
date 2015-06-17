@@ -1,6 +1,16 @@
 hadoop CHANGELOG
 ===============
 
+v2.0.2 (Jun 12, 2015)
+---------------------
+- Don't make /etc/default files executable ( Issue: #201 )
+- Remove Vagrantfile ( Issue: #202 )
+- Fix Ubuntu init ( Issue: #203 )
+
+v2.0.1 (Jun 9, 2015)
+--------------------
+- Supply /etc/default/hbase for hbase binary ( Issue: #200 )
+
 v2.0.0 (Jun 8, 2015)
 --------------------
 - Transparent Hugepages are not universally available, per @jdecello and @taverentech ( Issue: #156 )
