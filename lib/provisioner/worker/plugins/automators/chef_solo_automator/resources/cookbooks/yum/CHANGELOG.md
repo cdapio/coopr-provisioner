@@ -2,6 +2,18 @@ yum Cookbook CHANGELOG
 ======================
 This file is used to list changes made in each version of the yum cookbook.
 
+v3.6.3 (2015-07-13)
+-------------------
+- Normalizing sslverify option rendering behavior
+- Setting default value on the resource to nil
+- Explictly setting string to render in template if value is supplied
+- Behavior should default to "True", per man page
+
+v3.6.2 (2015-07-13)
+-------------------
+- Adding -y to makecache, to import key when repo_gpgcheck = true.
+- Accepting Integer value for max_retries
+
 v3.6.1 (2015-06-04)
 -------------------
 - Executing yum clean before makecache
