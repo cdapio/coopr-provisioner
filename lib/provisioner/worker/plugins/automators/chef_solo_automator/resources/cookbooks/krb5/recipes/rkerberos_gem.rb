@@ -2,7 +2,7 @@
 # Cookbook Name:: krb5
 # Recipe:: rkerberos_gem
 #
-# Copyright © 2014 Cask Data, Inc.
+# Copyright © 2014-2015 Cask Data, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,14 +17,17 @@
 # limitations under the License.
 #
 
+include_recipe 'build-essential'
+
 node['krb5']['devel']['packages'].each do |pkg|
   package pkg do
     action :nothing
   end.run_action(:install)
 end
 
-chef_gem 'rkerberos' do
+chef_gem 'rkerberos' do # ~FC009
   action :install
+  compile_time true if respond_to?(:compile_time)
 end
 
 require 'rkerberos' unless defined?(ChefSpec)
