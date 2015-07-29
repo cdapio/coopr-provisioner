@@ -1,8 +1,8 @@
 #
 # Cookbook Name:: cdap
-# Recipe:: security
+# Attribute:: default
 #
-# Copyright © 2013-2014 Cask Data, Inc.
+# Copyright © 2013-2015 Cask Data, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,24 +17,8 @@
 # limitations under the License.
 #
 
-include_recipe 'java::default'
-include_recipe 'cdap::repo'
+# Install Java and Hadoop clients by default
+default['cdap']['skip_prerequisites'] = false
 
-package 'cdap-security' do
-  action :install
-  version node['cdap']['version']
-end
-
-template '/etc/init.d/cdap-auth-server' do
-  source 'cdap-service.erb'
-  mode 0755
-  owner 'root'
-  group 'root'
-  action :create
-  variables node['cdap']['security']
-end
-
-service 'cdap-auth-server' do
-  status_command 'service cdap-auth-server status'
-  action node['cdap']['security']['init_actions']
-end
+# User to run hadoop fs commands as
+default['cdap']['fs_superuser'] = 'hdfs'
