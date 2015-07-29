@@ -1,6 +1,6 @@
 {
   "name": "homebrew",
-  "version": "1.12.0",
+  "version": "1.13.0",
   "description": "Install Homebrew, and use it as the OS X package provider on Chef versions =< 11",
   "long_description": "",
   "maintainer": "Chef Software, Inc.",
