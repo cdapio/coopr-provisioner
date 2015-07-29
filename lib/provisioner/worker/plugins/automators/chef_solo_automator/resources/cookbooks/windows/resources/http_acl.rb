@@ -1,9 +1,9 @@
 #
-# Author:: Doug MacEachern <dougm@vmware.com>
+# Author:: Richard Lavey (richard.lavey@calastone.com)
 # Cookbook Name:: windows
-# Resource:: shortcut
+# Resource:: http_acl
 #
-# Copyright:: 2010, VMware, Inc.
+# Copyright:: 2015, Calastone Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -18,19 +18,10 @@
 # limitations under the License.
 #
 
-actions :create
-
+actions :create, :delete
 default_action :create
 
-attribute :name, :kind_of => String
-attribute :target, :kind_of => String
-attribute :arguments, :kind_of => String
-attribute :description, :kind_of => String
-attribute :cwd, :kind_of => String
-attribute :iconlocation, :kind_of => String
+attribute :url, :kind_of => String, :name_attribute => true, :required => true
+attribute :user, :kind_of => String
 
-# Covers 0.10.8 and earlier
-def initialize(*args)
-  super
-  @action = :create
-end
+attr_accessor :exists

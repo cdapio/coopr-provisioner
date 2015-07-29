@@ -1,9 +1,9 @@
 #
-# Author:: Doug MacEachern <dougm@vmware.com>
+# Author:: Richard Lavey (richard.lavey@calastone.com)
 # Cookbook Name:: windows
-# Resource:: shortcut
+# Resource:: certificate
 #
-# Copyright:: 2010, VMware, Inc.
+# Copyright:: 2015, Calastone Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -18,19 +18,11 @@
 # limitations under the License.
 #
 
-actions :create
-
+actions :create, :delete, :acl_add
 default_action :create
 
-attribute :name, :kind_of => String
-attribute :target, :kind_of => String
-attribute :arguments, :kind_of => String
-attribute :description, :kind_of => String
-attribute :cwd, :kind_of => String
-attribute :iconlocation, :kind_of => String
-
-# Covers 0.10.8 and earlier
-def initialize(*args)
-  super
-  @action = :create
-end
+attribute :source, :kind_of => String, :name_attribute => true, :required => true
+attribute :pfx_password, :kind_of => String
+attribute :private_key_acl, :kind_of => Array
+attribute :store_name, :kind_of => String, :default => 'MY', :regex => /^(?:MY|CA|ROOT)$/
+attribute :user_store, :kind_of => [TrueClass, FalseClass], :default => false
