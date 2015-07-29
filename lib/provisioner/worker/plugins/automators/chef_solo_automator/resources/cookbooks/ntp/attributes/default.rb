@@ -25,12 +25,17 @@
 default['ntp']['servers']   = [] # The default recipe sets a list of common NTP servers (COOK-1170)
 default['ntp']['peers'] = []
 default['ntp']['restrictions'] = []
+default['ntp']['tinker'] = { 'panic' => 0 }
+
+# set `restrict default` for IPv4 and IPv6
+default['ntp']['restrict_default'] = 'kod notrap nomodify nopeer noquery'
 
 # internal attributes
 default['ntp']['packages'] = %w(ntp ntpdate)
 default['ntp']['service'] = 'ntpd'
 default['ntp']['varlibdir'] = '/var/lib/ntp'
 default['ntp']['driftfile'] = "#{node['ntp']['varlibdir']}/ntp.drift"
+default['ntp']['logfile'] = nil
 default['ntp']['conffile'] = '/etc/ntp.conf'
 default['ntp']['statsdir'] = '/var/log/ntpstats/'
 default['ntp']['conf_owner'] = 'root'
@@ -45,16 +50,30 @@ default['ntp']['listen_network'] = nil
 default['ntp']['apparmor_enabled'] = false
 default['ntp']['monitor'] = false
 default['ntp']['statistics'] = true
+default['ntp']['conf_restart_immediate'] = false
+
+# See http://www.vmware.com/vmtn/resources/238 p. 23 for explanation
+default['ntp']['disable_tinker_panic_on_virtualization_guest'] = true
 
 default['ntp']['peer']['use_iburst'] = true
 default['ntp']['peer']['use_burst'] = false
 default['ntp']['peer']['minpoll'] = 6
 default['ntp']['peer']['maxpoll'] = 10
 
+default['ntp']['server']['prefer'] = ''
 default['ntp']['server']['use_iburst'] = true
 default['ntp']['server']['use_burst'] = false
 default['ntp']['server']['minpoll'] = 6
 default['ntp']['server']['maxpoll'] = 10
+
+default['ntp']['tinker']['allan'] = 1500
+default['ntp']['tinker']['dispersion'] = 15
+default['ntp']['tinker']['panic'] = 1000
+default['ntp']['tinker']['step'] = 0.128
+default['ntp']['tinker']['stepout'] = 900
+
+# Set to true if using ntp < 4.2.8 or any unpatched ntp version to mitigate CVE-2014-9293 / CVE-2014-9294 / CVE-2014-9295
+default['ntp']['localhost']['noquery'] = false
 
 # overrides on a platform-by-platform basis
 case node['platform_family']
@@ -96,4 +115,12 @@ when 'solaris2'
   default['ntp']['var_owner'] = 'root'
   default['ntp']['var_group'] = 'sys'
   default['ntp']['leapfile'] = '/etc/inet/ntp.leap'
+end
+
+unless node['platform'] == 'windows'
+  if !node['virtualization'] || node['virtualization']['role'] != 'guest'
+    default['ntp']['use_cmos'] = true
+  else
+    default['ntp']['use_cmos'] = false
+  end
 end

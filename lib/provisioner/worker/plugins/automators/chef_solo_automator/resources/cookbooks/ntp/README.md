@@ -21,7 +21,7 @@ Requirements
 - Windows
 
 ### Cookbooks
-- When running on Windows based systems, the node must include the Windows cookbook. This cookbook suggests the Windows cookbook in the metadata so as to not force inclusion of the Windows cookbook on *nix systems. Change 'suggests' to 'depends' if you require Windows platform support.
+- When running on Windows based systems, the node must include the Windows cookbook. This cookbook suggests the Windows cookbook in the metadata so as to not force inclusion of the Windows cookbook on \*nix systems. Change 'suggests' to 'depends' if you require Windows platform support.
 
 Attributes
 ----------
@@ -42,8 +42,11 @@ Attributes
   - Boolean. Defaults to false. Forces the ntp daemon to be halted, an ntp -q command to be issued, and the ntp daemon to be restarted again on every Chef-client run. Will have no effect if drift is over 1000 seconds.
 
 * `ntp['sync_hw_clock']` (applies to NTP Servers and Clients)
-  - Boolean. Defaults to false. On *nix-based systems, forces the 'hwclock --systohc' command to be issued on every Chef-client run. This will sync the hardware clock to the system clock.
+  - Boolean. Defaults to false. On \*nix-based systems, forces the 'hwclock --systohc' command to be issued on every Chef-client run. This will sync the hardware clock to the system clock.
   - Not available on Windows.
+
+* `ntp['restrict_default']`
+  - String. Defaults to 'kod notrap nomodify nopeer noquery'. Set to 'ignore' to [further lock down access](http://support.ntp.org/bin/view/Support/AccessRestrictions#Section_6.5.1.1.2.).
 
 * `ntp["listen_network"]` / `ntp["listen"]`
   - String, optional attribute. Default is for NTP to listen on all addresses.
@@ -55,6 +58,12 @@ Attributes
  - Boolean. Default to true. Enable/disable statistics data logging into
    `ntp['statsdir']`.
  - Not available on Windows.
+
+* `ntp['conf_restart_immediate']`
+  - Boolean. Defaults to false. Restarts NTP service immediately after a config update if true.  Otherwise it is a delayed restart.
+
+* `ntp['peer']['disable_tinker_panic_on_virtualization_guest']` (applies to virtualized hosts only)
+  - Boolean. Defaults to true. Sets tinker panic to 0.  NTP default it 1000.  (See http://www.vmware.com/vmtn/resources/238 p. 23 for explanation on disabling panic) (Note: this overrides `ntp['tinker']['panic']` attribute)
 
 * `ntp['peer']['use_iburst']` (applies to NTP Servers ONLY)
   - Boolean. Defaults to true. Enables iburst in peer declaration.
@@ -68,6 +77,9 @@ Attributes
 * `ntp['peer']['maxpoll']` (applies to NTP Servers ONLY)
   - Boolean. Defaults to 10 (ntp default). Specify the maximum poll intervals for NTP messages, in seconds to the power of two.
 
+* `ntp['server']['prefer']` (applies to NTP Servers and Clients)
+  - String. Defaults to emtpy string. The server from `ntp['servers']` to prefer getting the time from.
+
 * `ntp['server']['use_iburst']` (applies to NTP Servers and Clients)
   - Boolean. Defaults to true. Enables iburst in server declaration.
 
@@ -79,6 +91,24 @@ Attributes
 
 * `ntp['server']['maxpoll']` (applies to NTP Servers and Clients)
   - Boolean. Defaults to 10 (ntp default). Specify the maximum poll intervals for NTP messages, in seconds to the power of two.
+
+* `ntp['tinker']['allan']`
+  - Number. Defaults to 1500 (ntp default). Spedifies the Allan intercept, which is a parameter of the PLL/FLL clock discipline algorithm, in seconds.
+
+* `ntp['tinker']['dispersion']`
+  - Number. Defaults to 15 (ntp default). Specifies the dispersion increase rate in parts-per-million (PPM).
+
+* `ntp['tinker']['panic']`
+  - Number. Defaults to 1000 (ntp default). Spedifies the panic threshold in seconds. If set to zero, the panic sanity check is disabled and a clock offset of any value will be accepted.
+
+* `ntp['tinker']['step']`
+  - Number. Defaults to 0.128 (ntp default). Spedifies the step threshold in seconds. If set to zero, step adjustments will never occur. Note: The kernel time discipline is disabled if the step threshold is set to zero or greater than 0.5 s.
+
+* `ntp['tinker']['stepout']`
+  - Number. Defaults to 900 (ntp default). Specifies the stepout threshold in seconds. If set to zero, popcorn spikes will not be suppressed.
+
+* `ntp['localhost']['noquery']` (applies to NTP Servers and Clients)
+  - Boolean. Defaults to false. Set to true if using ntp < 4.2.8 or any unpatched ntp version to mitigate CVE-2014-9293 / CVE-2014-9294 / CVE-2014-9295
 
 ### Platform specific
 
@@ -145,6 +175,10 @@ Attributes
   - Defaults to false and will make no provisions for apparmor.  If a
     platform is apparmor enabled by default, (currently Ubuntu)
     default will be true.
+
+* `ntp['use_cmos']`
+  - Boolean, uses a high stratum undisciplined clock for machines with real CMOS clock.
+  - Defaults to true unless a platform appears to be virtualized according to Ohai.
 
 
 Usage
