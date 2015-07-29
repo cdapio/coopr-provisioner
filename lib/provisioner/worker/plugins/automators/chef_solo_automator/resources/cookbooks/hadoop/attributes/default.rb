@@ -51,7 +51,7 @@ default['hadoop']['yarn_site']['yarn.resourcemanager.hostname'] = node['fqdn']
 
 # Set yarn.application.classpath
 if node['hadoop']['distribution'] == 'hdp' && node['hadoop']['distribution_version'].to_f >= 2.2
-  default['hadoop']['yarn_site']['yarn.application.classpath'] = '/etc/hadoop/conf,/usr/hdp/${hdp.version}/hadoop-client/*,/usr/hdp/${hdp.version}/hadoop-client/lib/*,/usr/hdp/${hdp.version}/hadoop-hdfs-client/*,/usr/hdp/${hdp.version}/hadoop-hdfs-client/lib/*,/usr/hdp/${hdp.version}/hadoop-yarn-client/*,/usr/hdp/${hdp.version}/hadoop-yarn-client/lib/*'
+  default['hadoop']['yarn_site']['yarn.application.classpath'] = '/etc/hadoop/conf,/usr/hdp/current/hadoop-client/*,/usr/hdp/current/hadoop-client/lib/*,/usr/hdp/current/hadoop-hdfs-client/*,/usr/hdp/current/hadoop-hdfs-client/lib/*,/usr/hdp/current/hadoop-yarn-client/*,/usr/hdp/current/hadoop-yarn-client/lib/*'
 else
   default['hadoop']['yarn_site']['yarn.application.classpath'] = '$HADOOP_CONF_DIR, $HADOOP_COMMON_HOME/*, $HADOOP_COMMON_HOME/lib/*, $HADOOP_HDFS_HOME/*, $HADOOP_HDFS_HOME/lib/*, $HADOOP_MAPRED_HOME/*, $HADOOP_MAPRED_HOME/lib/*, $HADOOP_YARN_HOME/*, $HADOOP_YARN_HOME/lib/*'
 end
@@ -70,12 +70,17 @@ end
 # MR settings for HDP 2.2+
 ###
 hdp_version =
-  if node['hadoop']['distribution_version'] == '2.2.0.0'
+  case node['hadoop']['distribution_version']
+  when '2.2.0.0'
     '2.2.0.0-2041'
-  elsif node['hadoop']['distribution_version'] == '2.2.1.0'
+  when '2.2.1.0'
     '2.2.1.0-2340'
-  elsif node['hadoop']['distribution_version'] == '2.2.4.2'
+  when '2.2.4.2'
     '2.2.4.2-2'
+  when '2.2.4.4'
+    '2.2.4.4-16'
+  when '2.2.6.0'
+    '2.2.6.0-2800'
   else
     node['hadoop']['distribution_version']
   end

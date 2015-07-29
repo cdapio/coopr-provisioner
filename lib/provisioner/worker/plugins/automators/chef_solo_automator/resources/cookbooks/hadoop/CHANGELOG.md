@@ -1,6 +1,19 @@
 hadoop CHANGELOG
 ===============
 
+v2.0.4 (Jul 23, 2015)
+---------------------
+- Fix ChefSpec ( Issue: #207 )
+- Support HDP 2.1.15.0, 2.2.4.4, and 2.2.6.0 ( Issue: #208 )
+- HiveServer2 process fix per @jsh2134 ( Issue: #210 )
+- Fix HDP 2.2 yarn.application.classpath ( Issue: #211 )
+
+v2.0.3 (Jun 25, 2015)
+---------------------
+- Config files should be root owned ( Issue: #204 )
+- Fix disable THP Compaction ( Issues: #205 [COOK-57](https://issues.cask.co/browse/COOK-57) )
+- Fix init for EXE_ARGS ending in ampersand ( Issues: #206 [COOK-59](https://issues.cask.co/browse/COOK-59) )
+
 v2.0.2 (Jun 12, 2015)
 ---------------------
 - Don't make /etc/default files executable ( Issue: #201 )
