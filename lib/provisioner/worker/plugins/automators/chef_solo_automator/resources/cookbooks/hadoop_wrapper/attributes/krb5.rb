@@ -19,7 +19,7 @@ if node['hadoop'].key?('core_site') && node['hadoop']['core_site'].key?('hadoop.
   default['krb5_utils']['krb5_user_keytabs']['yarn'] = { 'owner' => 'yarn', 'group' => 'hadoop', 'mode' => '0640' }
 
   # container-executor.cfg
-  default['hadoop']['container_executor']['allowed.system.users'] = 'yarn'
+  default['hadoop']['container_executor']['allowed.system.users'] = 'hive,yarn'
   default['hadoop']['container_executor']['banned.users'] = 'hdfs,mapred,bin'
   default['hadoop']['container_executor']['min.user.id'] = 500
   default['hadoop']['container_executor']['yarn.nodemanager.linux-container-executor.group'] = 'yarn'
@@ -64,7 +64,6 @@ if node['hadoop'].key?('core_site') && node['hadoop']['core_site'].key?('hadoop.
   default['hadoop']['yarn_site']['yarn.nodemanager.principal'] = "yarn/_HOST@#{node['krb5']['krb5_conf']['realms']['default_realm'].upcase}"
   default['hadoop']['yarn_site']['yarn.nodemanager.linux-container-executor.group'] = 'yarn'
   default['hadoop']['yarn_site']['yarn.nodemanager.container-executor.class'] = 'org.apache.hadoop.yarn.server.nodemanager.LinuxContainerExecutor'
-
 end
 
 # HBase
@@ -84,7 +83,6 @@ if node['hbase'].key?('hbase_site') && node['hbase']['hbase_site'].key?('hbase.s
   default['hbase']['hbase_site']['hbase.coprocessor.region.classes'] = 'org.apache.hadoop.hbase.security.token.TokenProvider,org.apache.hadoop.hbase.security.access.SecureBulkLoadEndpoint,org.apache.hadoop.hbase.security.access.AccessController'
   default['hbase']['hbase_site']['hbase.coprocessor.master.classes'] = 'org.apache.hadoop.hbase.security.access.AccessController'
   default['hbase']['hbase_site']['hbase.bulkload.staging.dir'] = '/tmp/hbase-staging'
-
 end
 
 # Hive MetaStore
@@ -94,10 +92,13 @@ if node['hive'].key?('hive_site') && node['hive']['hive_site'].key?('hive.metast
   include_attribute 'krb5'
   include_attribute 'krb5_utils'
 
+  # core-site.xml
+  default['hadoop']['core_site']['hadoop.proxyuser.hive.groups'] = 'hadoop,hive'
+  default['hadoop']['core_site']['hadoop.proxyuser.hive.hosts'] = '*'
+
   # hive-site.xml
   default['hive']['hive_site']['hive.metastore.kerberos.keytab.file'] = "#{node['krb5_utils']['keytabs_dir']}/hive.service.keytab"
   default['hive']['hive_site']['hive.metastore.kerberos.principal'] = "hive/_HOST@#{node['krb5']['krb5_conf']['realms']['default_realm'].upcase}"
-
 end
 
 # Hive Server2
@@ -111,7 +112,6 @@ if node['hive'].key?('hive_site') && node['hive']['hive_site'].key?('hive.server
   default['hive']['hive_site']['hive.server2.authentication'] = 'KERBEROS'
   default['hive']['hive_site']['hive.server2.authentication.kerberos.principal'] = "#{node['krb5_utils']['keytabs_dir']}/hive.service.keytab"
   default['hive']['hive_site']['hive.server2.authentication.kerberos.keytab'] = "hive/_HOST@#{node['krb5']['krb5_conf']['realms']['default_realm'].upcase}"
-
 end
 
 # ZooKeeper
@@ -132,5 +132,4 @@ if node['zookeeper'].key?('zoocfg') && node['zookeeper']['zoocfg'].key?('authPro
   default['zookeeper']['zoocfg']['jaasLoginRenew'] = '3600000' unless node['zookeeper']['zoocfg']['jaasLoginRenew']
   default['zookeeper']['zoocfg']['kerberos.removeHostFromPrincipal'] = 'true'
   default['zookeeper']['zoocfg']['kerberos.removeRealmFromPrincipal'] = 'true'
-
 end
