@@ -58,11 +58,25 @@ if node['cdap']['cdap_site'].key?('kerberos.auth.enabled') && node['cdap']['cdap
   # Add cdap user to YARN container-executor.cfg's allowed.system.users
   if node['hadoop'].key?('container_executor') && node['hadoop']['container_executor'].key?('allowed.system.users')
     arr = node['hadoop']['container_executor']['allowed.system.users'].split(',')
-    user = node['cdap']['security']['cdap_principal'].split(%r{[@/]}).first
+    user = node['cdap']['kerberos']['cdap_principal'].split(%r{[@/]}).first
     unless arr.include?(user)
       arr += [user]
       default['hadoop']['container_executor']['allowed.system.users'] = arr.join(',')
     end
+  else
+    default['hadoop']['container_executor']['allowed.system.users'] = 'cdap,yarn'
+  end
+
+  # Add cdap group to core-site.xml's hadoop.proxyuser.hive.groups
+  if node['hadoop'].key?('core_site') && node['hadoop']['core_site'].key?('hadoop.proxyuser.hive.groups')
+    arr = node['hadoop']['core_site']['hadoop.proxyuser.hive.groups'].split(',')
+    group = 'cdap'
+    unless arr.include?(group)
+      arr += [group]
+      default['hadoop']['core_site']['hadoop.proxyuser.hive.groups'] = arr.join(',')
+    end
+  else
+    default['hadoop']['core_site']['hadoop.proxyuser.hive.groups'] = 'cdap,hadoop'
   end
 
   # For cdap-auth-server and cdap-router
