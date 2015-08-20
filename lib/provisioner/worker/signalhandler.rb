@@ -43,12 +43,10 @@ module Coopr
       def dont_interupt
         @interuptable = false
         @enqueued     = []
-        # rubocop:disable GuardClause
         if block_given?
           yield
           allow_interuptions
         end
-        # rubocop:enable GuardClause
       end
 
       def allow_interuptions
