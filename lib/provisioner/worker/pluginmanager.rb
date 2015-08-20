@@ -55,7 +55,7 @@ module Coopr
         ).each do |jsonfile|
           begin
             log.debug "pluginmanager scanning #{jsonfile}"
-            jsondata =  JSON.parse( IO.read(jsonfile) )
+            jsondata = JSON.parse( IO.read(jsonfile) )
 
             raise "missing 'name' field when loading plugin #{jsonfile}" unless jsondata.key?('name')
             p_name = jsondata['name']
