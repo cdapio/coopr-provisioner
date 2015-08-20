@@ -61,6 +61,7 @@ Chef 0.10.10+ and Ohai 6.10+ for `platform_family` use.
 * FreeBSD
 * SmartOS
 * Windows
+* Mac OS X
 
 Attributes
 -----
@@ -125,7 +126,7 @@ Recipes
 Include the default recipe in a run list or recipe to get `java`.  By default
 the `openjdk` flavor of Java is installed, but this can be changed by
 using the `install_flavor` attribute. By default on Windows platform
-systems, the `install_flavor` is `windows`.
+systems, the `install_flavor` is `windows` and on Mac OS X platform systems, the `install_flavor` is `homebrew`.
 
 OpenJDK is the default because of licensing changes made upstream by
 Oracle. See notes on the `oracle` recipe below.
@@ -273,6 +274,10 @@ By default, the extracted directory is extracted to
 - `owner`: owner of extracted directory, set to "root" by default
 - `group`: group of extracted directory, set to `:owner` by default
 - `default`: whether this the default installation of this package,
+  boolean true or false
+- `reset_alternatives`: whether alternatives is reset
+  boolean true or false
+- `use_alt_suffix`: whether '_alt' suffix is used for not default javas
   boolean true or false
 
 #### Examples
