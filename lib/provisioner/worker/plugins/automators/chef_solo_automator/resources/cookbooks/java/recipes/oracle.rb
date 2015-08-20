@@ -50,6 +50,8 @@ end
 
 include_recipe "java::set_java_home"
 
+package "tar"
+
 java_ark "jdk" do
   url tarball_url
   default node['java']['set_default']
@@ -60,6 +62,8 @@ java_ark "jdk" do
   retries node['java']['ark_retries']
   retry_delay node['java']['ark_retry_delay']
   connect_timeout node['java']['ark_timeout']
+  use_alt_suffix node['java']['use_alt_suffix']
+  reset_alternatives node['java']['reset_alternatives']
   action :install
 end
 

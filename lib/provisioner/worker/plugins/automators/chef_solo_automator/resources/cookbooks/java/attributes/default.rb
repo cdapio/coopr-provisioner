@@ -26,6 +26,8 @@ default['java']['accept_license_agreement'] = false
 default['java']['set_default'] = true
 default['java']['alternatives_priority'] = 1062
 default['java']['set_etc_environment'] = false
+default['java']['use_alt_suffix'] = true
+default['java']['reset_alternatives'] = true
 
 # the following retry parameters apply when downloading oracle java
 default['java']['ark_retries'] = 0
@@ -38,6 +40,8 @@ when "windows"
   default['java']['windows']['url'] = nil
   default['java']['windows']['checksum'] = nil
   default['java']['windows']['package_name'] = "Java(TM) SE Development Kit 7 (64-bit)"
+when "mac_os_x"
+  default['java']['install_flavor'] = "homebrew"
 else
   default['java']['install_flavor'] = "openjdk"
 end
@@ -120,16 +124,16 @@ default['java']['jdk']['8']['bin_cmds'] = [ "appletviewer", "apt", "ControlPanel
                                             "rmic", "rmid", "rmiregistry", "schemagen", "serialver", "servertool", "tnameserv",
                                             "unpack200", "wsgen", "wsimport", "xjc"]
 
-# Oracle doesn't seem to publish SHA256 checksums for Java releases, so we use MD5 instead.
-# Official checksums for the latest release can be found at https://www.oracle.com/webfolder/s/digest/8u31checksum.html
+# Oracle just started publishing SHA256 checksums for Java releases with 8u51, so we use MD5 instead.
+# Official checksums for the latest release can be found at https://www.oracle.com/webfolder/s/digest/8u51checksum.html
 
 # x86_64
-default['java']['jdk']['8']['x86_64']['url'] = 'http://download.oracle.com/otn-pub/java/jdk/8u31-b13/jdk-8u31-linux-x64.tar.gz'
-default['java']['jdk']['8']['x86_64']['checksum'] = '173e24bc2d5d5ca3469b8e34864a80da'
+default['java']['jdk']['8']['x86_64']['url'] = 'http://download.oracle.com/otn-pub/java/jdk/8u51-b16/jdk-8u51-linux-x64.tar.gz'
+default['java']['jdk']['8']['x86_64']['checksum'] = 'b34ff02c5d98b6f372288c17e96c51cf'
 
 # i586
-default['java']['jdk']['8']['i586']['url'] = 'http://download.oracle.com/otn-pub/java/jdk/8u31-b13/jdk-8u31-linux-i586.tar.gz'
-default['java']['jdk']['8']['i586']['checksum'] = '4e9aec24367672412c7d10105a2a2bbb'
+default['java']['jdk']['8']['i586']['url'] = 'http://download.oracle.com/otn-pub/java/jdk/8u51-b16/jdk-8u51-linux-i586.tar.gz'
+default['java']['jdk']['8']['i586']['checksum'] = '742b9151d9190a9ae7d8ed05c7d39850'
 
 
 default['java']['oracle']['jce']['enabled'] = false
