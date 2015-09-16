@@ -22,7 +22,9 @@ include_recipe 'hadoop::default'
 include_recipe 'hadoop::hive_metastore'
 
 # Set up our database
-if node['hive'].key?('hive_site') && node['hive']['hive_site'].key?('javax.jdo.option.ConnectionURL')
+if node['hive'].key?('hive_site') && node['hive']['hive_site'].key?('javax.jdo.option.ConnectionURL') &&
+   node['hive']['hive_site'].key?('javax.jdo.option.ConnectionDriverName') &&
+   node['hive']['hive_site']['javax.jdo.option.ConnectionDriverName'] != 'org.apache.derby.jdbc.EmbeddedDriver'
   jdo_array = node['hive']['hive_site']['javax.jdo.option.ConnectionURL'].split(':')
   hive_uris = node['hive']['hive_site']['hive.metastore.uris'].gsub('thrift://', '').gsub(':9083', '').split(',')
   hive_uris.push('localhost')

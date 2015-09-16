@@ -34,10 +34,9 @@ scratch_dir =
     '/tmp/hive-${user.name}'
   end
 
-unless scratch_dir == '/tmp/hive-${user.name}'
-  ruby_block 'initaction-create-hive-hdfs-scratchdir' do
-    block do
-      resources('execute[hive-hdfs-scratchdir]').run_action(:run)
-    end
+ruby_block 'initaction-create-hive-hdfs-scratchdir' do
+  block do
+    resources('execute[hive-hdfs-scratchdir]').run_action(:run)
   end
+  not_if { scratch_dir == '/tmp/hive-${user.name}' }
 end
