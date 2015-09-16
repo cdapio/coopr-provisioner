@@ -40,7 +40,12 @@ execute 'create-router-ssl-keystore' do
     end
 
   password = node['cdap']['cdap_site']['router.ssl.keystore.password']
-  keypass = node['cdap']['cdap_site']['router.ssl.keystore.keypassword']
+  keypass =
+    if node['cdap']['cdap_site'].key?('router.ssl.keystore.keypassword')
+      node['cdap']['cdap_site']['router.ssl.keystore.keypassword']
+    else
+      node['cdap']['cdap_site']['router.ssl.keystore.password']
+    end
   path = node['cdap']['cdap_site']['router.ssl.keystore.path']
   common_name = node['cdap']['security']['ssl_common_name']
   jks =
@@ -51,8 +56,8 @@ execute 'create-router-ssl-keystore' do
     end
 
   command "keytool -genkey -noprompt -alias ext-auth -keysize 2048 -keyalg RSA -keystore #{path} -storepass #{password} -keypass #{keypass} -dname 'CN=#{common_name}, OU=cdap, O=cdap, L=Palo Alto, ST=CA, C=US'"
-  not_if { File.exist?(path) }
-  only_if { ssl_enabled && jks }
+  not_if { ::File.exist?(path.to_s) }
+  only_if { ssl_enabled.to_s == 'true' && jks.to_s == 'true' }
 end
 
 svcs = ['cdap-router']
