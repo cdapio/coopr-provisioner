@@ -21,9 +21,15 @@ until all dependent cookbooks have been ported.
 
 Requirements
 ------------
-* Chef 11 or higher
-* Ruby 1.9 (preferably from the Chef full-stack installer)
-* RHEL5, RHEL6, or other platforms within the family
+#### Platforms
+* RHEL/CentOS and derivatives
+* Fedora
+
+#### Chef
+* Chef 11+
+
+#### Cookbooks
+* none
 
 Resources/Providers
 -------------------
@@ -71,6 +77,8 @@ end
 * `cost` - relative cost of accessing this repository. Useful for
   weighing one repo's packages as greater/less than any other.
   defaults to 1000
+* `clean_headers` - Run "yum clean headers <reponame>" during
+  repository creation. defaults to true.
 * `description` - Maps to the 'name' parameter in a repository .conf.
   Descriptive name for the repository channel. This directive must be
   specified.
@@ -261,7 +269,7 @@ License & Authors
 
 ```text
 Copyright:: 2011 Eric G. Wolfe
-Copyright:: 2013 Chef
+Copyright:: 2013-2014 Chef Software, Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -275,5 +283,3 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 ```
-
-This is a test
