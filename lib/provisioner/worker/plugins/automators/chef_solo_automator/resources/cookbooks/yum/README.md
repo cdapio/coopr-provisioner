@@ -2,6 +2,7 @@ yum Cookbook
 ============
 [![Build Status](https://travis-ci.org/chef-cookbooks/yum.svg?branch=master)](http://travis-ci.org/chef-cookbooks/yum)
 [![Cookbook Version](https://img.shields.io/cookbook/v/yum.svg)](https://supermarket.chef.io/cookbooks/yum)
+[![Code Climate](https://codeclimate.com/github/chef-cookbooks/yum/badges/gpa.svg)](https://codeclimate.com/github/chef-cookbooks/yum)
 
 The Yum cookbook exposes the `yum_globalconfig` and `yum_repository`
 resources that allows a user to both control global behavior and make
@@ -77,7 +78,7 @@ end
 * `cost` - relative cost of accessing this repository. Useful for
   weighing one repo's packages as greater/less than any other.
   defaults to 1000
-* `clean_headers` - Run "yum clean headers <reponame>" during
+* `clean_metadata` - Run "yum clean metadata <reponame>" during
   repository creation. defaults to true.
 * `description` - Maps to the 'name' parameter in a repository .conf.
   Descriptive name for the repository channel. This directive must be
