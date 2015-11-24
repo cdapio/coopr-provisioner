@@ -357,7 +357,8 @@ module Coopr
     def local_ip
       begin
         server_ip = Resolv.getaddress( @server_uri.sub(%r{^https?://}, '').split(':').first ) rescue '127.0.0.1'
-        orig, Socket.do_not_reverse_lookup = Socket.do_not_reverse_lookup, true # turn off reverse DNS resolution temporarily
+        orig = Socket.do_not_reverse_lookup
+        Socket.do_not_reverse_lookup = true # turn off reverse DNS resolution temporarily
         UDPSocket.open do |s|
           s.connect server_ip, 1
           s.addr.last
