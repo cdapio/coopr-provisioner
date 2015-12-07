@@ -61,7 +61,7 @@ when 'hdp'
     Chef::Log.warn("Short versions for node['hadoop']['distribution_version'] are deprecated! Please use full version!")
     node.override['hadoop']['distribution_version'] = hdp_update_version
   # 2.3.0.0 does not have its own base version
-  when '2.2.1.0', '2.2.4.2', '2.2.4.4', '2.2.6.0', '2.2.6.3', '2.2.8.0', '2.3.0.0'
+  when '2.2.1.0', '2.2.4.2', '2.2.4.4', '2.2.6.0', '2.2.6.3', '2.2.8.0', '2.3.0.0', '2.3.2.0'
     hdp_version = '2.2.0.0'
     hdp_update_version = node['hadoop']['distribution_version']
   when '2.2'
@@ -71,7 +71,7 @@ when 'hdp'
     node.override['hadoop']['distribution_version'] = hdp_update_version
   when '2.3', '2'
     hdp_version = '2.2.0.0'
-    hdp_update_version = '2.3.0.0'
+    hdp_update_version = '2.3.2.0'
     Chef::Log.warn("Short versions for node['hadoop']['distribution_version'] are deprecated! Please use full version!")
     node.override['hadoop']['distribution_version'] = hdp_update_version
   else
@@ -252,7 +252,11 @@ when 'bigtop'
       yum_platform_version = major_platform_version
     end
 
-    yum_base_url = "http://bigtop.s3.amazonaws.com/releases/#{bigtop_release}/redhat"
+    if bigtop_release.to_f >= 1.0
+      yum_base_url = "http://bigtop.s3.amazonaws.com/releases/#{bigtop_release}/centos"
+    else
+      yum_base_url = "http://bigtop.s3.amazonaws.com/releases/#{bigtop_release}/redhat"
+    end
     yum_repo_url = node['hadoop']['yum_repo_url'] ? node['hadoop']['yum_repo_url'] : "#{yum_base_url}/#{yum_platform_version}/#{node['kernel']['machine']}"
     yum_repo_key_url = node['hadoop']['yum_repo_key_url'] ? node['hadoop']['yum_repo_key_url'] : 'http://archive.apache.org/dist/bigtop/KEYS'
 
@@ -268,6 +272,16 @@ when 'bigtop'
   when 'debian'
     # for bigtop, we do not validate codename, to support developing against custom repositories
     codename = node['lsb']['codename']
+
+    # rubocop: disable Metrics/BlockNesting
+    case codename
+    when 'precise', 'quantal', 'raring', 'saucy', 'utopic', 'vivid', 'wily'
+      if bigtop_release.to_f >= 1.0
+        Chef::Log.warn('This version of Ubuntu is unsupported by Bigtop! Bug reports should include patches.')
+        codename = 'trusty'
+      end
+    end
+    # rubocop: enable Metrics/BlockNesting
 
     apt_domain_name = 'bigtop.s3.amazonaws.com'
     apt_base_url = "http://#{apt_domain_name}/releases/#{bigtop_release}/#{node['platform']}"
