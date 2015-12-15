@@ -17,10 +17,9 @@
 
 require 'optparse'
 
-module Coopr 
+module Coopr
   class CLI
     def self.read(arguments = ARGV)
-
       # Parse command line options.
       options = {}
       OptionParser.new do |opts|

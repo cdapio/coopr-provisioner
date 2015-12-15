@@ -93,7 +93,7 @@ module Coopr
     end
 
     def validate
-      if @pluginmanager.providermap.empty? or @pluginmanager.automatormap.empty?
+      if @pluginmanager.providermap.empty? || @pluginmanager.automatormap.empty?
         log.fatal 'Error: at least one provider plugin and one automator plugin must be installed'
         exit(1)
       end
@@ -173,8 +173,16 @@ module Coopr
       taskName = task['taskName'].downcase
       # depending on task, these may be nil
       # automator take pecedence as presence indicates a 'software' task
-      providerName = task['config']['provider']['providertype'] rescue nil
-      automatorName = task['config']['service']['action']['type'] rescue nil
+      providerName = begin
+                       task['config']['provider']['providertype']
+                     rescue
+                       nil
+                     end
+      automatorName = begin
+                        task['config']['service']['action']['type']
+                      rescue
+                        nil
+                      end
 
       case taskName
       when 'create', 'confirm', 'delete'
@@ -188,7 +196,7 @@ module Coopr
       when 'bootstrap'
         combinedresult = {}
         classes = []
-        if task['config'].key?('automators') and !task['config']['automators'].empty?
+        if task['config'].key?('automators') && !task['config']['automators'].empty?
           # server must specify which bootstrap handlers need to run
           log.debug "Task #{task_id} running specified bootstrap handlers: #{task['config']['automators']}"
           task['config']['automators'].each do |automator|
@@ -210,33 +218,31 @@ module Coopr
 
     # Run a single task read from file
     def run_task_from_file
-      begin
-        result = nil
-        task = nil
-        log.info "Start Worker run for file #{@file}"
-        task = JSON.parse(IO.read(@file))
+      result = nil
+      task = nil
+      log.info "Start Worker run for file #{@file}"
+      task = JSON.parse(IO.read(@file))
 
-        # While provisioning, don't allow the provisioner to terminate by disabling signal
-        sigterm = Coopr::Worker::SignalHandler.new('TERM')
-        sigterm.dont_interupt {
-          result = delegate_task(task)
-        }
-      rescue => e
-        log.error "Caught exception when running task from file #{@file}"
-
-        result = {} if result.nil? == true
-        result['status'] = '1'
-        # Check if it's an ssh_exec exception for additional logging info
-        if e.class.name == 'CommandExecutionError'
-          log.error "#{e.class.name}: #{e.to_json}"
-          result['stdout'] = e.stdout
-          result['stderr'] = e.stderr
-        else
-          result['stdout'] = e.inspect
-          result['stderr'] = "#{e.inspect}\n#{e.backtrace.join("\n")}"
-        end
-        log.error "Worker run failed, result: #{result}"
+      # While provisioning, don't allow the provisioner to terminate by disabling signal
+      sigterm = Coopr::Worker::SignalHandler.new('TERM')
+      sigterm.dont_interupt do
+        result = delegate_task(task)
       end
+    rescue => e
+      log.error "Caught exception when running task from file #{@file}"
+
+      result = {} if result.nil? == true
+      result['status'] = '1'
+      # Check if it's an ssh_exec exception for additional logging info
+      if e.class.name == 'CommandExecutionError'
+        log.error "#{e.class.name}: #{e.to_json}"
+        result['stdout'] = e.stdout
+        result['stderr'] = e.stderr
+      else
+        result['stdout'] = e.inspect
+        result['stderr'] = "#{e.inspect}\n#{e.backtrace.join("\n")}"
+      end
+      log.error "Worker run failed, result: #{result}"
     end
 
     # Poll Coopr Server for a task, retries until it gets some response
@@ -244,7 +250,7 @@ module Coopr
       server_uri = @config.get(PROVISIONER_SERVER_URI)
       poll_error_interval = @config.get(PROVISIONER_WORKER_POLL_ERROR_INTERVAL).to_i || 10
       postdata = { 'provisionerId' => @provisioner_id, 'workerId' => @worker_id, 'tenantId' => @tenant }.to_json
-      loop {
+      loop do
         begin
           response = Coopr::RestHelper.post "#{server_uri}/v2/tasks/take", postdata
           break response
@@ -252,14 +258,14 @@ module Coopr
           log.error "Unable to connect to Coopr Server #{server_uri}/v2/tasks/take: #{e}"
           sleep poll_error_interval
         end
-      }
+      end
     end
 
     # Poll Coopr Server for a task, retries until a task is successfully retrieved
     def _poll_server_and_retrieve_task
       poll_interval = @config.get(PROVISIONER_WORKER_POLL_INTERVAL).to_i || 1
       poll_error_interval = @config.get(PROVISIONER_WORKER_POLL_ERROR_INTERVAL).to_i || 10
-      loop {
+      loop do
         begin
           response = _poll_server
           if response.code == 200 && response.to_str && response.to_str != ''
@@ -276,7 +282,7 @@ module Coopr
           log.error "Caught exception processing response from coopr server: #{e.inspect}"
         end
         sleep poll_error_interval
-      }
+      end
     end
 
     # Run in continuous server polling mode
@@ -289,7 +295,7 @@ module Coopr
 
       log.info "Starting worker with id #{@worker_id}, connecting to server #{@config.get(PROVISIONER_SERVER_URI)}"
 
-      loop {
+      loop do
         result = nil
 
         # Poll Coopr Server until a task is retrieved
@@ -297,11 +303,11 @@ module Coopr
 
         # While running task, trap and queue TERM signal to prevent shutdown until task is complete
         sigterm = Coopr::Worker::SignalHandler.new('TERM')
-        sigterm.dont_interupt {
+        sigterm.dont_interupt do
           begin
             result = delegate_task(task)
 
-            result = Hash.new if result.nil? == true
+            result = {} if result.nil? == true
             result['workerId'] = @worker_id
             result['taskId'] = task['taskId']
             result['provisionerId'] = @provisioner_id
@@ -315,7 +321,7 @@ module Coopr
             end
 
           rescue => e
-            result = Hash.new if result.nil? == true
+            result = {} if result.nil? == true
             result['status'] = '1'
             result['workerId'] = @worker_id
             result['taskId'] = task['taskId']
@@ -336,11 +342,11 @@ module Coopr
               log.error "Caught exception posting back to server #{server_uri}/v2/tasks/finish: #{e}"
             end
           end
-        }
+        end
 
         break if @once
         sleep 5
-      }
+      end
     end
   end
 end

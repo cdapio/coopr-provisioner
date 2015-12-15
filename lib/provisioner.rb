@@ -15,6 +15,6 @@
 # limitations under the License.
 #
 
-module Coopr 
+module Coopr
   # provisioner master process which manages tenants and worker processes
 end
