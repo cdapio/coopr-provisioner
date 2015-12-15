@@ -153,7 +153,7 @@ class FogProviderAWS < Coopr::Plugin::Provider
 
       # Validate connectivity
       Net::SSH.start(bootstrap_ip, @task['config']['ssh-auth']['user'], @credentials) do |ssh|
-        ssh_exec!(ssh, 'ping -c1 www.opscode.com', 'Validating external connectivity and DNS resolution via ping')
+        ssh_exec!(ssh, 'ping -c1 www.google.com', 'Validating external connectivity and DNS resolution via ping')
         ssh_exec!(ssh, "#{sudo} hostname #{hostname}", "Setting hostname to #{hostname}")
         # Setting up disks
         log.debug 'Starting disk configuration'
