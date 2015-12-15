@@ -160,9 +160,9 @@ module Coopr
     end
 
     def delegate_task(task)
-      providerName = nil # rubocop:disable UselessAssignment
-      automatorName = nil # rubocop:disable UselessAssignment
-      clazz = nil # rubocop:disable UselessAssignment
+      providerName = nil
+      automatorName = nil
+      clazz = nil
       object = nil
       result = nil
       classes = nil
