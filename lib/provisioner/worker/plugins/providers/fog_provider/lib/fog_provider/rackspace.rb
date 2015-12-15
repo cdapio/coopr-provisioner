@@ -133,7 +133,7 @@ class FogProviderRackspace < Coopr::Plugin::Provider
 
       # Validate connectivity and Mount data disk
       Net::SSH.start(bootstrap_ip, @task['config']['ssh-auth']['user'], @credentials) do |ssh|
-        ssh_exec!(ssh, 'ping -c1 www.opscode.com', 'Validating external connectivity and DNS resolution via ping')
+        ssh_exec!(ssh, 'ping -c1 www.rackspace.com', 'Validating external connectivity and DNS resolution via ping')
         ssh_exec!(ssh, "test -e /dev/xvde1 && (#{sudo} /sbin/mkfs.ext4 /dev/xvde1 && #{sudo} mkdir -p /data && #{sudo} mount /dev/xvde1 /data) || true", 'Mounting any additional data disks')
       end
       # Return 0
