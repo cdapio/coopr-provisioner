@@ -15,7 +15,7 @@
 # limitations under the License.
 #
 
-module Coopr 
+module Coopr
   # configuration constants
   PROVISIONER_SERVER_URI = 'provisioner.server.uri'
   PROVISIONER_BIND_IP = 'provisioner.bind.ip'
@@ -37,8 +37,4 @@ module Coopr
 
   # api version
   PROVISIONER_API_VERSION = 'v2'
-
 end
-
-
-

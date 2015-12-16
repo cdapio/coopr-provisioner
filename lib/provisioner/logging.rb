@@ -19,7 +19,7 @@
 
 require 'logger'
 
-module Coopr 
+module Coopr
   module Logging
     attr_accessor :level
     @level = ::Logger::INFO
@@ -32,9 +32,7 @@ module Coopr
     end
 
     def self.configure(out)
-      if out != 'STDOUT'
-        @out = out
-      end
+      @out = out if out != 'STDOUT'
     end
 
     def self.level=(level)
@@ -74,7 +72,7 @@ module Coopr
           @logger = ::Logger.new(STDOUT)
         end
         @logger.level = @level
-        @logger.formatter = proc do |severity, datetime, progname, msg|
+        @logger.formatter = proc do |severity, datetime, _progname, msg|
           "#{datetime} #{@process_name} #{severity}: #{msg}\n"
         end
       end

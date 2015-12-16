@@ -25,7 +25,7 @@ require 'rubygems/package'
 require 'zlib'
 require_relative '../lib/provisioner/rest-helper'
 
-# ./data-uploader [-u http://localhost:55054] [-t superadmin] [-U admin] upload|stage|sync \ 
+# ./data-uploader [-u http://localhost:55054] [-t superadmin] [-U admin] upload|stage|sync \
 #   ./my/local/cookbooks/hadoop automatortypes/chef-solo/cookbooks/hadoop
 
 # Parse command line options.
@@ -67,7 +67,7 @@ begin
   end
   op.parse!(ARGV)
 rescue OptionParser::InvalidArgument, OptionParser::InvalidOption
-  puts "Invalid Argument/Options: #{$!}"
+  puts "Invalid Argument/Options: #{$ERROR_INFO}"
   puts op # prints usage
   exit 1
 end
@@ -88,7 +88,7 @@ options[:target] = ARGV.shift
 Coopr::RestHelper.cert_path = options[:cert_path] || ENV['TRUST_CERT_PATH']
 Coopr::RestHelper.cert_pass = options[:cert_pass] || ENV['TRUST_CERT_PASSWORD']
 
-module Coopr 
+module Coopr
   module DataUploader
     # class representing the resource to be uploaded
     class Resource

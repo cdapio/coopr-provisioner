@@ -19,11 +19,11 @@
 require_relative 'resourcespec'
 
 # simple specification for a tenant
-module Coopr 
+module Coopr
   class TenantSpec
     attr_accessor :id, :workers, :resourcespec, :plugins
 
-    def initialize(id, workers, resources = nil, plugins = nil)
+    def initialize(id, workers, resources = nil, _plugins = nil)
       @id = id
       @workers = workers
       @resourcespec = ResourceSpec.new(resources)
@@ -34,6 +34,5 @@ module Coopr
     def ==(other)
       @workers == other.workers && @resourcespec == other.resourcespec
     end
-
   end
 end

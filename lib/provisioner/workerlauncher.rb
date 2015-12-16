@@ -19,7 +19,7 @@
 require_relative 'worker'
 
 # simple class to construct the ruby command used to launch a worker process
-module Coopr 
+module Coopr
   class WorkerLauncher
     attr_accessor :tenant, :provisioner, :name, :config, :register
 
@@ -38,7 +38,7 @@ module Coopr
       cmd += " --provisioner #{@provisioner}" unless @provisioner.nil?
       cmd += " --tenant #{@tenant}" unless @tenant.nil?
       cmd += " --name #{@name}" unless @name.nil?
-      cmd += " --register" if @register
+      cmd += ' --register' if @register
       cmd
     end
 
