@@ -61,12 +61,12 @@ when 'hdp'
     Chef::Log.warn("Short versions for node['hadoop']['distribution_version'] are deprecated! Please use full version!")
     node.override['hadoop']['distribution_version'] = hdp_update_version
   # 2.3.0.0 does not have its own base version
-  when '2.2.1.0', '2.2.4.2', '2.2.4.4', '2.2.6.0', '2.2.6.3', '2.2.8.0', '2.3.0.0', '2.3.2.0'
+  when '2.2.1.0', '2.2.4.2', '2.2.4.4', '2.2.6.0', '2.2.6.3', '2.2.8.0', '2.2.9.0', '2.3.0.0', '2.3.2.0'
     hdp_version = '2.2.0.0'
     hdp_update_version = node['hadoop']['distribution_version']
   when '2.2'
     hdp_version = '2.2.0.0'
-    hdp_update_version = '2.2.8.0'
+    hdp_update_version = '2.2.9.0'
     Chef::Log.warn("Short versions for node['hadoop']['distribution_version'] are deprecated! Please use full version!")
     node.override['hadoop']['distribution_version'] = hdp_update_version
   when '2.3', '2'
@@ -127,19 +127,22 @@ when 'hdp'
   when 'debian'
     apt_domain_name = 'public-repo-1.hortonworks.com'
     apt_base_url = "http://#{apt_domain_name}/HDP"
-    # HDP only supports Debian 6 and Ubuntu 12
-    case node['platform']
-    when 'debian'
+    hdp_update_version = hdp_version if hdp_update_version.nil?
+    # HDP supports Debian 6, Ubuntu 12. Starting with 2.3.2.0 Ubuntu 14 and Debian 7
+    if node['platform'] == 'debian' && node['platform_version'] =~ /^7/ && Gem::Version.new(hdp_update_version) >= Gem::Version.new('2.3.2.0')
+      os = "#{node['platform']}7"
+    elsif node['platform'] == 'debian'
       os = "#{node['platform']}6"
-    else
+    elsif node['platform'] == 'ubuntu' && node['platform_version'] =~ /^14/ && Gem::Version.new(hdp_update_version) >= Gem::Version.new('2.3.2.0')
+      os = "#{node['platform']}14"
+    elsif node['platform'] == 'ubuntu'
       os = "#{node['platform']}12"
     end
-    hdp_update_version = hdp_version if hdp_update_version.nil?
     hdp_apt_repo_path =
       case hdp_update_version
       when '2.2.0.0'
         "2.x/GA/#{hdp_update_version}"
-      when '2.1.10.0', '2.1.15.0', '2.2.1.0', '2.2.4.2', '2.2.6.0', '2.2.6.3', '2.2.8.0'
+      when '2.1.10.0', '2.1.15.0', '2.2.1.0', '2.2.4.2', '2.2.6.0', '2.2.6.3', '2.2.8.0', '2.2.9.0', '2.3.0.0', '2.3.2.0'
         "2.x/updates/#{hdp_update_version}"
       else
         hdp_update_version
