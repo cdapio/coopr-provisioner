@@ -156,7 +156,7 @@ module Coopr
           begin
             resp_plugin = JSON.parse(resp.to_str)
           rescue JSON::ParserError => e
-            fail "Error parsing response from server #{@options[:uri]}: #{e.class}. " \
+            raise "Error parsing response from server #{@options[:uri]}: #{e.class}. " \
                  "content-type #{resp.headers[:content_type]}\n" \
                  "Are you connecting to the right server:port?\n"
           end
@@ -326,7 +326,7 @@ begin
   end
 rescue ArgumentError => e
   puts "Argument Error: #{e.message}"
-  puts "run with  -h or --help to get usage help"
+  puts 'run with  -h or --help to get usage help'
   exit 1
 rescue => e
   puts "Error: #{e.message} #{e.backtrace}"
