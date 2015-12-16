@@ -17,7 +17,7 @@
 
 require 'rexml/document'
 
-module Coopr 
+module Coopr
   # class which reads and stores configuration settings from a property file
   class Config
     attr_reader :properties, :default_file, :descriptions, :site_file
@@ -90,6 +90,5 @@ module Coopr
     def validate
       # %w(server.uri register.ip data.dir work.dir capacity )
     end
-
   end
 end

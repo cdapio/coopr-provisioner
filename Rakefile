@@ -27,4 +27,4 @@ task :rubocop do
   sh 'rubocop -D'
 end
 
-task :default => %w(rubocop rspec)
+task default: %w(rubocop rspec)

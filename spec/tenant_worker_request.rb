@@ -47,7 +47,7 @@ data['workers'] = num_workers.to_i
 begin
   json = JSON.generate(data)
   resp = Coopr::RestHelper.put("http://localhost:55056/v2/tenants/#{id}", json)
-  if (resp.code == 200)
+  if resp.code == 200
     puts 'success: 200'
   else
     puts "response code: #{resp.code}"

@@ -24,9 +24,9 @@ group :dependencies do
   gem 'logger'
   gem 'net-scp'
   gem 'rest_client', '~> 1.7'
-  gem 'sinatra', "~> 1.4"
-  gem 'thin', "~> 1.6"
-  gem "deep_merge", '~> 1.0', :require => 'deep_merge/rails_compat'
+  gem 'sinatra', '~> 1.4'
+  gem 'thin', '~> 1.6'
+  gem 'deep_merge', '~> 1.0', require: 'deep_merge/rails_compat'
 end
 
 group :test do
@@ -34,11 +34,11 @@ group :test do
   gem 'rack-test', '~> 0.6'
   gem 'rspec', '~> 3.0'
   gem 'rubocop', '~> 0.24'
-  gem 'simplecov', '~> 0.7.1', :require => false
+  gem 'simplecov', '~> 0.7.1', require: false
 end
 
 # Install gems from each plugin
-Dir.glob(File.join(File.dirname(__FILE__), 'lib', 'provisioner', 'worker', 'plugins', '*', '*', "Gemfile")) do |gemfile|
+Dir.glob(File.join(File.dirname(__FILE__), 'lib', 'provisioner', 'worker', 'plugins', '*', '*', 'Gemfile')) do |gemfile|
   puts "Including provisioner plugin Gemfile: #{gemfile}"
   eval_gemfile(gemfile)
 end

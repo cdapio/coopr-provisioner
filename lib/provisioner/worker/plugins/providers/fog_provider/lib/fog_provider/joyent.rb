@@ -130,7 +130,7 @@ class FogProviderJoyent < Coopr::Plugin::Provider
 
       # Validate connectivity
       Net::SSH.start(bootstrap_ip, @task['config']['ssh-auth']['user'], @credentials) do |ssh|
-        ssh_exec!(ssh, 'ping -c1 www.opscode.com', 'Validating external connectivity and DNS resolution via ping')
+        ssh_exec!(ssh, 'ping -c1 www.joyent.com', 'Validating external connectivity and DNS resolution via ping')
         ssh_exec!(ssh, "#{sudo} hostname #{@task['config']['hostname']}", 'Temporarily setting hostname')
         # Check and make sure firstboot is done running
         beginning = Time.now

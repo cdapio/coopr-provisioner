@@ -195,7 +195,7 @@ class FogProviderGoogle < Coopr::Plugin::Provider
       # Validate connectivity
       log.debug "Attempting to ssh to #{bootstrap_ip} as #{@task['config']['ssh-auth']['user']} with credentials: #{@credentials}"
       Net::SSH.start(bootstrap_ip, @task['config']['ssh-auth']['user'], @credentials) do |ssh|
-        ssh_exec!(ssh, 'ping -c1 www.opscode.com', 'Validating external connectivity and DNS resolution via ping')
+        ssh_exec!(ssh, 'ping -c1 www.google.com', 'Validating external connectivity and DNS resolution via ping')
         ssh_exec!(ssh, "#{sudo} hostname #{hostname}", "Setting hostname to #{hostname}")
       end
 
