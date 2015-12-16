@@ -26,7 +26,7 @@ require 'rubygems/package'
 require 'zlib'
 require_relative 'rest-helper'
 
-module Coopr 
+module Coopr
   # class which manages data resources locally on the provisioner. can sync from server, and activate
   class ResourceManager
     include Logging
@@ -124,7 +124,7 @@ module Coopr
             end
             # extract
             if entry.directory?
-              FileUtils.mkdir_p dest, :mode => entry.header.mode
+              FileUtils.mkdir_p dest, mode: entry.header.mode
             elsif entry.file?
               # ensure extraction directory exists
               d_dir = File.dirname(dest)
@@ -148,7 +148,7 @@ module Coopr
       uri = %W( #{@config.get(PROVISIONER_SERVER_URI)} v2/tenants/#{@tenant} #{resource} versions #{version} ).join('/')
       log.debug "fetching resource at #{uri} for tenant #{@tenant}"
       begin
-        response = Coopr::RestHelper.get(uri, { 'Coopr-UserID' => 'admin', 'Coopr-TenantID' => @tenant })
+        response = Coopr::RestHelper.get(uri, 'Coopr-UserID' => 'admin', 'Coopr-TenantID' => @tenant)
       rescue => e
         log.error "unable to fetch resource: #{e.inspect}"
         return
@@ -167,11 +167,7 @@ module Coopr
       end
       yield tmpfile
     ensure
-      if defined? tmpfile
-        unless tmpfile.nil?
-          FileUtils.rm_rf tmpfile
-        end
-      end
+      FileUtils.rm_rf tmpfile if defined? tmpfile && !tmpfile.nil?
     end
 
     # deletes a resource from the local data directory
@@ -229,7 +225,7 @@ module Coopr
         end
         return true
       end
-      return false
+      false
     end
 
     # determine if a versioned resource is active
@@ -248,13 +244,11 @@ module Coopr
       if workdir.exist?
         workdir.find do |path|
           # symlinks indicate an active version of a resource
-          if File.symlink?(path)
-            # determine where the link points
-            target = File.readlink(path)
-            # the version will be the parent directory
-            version = target.split('/')[-2]
-            @active[path.relative_path_from(workdir).to_s] = version
-          end
+          next unless File.symlink?(path)
+          target = File.readlink(path)
+          # the version will be the parent directory
+          version = target.split('/')[-2]
+          @active[path.relative_path_from(workdir).to_s] = version
         end
       end
     end

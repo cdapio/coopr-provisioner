@@ -21,16 +21,15 @@ require 'openssl'
 
 module Coopr
   class RestHelper
-
     @cert_path = nil
     @cert_pass = nil
 
-    def self.cert_path=(cert_path)
-      @cert_path = cert_path
+    class << self
+      attr_writer :cert_path
     end
 
-    def self.cert_pass=(cert_pass)
-      @cert_pass = cert_pass
+    class << self
+      attr_writer :cert_pass
     end
 
     def self.get_resource(uri)
@@ -40,8 +39,8 @@ module Coopr
         cert = File.read(@cert_path)
         RestClient::Resource.new(
           uri,
-          :ssl_client_cert => OpenSSL::X509::Certificate.new(cert),
-          :ssl_client_key => OpenSSL::PKey::RSA.new(cert, @cert_pass)
+          ssl_client_cert: OpenSSL::X509::Certificate.new(cert),
+          ssl_client_key: OpenSSL::PKey::RSA.new(cert, @cert_pass)
         )
       end
     end

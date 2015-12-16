@@ -23,7 +23,7 @@ describe Coopr::Plugin::Provider do
 
   # Set these up once
   before :all do
-    env = Hash.new
+    env = {}
     %w(create confirm delete).each do |taskname|
       instance_variable_set("@task_#{taskname}", JSON.parse(response.gsub('BOOTSTRAP', taskname)))
       instance_variable_set("@provider_#{taskname}", Coopr::Plugin::Provider.new(env, instance_variable_get("@task_#{taskname}")))

@@ -23,7 +23,7 @@ describe Coopr::Plugin::Automator do
 
   # Set these up once
   before :all do
-    env = Hash.new
+    env = {}
     %w(bootstrap install configure initialize start stop remove).each do |taskname|
       instance_variable_set("@task_#{taskname}", JSON.parse(response.gsub('BOOTSTRAP', taskname)))
       instance_variable_set("@automator_#{taskname}", Coopr::Plugin::Automator.new(env, instance_variable_get("@task_#{taskname}")))

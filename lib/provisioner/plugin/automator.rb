@@ -37,7 +37,11 @@ module Coopr
         sshauth = @task['config']['ssh-auth']
         hostname = @task['config']['hostname']
         ipaddress = @task['config']['ipaddresses']['access_v4']
-        fields = @task['config']['service']['action']['fields'] rescue nil
+        fields = begin
+                   @task['config']['service']['action']['fields']
+                 rescue
+                   nil
+                 end
 
         verify_ssh_host_key(ipaddress, 'rsa')
 
@@ -46,22 +50,22 @@ module Coopr
           bootstrap('hostname' => hostname, 'ipaddress' => ipaddress, 'sshauth' => sshauth)
           return @result
         when 'install'
-          install({'hostname' => hostname, 'ipaddress' => ipaddress, 'sshauth' => sshauth, 'fields' => fields})
+          install('hostname' => hostname, 'ipaddress' => ipaddress, 'sshauth' => sshauth, 'fields' => fields)
           return @result
         when 'configure'
-          configure({'hostname' => hostname, 'ipaddress' => ipaddress, 'sshauth' => sshauth, 'fields' => fields})
+          configure('hostname' => hostname, 'ipaddress' => ipaddress, 'sshauth' => sshauth, 'fields' => fields)
           return @result
         when 'initialize'
-          init({'hostname' => hostname, 'ipaddress' => ipaddress, 'sshauth' => sshauth, 'fields' => fields})
+          init('hostname' => hostname, 'ipaddress' => ipaddress, 'sshauth' => sshauth, 'fields' => fields)
           return @result
         when 'start'
-          start({'hostname' => hostname, 'ipaddress' => ipaddress, 'sshauth' => sshauth, 'fields' => fields})
+          start('hostname' => hostname, 'ipaddress' => ipaddress, 'sshauth' => sshauth, 'fields' => fields)
           return @result
         when 'stop'
-          stop({'hostname' => hostname, 'ipaddress' => ipaddress, 'sshauth' => sshauth, 'fields' => fields})
+          stop('hostname' => hostname, 'ipaddress' => ipaddress, 'sshauth' => sshauth, 'fields' => fields)
           return @result
         when 'remove'
-          remove({'hostname' => hostname, 'ipaddress' => ipaddress, 'sshauth' => sshauth, 'fields' => fields})
+          remove('hostname' => hostname, 'ipaddress' => ipaddress, 'sshauth' => sshauth, 'fields' => fields)
           return @result
         else
           fail "unhandled automator task type: #{task['taskName']}"
@@ -81,43 +85,43 @@ module Coopr
         end
       end
 
-      def bootstrap(inputmap)
+      def bootstrap(_inputmap)
         @result['status'] = 1
         @result['message'] = "Unimplemented task bootstrap in class #{self.class.name}"
         fail "Unimplemented task bootstrap in class #{self.class.name}"
       end
 
-      def install(inputmap)
+      def install(_inputmap)
         @result['status'] = 1
         @result['message'] = "Unimplemented task install in class #{self.class.name}"
         fail "Unimplemented task install in class #{self.class.name}"
       end
 
-      def configure(inputmap)
+      def configure(_inputmap)
         @result['status'] = 1
         @result['message'] = "Unimplemented task configure in class #{self.class.name}"
         fail "Unimplemented task configure in class #{self.class.name}"
       end
 
-      def init(inputmap)
+      def init(_inputmap)
         @result['status'] = 1
         @result['message'] = "Unimplemented task initialize in class #{self.class.name}"
         fail "Unimplemented task initialize in class #{self.class.name}"
       end
 
-      def start(inputmap)
+      def start(_inputmap)
         @result['status'] = 1
         @result['message'] = "Unimplemented task start in class #{self.class.name}"
         fail "Unimplemented task start in class #{self.class.name}"
       end
 
-      def stop(inputmap)
+      def stop(_inputmap)
         @result['status'] = 1
         @result['message'] = "Unimplemented task stop in class #{self.class.name}"
         fail "Unimplemented task stop in class #{self.class.name}"
       end
 
-      def remove(inputmap)
+      def remove(_inputmap)
         @result['status'] = 1
         @result['message'] = "Unimplemented task remove in class #{self.class.name}"
         fail "Unimplemented task remove in class #{self.class.name}"
