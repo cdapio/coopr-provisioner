@@ -2,11 +2,11 @@
 # Cookbook Name:: ntp
 # Attributes:: default
 #
-# Author:: Joshua Timberman (<joshua@opscode.com>)
-# Author:: Tim Smith (<tsmith@limelight.com>)
-# Author:: Charles Johnson (<charles@opscode.com>)
+# Author:: Joshua Timberman (<joshua@chef.io>)
+# Author:: Tim Smith (<tsmith@chef.io>)
+# Author:: Charles Johnson (<charles@chef.io>)
 #
-# Copyright 2009-2013, Opscode, Inc.
+# Copyright 2009-2015, Chef Software, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -22,15 +22,20 @@
 #
 
 # default attributes for all platforms
-default['ntp']['servers']   = [] # The default recipe sets a list of common NTP servers (COOK-1170)
+default['ntp']['servers'] = [] # The default recipe sets a list of common NTP servers (COOK-1170)
 default['ntp']['peers'] = []
 default['ntp']['restrictions'] = []
+default['ntp']['tinker'] = { 'panic' => 0 }
+
+# set `restrict default` for IPv4 and IPv6
+default['ntp']['restrict_default'] = 'kod notrap nomodify nopeer noquery'
 
 # internal attributes
 default['ntp']['packages'] = %w(ntp ntpdate)
 default['ntp']['service'] = 'ntpd'
 default['ntp']['varlibdir'] = '/var/lib/ntp'
 default['ntp']['driftfile'] = "#{node['ntp']['varlibdir']}/ntp.drift"
+default['ntp']['logfile'] = nil
 default['ntp']['conffile'] = '/etc/ntp.conf'
 default['ntp']['statsdir'] = '/var/log/ntpstats/'
 default['ntp']['conf_owner'] = 'root'
@@ -42,19 +47,34 @@ default['ntp']['sync_clock'] = false
 default['ntp']['sync_hw_clock'] = false
 default['ntp']['listen'] = nil
 default['ntp']['listen_network'] = nil
+default['ntp']['ignore'] = nil
 default['ntp']['apparmor_enabled'] = false
 default['ntp']['monitor'] = false
 default['ntp']['statistics'] = true
+default['ntp']['conf_restart_immediate'] = false
+
+# See http://www.vmware.com/vmtn/resources/238 p. 23 for explanation
+default['ntp']['disable_tinker_panic_on_virtualization_guest'] = true
 
 default['ntp']['peer']['use_iburst'] = true
 default['ntp']['peer']['use_burst'] = false
 default['ntp']['peer']['minpoll'] = 6
 default['ntp']['peer']['maxpoll'] = 10
 
+default['ntp']['server']['prefer'] = ''
 default['ntp']['server']['use_iburst'] = true
 default['ntp']['server']['use_burst'] = false
 default['ntp']['server']['minpoll'] = 6
 default['ntp']['server']['maxpoll'] = 10
+
+default['ntp']['tinker']['allan'] = 1500
+default['ntp']['tinker']['dispersion'] = 15
+default['ntp']['tinker']['panic'] = 1000
+default['ntp']['tinker']['step'] = 0.128
+default['ntp']['tinker']['stepout'] = 900
+
+# Set to true if using ntp < 4.2.8 or any unpatched ntp version to mitigate CVE-2014-9293 / CVE-2014-9294 / CVE-2014-9295
+default['ntp']['localhost']['noquery'] = false
 
 # overrides on a platform-by-platform basis
 case node['platform_family']
@@ -81,6 +101,7 @@ when 'freebsd'
   default['ntp']['driftfile'] = "#{node['ntp']['varlibdir']}/ntpd.drift"
   default['ntp']['statsdir'] = "#{node['ntp']['varlibdir']}/ntpstats"
   default['ntp']['conf_group'] = 'wheel'
+  default['ntp']['var_owner'] = 'root'
   default['ntp']['var_group'] = 'wheel'
 when 'gentoo'
   default['ntp']['packages'] = %w(ntp)
@@ -96,4 +117,18 @@ when 'solaris2'
   default['ntp']['var_owner'] = 'root'
   default['ntp']['var_group'] = 'sys'
   default['ntp']['leapfile'] = '/etc/inet/ntp.leap'
+when 'pld'
+  default['ntp']['packages'] = %w(ntpd)
+  default['ntp']['conffile'] = '/etc/ntp/ntp.conf'
+  default['ntp']['leapfile'] = '/etc/ntp/ntp.leapseconds'
+  default['ntp']['driftfile'] = "#{node['ntp']['varlibdir']}/drift"
+  default['ntp']['var_owner'] = 'root'
+end
+
+unless node['platform'] == 'windows'
+  if !node['virtualization'] || node['virtualization']['role'] != 'guest'
+    default['ntp']['use_cmos'] = true
+  else
+    default['ntp']['use_cmos'] = false
+  end
 end

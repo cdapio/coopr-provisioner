@@ -1,10 +1,10 @@
 #
 # Cookbook Name:: ntp
 # Recipe:: default
-# Author:: Joshua Timberman (<joshua@opscode.com>)
+# Author:: Joshua Timberman (<joshua@chef.io>)
 # Author:: Tim Smith (<tsmith@limelight.com>)
 #
-# Copyright 2009-2013, Opscode, Inc
+# Copyright 2009-2015, Chef Software, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-::Chef::Recipe.send(:include, Opscode::Ntp::Helper)
+::Chef::Resource.send(:include, Opscode::Ntp::Helper)
 
 if platform_family?('windows')
   include_recipe 'ntp::windows_client'
@@ -41,6 +41,7 @@ else
     group node['ntp']['conf_group']
     mode  '0644'
     source 'ntp.leapseconds'
+    notifies :restart, "service[#{node['ntp']['service']}]"
   end
 
   include_recipe 'ntp::apparmor' if node['ntp']['apparmor_enabled']
@@ -63,7 +64,7 @@ if node['ntp']['listen'].nil? && !node['ntp']['listen_network'].nil?
     require 'ipaddr'
     net = IPAddr.new(node['ntp']['listen_network'])
 
-    node['network']['interfaces'].each do |iface, addrs|
+    node['network']['interfaces'].each do |_iface, addrs|
       addrs['addresses'].each do |ip, params|
         addr = IPAddr.new(ip) if params['family'].eql?('inet') || params['family'].eql?('inet6')
         node.set['ntp']['listen'] = addr if net.include?(addr)
@@ -72,16 +73,19 @@ if node['ntp']['listen'].nil? && !node['ntp']['listen_network'].nil?
   end
 end
 
-leapfile_enabled = ntpd_supports_native_leapfiles
+node.default['ntp']['tinker']['panic'] = 0 if node['virtualization'] &&
+                                              node['virtualization']['role'] == 'guest' &&
+                                              node['ntp']['disable_tinker_panic_on_virtualization_guest']
 
 template node['ntp']['conffile'] do
   source   'ntp.conf.erb'
   owner    node['ntp']['conf_owner']
   group    node['ntp']['conf_group']
   mode     '0644'
-  notifies :restart, "service[#{node['ntp']['service']}]"
+  notifies :restart, "service[#{node['ntp']['service']}]" unless node['ntp']['conf_restart_immediate']
+  notifies :restart, "service[#{node['ntp']['service']}]", :immediately if node['ntp']['conf_restart_immediate']
   variables(
-      :ntpd_supports_native_leapfiles => leapfile_enabled
+    lazy { { ntpd_supports_native_leapfiles: ntpd_supports_native_leapfiles } }
   )
 end
 
@@ -106,6 +110,6 @@ execute 'Force sync hardware clock with system clock' do
 end
 
 service node['ntp']['service'] do
-  supports :status => true, :restart => true
+  supports status: true, restart: true
   action   [:enable, :start]
 end

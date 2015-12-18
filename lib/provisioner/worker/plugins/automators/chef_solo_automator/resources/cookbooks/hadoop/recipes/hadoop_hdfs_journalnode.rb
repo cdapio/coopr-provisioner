@@ -21,24 +21,8 @@
 
 include_recipe 'hadoop::default'
 include_recipe 'hadoop::_hadoop_hdfs_checkconfig'
-
+include_recipe 'hadoop::_system_tuning'
 pkg = 'hadoop-hdfs-journalnode'
-package pkg do
-  action :nothing
-end
-
-# Hack to prevent auto-start of services, see COOK-26
-ruby_block "package-#{pkg}" do
-  block do
-    begin
-      Chef::Resource::RubyBlock.send(:include, Hadoop::Helpers)
-      policy_rcd('disable') if node['platform_family'] == 'debian'
-      resources("package[#{pkg}]").run_action(:install)
-    ensure
-      policy_rcd('enable') if node['platform_family'] == 'debian'
-    end
-  end
-end
 
 dfs_jn_edits_dirs =
   if node['hadoop']['hdfs_site'].key?('dfs.journalnode.edits.dir')
@@ -55,6 +39,65 @@ dfs_jn_edits_dirs.split(',').each do |dir|
     action :create
     recursive true
   end
+end
+
+hadoop_log_dir =
+  if node['hadoop'].key?('hadoop_env') && node['hadoop']['hadoop_env'].key?('hadoop_log_dir')
+    node['hadoop']['hadoop_env']['hadoop_log_dir']
+  elsif hdp22?
+    '/var/log/hadoop/hdfs'
+  else
+    '/var/log/hadoop-hdfs'
+  end
+
+hadoop_pid_dir =
+  if hdp22?
+    '/var/run/hadoop/hdfs'
+  else
+    '/var/run/hadoop-hdfs'
+  end
+
+# Create /etc/default configuration
+template "/etc/default/#{pkg}" do
+  source 'generic-env.sh.erb'
+  mode '0644'
+  owner 'root'
+  group 'root'
+  action :create
+  variables :options => {
+    'hadoop_pid_dir' => hadoop_pid_dir,
+    'hadoop_log_dir' => hadoop_log_dir,
+    'hadoop_namenode_user' => 'hdfs',
+    'hadoop_secondarynamenode_user' => 'hdfs',
+    'hadoop_datanode_user' => 'hdfs',
+    'hadoop_ident_string' => 'hdfs',
+    'hadoop_privileged_nfs_user' => 'hdfs',
+    'hadoop_privileged_nfs_pid_dir' => hadoop_pid_dir,
+    'hadoop_privileged_nfs_log_dir' => hadoop_log_dir,
+    'hadoop_secure_dn_user' => 'hdfs',
+    'hadoop_secure_dn_pid_dir' => hadoop_pid_dir,
+    'hadoop_secure_dn_log_dir' => hadoop_log_dir
+  }
+end
+
+template "/etc/init.d/#{pkg}" do
+  source 'hadoop-init.erb'
+  mode '0755'
+  owner 'root'
+  group 'root'
+  action :create
+  variables :options => {
+    'desc' => 'Hadoop HDFS JournalNode',
+    'name' => pkg,
+    'process' => 'java',
+    'binary' => "#{hadoop_lib_dir}/hadoop/sbin/hadoop-daemon.sh",
+    'args' => '--config ${CONF_DIR} start journalnode',
+    'confdir' => '${HADOOP_CONF_DIR}',
+    'user' => 'hdfs',
+    'home' => "#{hadoop_lib_dir}/hadoop",
+    'pidfile' => "${HADOOP_PID_DIR}/#{pkg}.pid",
+    'logfile' => "${HADOOP_LOG_DIR}/#{pkg}.log"
+  }
 end
 
 service pkg do

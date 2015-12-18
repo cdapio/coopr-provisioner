@@ -18,23 +18,50 @@
 #
 
 include_recipe 'hadoop::hive'
+include_recipe 'hadoop::_system_tuning'
 pkg = 'hive-server'
 
-package pkg do
-  action :nothing
+hive_log_dir =
+  if node['hive'].key?('hive_env') && node['hive']['hive_env'].key?('hive_log_dir')
+    node['hive']['hive_env']['hive_log_dir']
+  else
+    '/var/log/hive'
+  end
+
+# Create /etc/default configuration
+template "/etc/default/#{pkg}" do
+  source 'generic-env.sh.erb'
+  mode '0644'
+  owner 'root'
+  group 'root'
+  action :create
+  variables :options => {
+    'hive_home' => "#{hadoop_lib_dir}/hive",
+    'hive_pid_dir' => '/var/run/hive',
+    'hive_log_dir' => hive_log_dir,
+    'hive_ident_string' => 'hive',
+    'hive_conf_dir' => '/etc/hive/conf'
+  }
 end
 
-# Hack to prevent auto-start of services, see COOK-26
-ruby_block "package-#{pkg}" do
-  block do
-    begin
-      Chef::Resource::RubyBlock.send(:include, Hadoop::Helpers)
-      policy_rcd('disable') if node['platform_family'] == 'debian'
-      resources("package[#{pkg}]").run_action(:install)
-    ensure
-      policy_rcd('enable') if node['platform_family'] == 'debian'
-    end
-  end
+template "/etc/init.d/#{pkg}" do
+  source 'hadoop-init.erb'
+  mode '0755'
+  owner 'root'
+  group 'root'
+  action :create
+  variables :options => {
+    'desc' => 'Hive Server',
+    'name' => pkg,
+    'process' => 'java',
+    'binary' => "#{hadoop_lib_dir}/hive/bin/hive",
+    'args' => '--config ${CONF_DIR} --service server > ${LOG_FILE} 2>&1 < /dev/null &',
+    'confdir' => '${HIVE_CONF_DIR}',
+    'user' => 'hive',
+    'home' => "#{hadoop_lib_dir}/hive",
+    'pidfile' => "${HIVE_PID_DIR}/#{pkg}.pid",
+    'logfile' => "${HIVE_LOG_DIR}/#{pkg}.log"
+  }
 end
 
 service pkg do
