@@ -24,44 +24,6 @@ package 'hive' do
 end
 
 hive_conf_dir = "/etc/hive/#{node['hive']['conf_dir']}"
-hive_data_dir = '/usr/lib/hive/lib'
-java_share_dir = '/usr/share/java'
-
-case node['platform_family']
-when 'debian'
-  pkgs = %w(
-    libmysql-java
-    libpostgresql-jdbc-java
-  )
-  jars = %w(
-    mysql-connector-java
-    postgresql-jdbc4
-  )
-when 'rhel'
-  case node['platform_version'].to_i
-  when 6
-    pkgs = %w(
-      mysql-connector-java
-      postgresql-jdbc
-    )
-    jars = pkgs
-  else
-    Chef::Log.warn('You must download and install JDBC connectors')
-    pkgs = nil
-  end
-end
-
-pkgs.each do |pkg|
-  package pkg do
-    action :install
-  end
-end
-
-jars.each do |jar|
-  link "#{hive_data_dir}/#{jar}.jar" do
-    to "#{java_share_dir}/#{jar}.jar"
-  end
-end
 
 directory hive_conf_dir do
   mode '0755'
@@ -78,74 +40,73 @@ directory '/var/lib/hive' do
   action :create
 end
 
+local_scratch_dir =
+  if node['hive'].key?('hive_site') && node['hive']['hive_site'].key?('hive.exec.local.scratchdir')
+    node['hive']['hive_site']['hive.exec.local.scratchdir']
+  else
+    '/tmp/${user.name}'
+  end
+
+node.default['hive']['hive_site']['hive.exec.local.scratchdir'] = local_scratch_dir
+
+directory local_scratch_dir.gsub('${user.name}', 'hive') do
+  mode '1777'
+  owner 'hive'
+  group 'hive'
+  action :create
+  only_if { local_scratch_dir != '/tmp/${user.name}' }
+end
+
 # Setup hive-site.xml
-if node['hive'].key?('hive_site')
-  my_vars = { :options => node['hive']['hive_site'] }
-
-  template "#{hive_conf_dir}/hive-site.xml" do
-    source 'generic-site.xml.erb'
-    mode '0644'
-    owner 'root'
-    group 'root'
-    action :create
-    variables my_vars
-  end
-
-  if node['hive']['hive_site'].key?('hive.exec.local.scratchdir') &&
-     node['hive']['hive_site']['hive.exec.local.scratchdir'] != '/tmp/${user.name}'
-
-    local_scratch_dir = node['hive']['hive_site']['hive.exec.local.scratchdir']
-
-    directory local_scratch_dir do
-      mode '1777'
-      owner 'hive'
-      group 'hive'
-      action :create
-    end
-  end
+template "#{hive_conf_dir}/hive-site.xml" do
+  source 'generic-site.xml.erb'
+  mode '0644'
+  owner 'root'
+  group 'root'
+  action :create
+  variables :options => node['hive']['hive_site']
+  only_if { node['hive'].key?('hive_site') && !node['hive']['hive_site'].empty? }
 end # End hive-site.xml
 
-# Setup hive-env.sh
-if node['hive'].key?('hive_env')
-  my_vars = { :options => node['hive']['hive_env'] }
+# Setup HIVE_LOG_DIR
+hive_log_dir =
+  if node['hive'].key?('hive_env') && node['hive']['hive_env'].key?('hive_log_dir')
+    node['hive']['hive_env']['hive_log_dir']
+  else
+    '/var/log/hive'
+  end
 
-  hive_log_dir =
-    if node['hive']['hive_env'].key?('hive_log_dir')
-      node['hive']['hive_env']['hive_log_dir']
-    else
-      '/var/log/hive'
-    end
+directory hive_log_dir do
+  owner 'hive'
+  group 'hive'
+  mode '0755'
+  action :create
+  recursive true
+  only_if { node['hive'].key?('hive_env') && node['hive']['hive_env'].key?('hive_log_dir') }
+end
 
-  directory hive_log_dir do
-    owner 'hive'
-    group 'hive'
-    mode '0755'
-    action :create
+unless hive_log_dir == '/var/log/hive'
+  # Delete default directory, if we aren't set to it
+  directory '/var/log/hive' do
+    action :delete
     recursive true
-    only_if { node['hive']['hive_env'].key?('hive_log_dir') }
+    not_if 'test -L /var/log/hive'
   end
+  # symlink
+  link '/var/log/hive' do
+    to hive_log_dir
+  end
+end
 
-  unless hive_log_dir == '/var/log/hive'
-    # Delete default directory, if we aren't set to it
-    directory '/var/log/hive' do
-      action :delete
-      recursive true
-      not_if 'test -L /var/log/hive'
-    end
-    # symlink
-    link '/var/log/hive' do
-      to hive_log_dir
-    end
-  end
-
-  template "#{hive_conf_dir}/hive-env.sh" do
-    source 'generic-env.sh.erb'
-    mode '0755'
-    owner 'hive'
-    group 'hive'
-    action :create
-    variables my_vars
-  end
+# Setup hive-env.sh
+template "#{hive_conf_dir}/hive-env.sh" do
+  source 'generic-env.sh.erb'
+  mode '0755'
+  owner 'hive'
+  group 'hive'
+  action :create
+  variables :options => node['hive']['hive_env']
+  only_if { node['hive'].key?('hive_env') && !node['hive']['hive_env'].empty? }
 end # End hive-env.sh
 
 # Create Hive user's home in HDFS
@@ -157,6 +118,13 @@ execute 'hive-hdfs-homedir' do
   group 'hdfs'
   not_if "hdfs dfs -test -d #{dfs}/user/hive", :user => 'hdfs'
   action :nothing
+end
+
+# Another Hortonworks mess to clean up, their packages force-install blank configs here
+directory '/etc/hive/conf' do
+  action :delete
+  recursive true
+  not_if 'test -L /etc/hive/conf'
 end
 
 # Update alternatives to point to our configuration

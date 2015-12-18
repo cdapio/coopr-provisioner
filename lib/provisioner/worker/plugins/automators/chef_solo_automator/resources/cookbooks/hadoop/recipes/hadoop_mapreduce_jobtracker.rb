@@ -18,6 +18,7 @@
 #
 
 include_recipe 'hadoop::default'
+include_recipe 'hadoop::_system_tuning'
 pkg = 'hadoop-0.20-mapreduce-jobtracker'
 
 # TODO: check for these and set them up
@@ -54,7 +55,6 @@ end
 ruby_block "package-#{pkg}" do
   block do
     begin
-      Chef::Resource::RubyBlock.send(:include, Hadoop::Helpers)
       policy_rcd('disable') if node['platform_family'] == 'debian'
       resources("package[#{pkg}]").run_action(:install)
     ensure

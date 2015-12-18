@@ -1,8 +1,11 @@
-# Hadoop
+# Enable security everywhere with these two properties
+# default['hadoop']['core_site']['hadoop.security.authorization'] = 'true'
+# default['hadoop']['core_site']['hadoop.security.authentication'] = 'kerberos'
+
 if node['hadoop'].key?('core_site') && node['hadoop']['core_site'].key?('hadoop.security.authorization') &&
-  node['hadoop']['core_site'].key?('hadoop.security.authentication') &&
-  node['hadoop']['core_site']['hadoop.security.authorization'].to_s == 'true' &&
-  node['hadoop']['core_site']['hadoop.security.authentication'] == 'kerberos'
+   node['hadoop']['core_site'].key?('hadoop.security.authentication') &&
+   node['hadoop']['core_site']['hadoop.security.authorization'].to_s == 'true' &&
+   node['hadoop']['core_site']['hadoop.security.authentication'] == 'kerberos'
 
   include_attribute 'krb5'
   include_attribute 'krb5_utils'
@@ -18,8 +21,10 @@ if node['hadoop'].key?('core_site') && node['hadoop']['core_site'].key?('hadoop.
   default['krb5_utils']['krb5_service_keytabs']['zookeeper'] = { 'owner' => 'zookeeper', 'group' => 'hadoop', 'mode' => '0640' }
   default['krb5_utils']['krb5_user_keytabs']['yarn'] = { 'owner' => 'yarn', 'group' => 'hadoop', 'mode' => '0640' }
 
+  # Hadoop
+
   # container-executor.cfg
-  default['hadoop']['container_executor']['allowed.system.users'] = 'yarn'
+  default['hadoop']['container_executor']['allowed.system.users'] = 'hive,yarn'
   default['hadoop']['container_executor']['banned.users'] = 'hdfs,mapred,bin'
   default['hadoop']['container_executor']['min.user.id'] = 500
   default['hadoop']['container_executor']['yarn.nodemanager.linux-container-executor.group'] = 'yarn'
@@ -34,10 +39,19 @@ if node['hadoop'].key?('core_site') && node['hadoop']['core_site'].key?('hadoop.
   default['hadoop']['container_executor']['yarn.nodemanager.log-dirs'] = '/var/log/hadoop-yarn/userlogs'
   default['hadoop']['container_executor']['yarn.nodemanager.container-executor.class'] = 'org.apache.hadoop.yarn.server.nodemanager.LinuxContainerExecutor'
 
+  # core-site.xml
+  default['hadoop']['core_site']['hadoop.proxyuser.hive.groups'] = 'hadoop,hive'
+  default['hadoop']['core_site']['hadoop.proxyuser.hive.hosts'] = '*'
+
   # hadoop-env.sh
   default['hadoop']['hadoop_env']['hadoop_secure_dn_user'] = 'hdfs'
-  default['hadoop']['hadoop_env']['hadoop_secure_dn_pid_dir'] = '/var/run/hadoop-hdfs'
-  default['hadoop']['hadoop_env']['hadoop_secure_dn_log_dir'] = '/var/log/hadoop-hdfs'
+  if node['hadoop']['distribution'] == 'hdp' && node['hadoop']['distribution_version'].to_f >= 2.2
+    default['hadoop']['hadoop_env']['hadoop_secure_dn_pid_dir'] = '/var/run/hadoop/hdfs'
+    default['hadoop']['hadoop_env']['hadoop_secure_dn_log_dir'] = '/var/log/hadoop/hdfs'
+  else
+    default['hadoop']['hadoop_env']['hadoop_secure_dn_pid_dir'] = '/var/run/hadoop-hdfs'
+    default['hadoop']['hadoop_env']['hadoop_secure_dn_log_dir'] = '/var/log/hadoop-hdfs'
+  end
 
   # hdfs-site.xml
   default['hadoop']['hdfs_site']['dfs.block.access.token.enable'] = 'true'
@@ -53,6 +67,10 @@ if node['hadoop'].key?('core_site') && node['hadoop']['core_site'].key?('hadoop.
   default['hadoop']['hdfs_site']['dfs.datanode.address'] = '0.0.0.0:1004'
   default['hadoop']['hdfs_site']['dfs.datanode.http.address'] = '0.0.0.0:1006'
 
+  # mapred-site.xml
+  default['hadoop']['mapred_site']['mapreduce.jobhistory.keytab'] = "#{node['krb5_utils']['keytabs_dir']}/jhs.service.keytab"
+  default['hadoop']['mapred_site']['mapreduce.jobhistory.principal'] = "jhs/_HOST@#{node['krb5']['krb5_conf']['realms']['default_realm'].upcase}"
+
   # yarn-site.xml
   default['hadoop']['yarn_site']['yarn.resourcemanager.keytab'] = "#{node['krb5_utils']['keytabs_dir']}/yarn.service.keytab"
   default['hadoop']['yarn_site']['yarn.nodemanager.keytab'] = "#{node['krb5_utils']['keytabs_dir']}/yarn.service.keytab"
@@ -61,18 +79,11 @@ if node['hadoop'].key?('core_site') && node['hadoop']['core_site'].key?('hadoop.
   default['hadoop']['yarn_site']['yarn.nodemanager.linux-container-executor.group'] = 'yarn'
   default['hadoop']['yarn_site']['yarn.nodemanager.container-executor.class'] = 'org.apache.hadoop.yarn.server.nodemanager.LinuxContainerExecutor'
 
-end
-
-# HBase
-if node['hbase'].key?('hbase_site') && node['hbase']['hbase_site'].key?('hbase.security.authorization') &&
-  node['hbase']['hbase_site'].key?('hbase.security.authentication') &&
-  node['hbase']['hbase_site']['hbase.security.authorization'].to_s == 'true' &&
-  node['hbase']['hbase_site']['hbase.security.authentication'] == 'kerberos'
-
-  include_attribute 'krb5'
-  include_attribute 'krb5_utils'
+  # HBase
 
   # hbase-site.xml
+  default['hbase']['hbase_site']['hbase.security.authorization'] = 'true'
+  default['hbase']['hbase_site']['hbase.security.authentication'] = 'kerberos'
   default['hbase']['hbase_site']['hbase.master.keytab.file'] = "#{node['krb5_utils']['keytabs_dir']}/hbase.service.keytab"
   default['hbase']['hbase_site']['hbase.regionserver.keytab.file'] = "#{node['krb5_utils']['keytabs_dir']}/hbase.service.keytab"
   default['hbase']['hbase_site']['hbase.master.kerberos.principal'] = "hbase/_HOST@#{node['krb5']['krb5_conf']['realms']['default_realm'].upcase}"
@@ -81,38 +92,17 @@ if node['hbase'].key?('hbase_site') && node['hbase']['hbase_site'].key?('hbase.s
   default['hbase']['hbase_site']['hbase.coprocessor.master.classes'] = 'org.apache.hadoop.hbase.security.access.AccessController'
   default['hbase']['hbase_site']['hbase.bulkload.staging.dir'] = '/tmp/hbase-staging'
 
-end
-
-# Hive MetaStore
-if node['hive'].key?('hive_site') && node['hive']['hive_site'].key?('hive.metastore.sasl.enabled') &&
-  node['hive']['hive_site']['hive.metastore.sasl.enabled'].to_s == 'true'
-
-  include_attribute 'krb5'
-  include_attribute 'krb5_utils'
+  # Hive
 
   # hive-site.xml
+  default['hive']['hive_site']['hive.metastore.sasl.enabled'] = 'true'
   default['hive']['hive_site']['hive.metastore.kerberos.keytab.file'] = "#{node['krb5_utils']['keytabs_dir']}/hive.service.keytab"
   default['hive']['hive_site']['hive.metastore.kerberos.principal'] = "hive/_HOST@#{node['krb5']['krb5_conf']['realms']['default_realm'].upcase}"
-
-end
-
-# Hive Server2
-if node['hive'].key?('hive_site') && node['hive']['hive_site'].key?('hive.server2.authentication') &&
-  node['hive']['hive_site']['hive.server2.authentication'].upcase == 'KERBEROS'
-
-  include_attribute 'krb5'
-  include_attribute 'krb5_utils'
-
-  # hive-site.xml
   default['hive']['hive_site']['hive.server2.authentication'] = 'KERBEROS'
-  default['hive']['hive_site']['hive.server2.authentication.kerberos.principal'] = "#{node['krb5_utils']['keytabs_dir']}/hive.service.keytab"
-  default['hive']['hive_site']['hive.server2.authentication.kerberos.keytab'] = "hive/_HOST@#{node['krb5']['krb5_conf']['realms']['default_realm'].upcase}"
+  default['hive']['hive_site']['hive.server2.authentication.kerberos.keytab'] = "#{node['krb5_utils']['keytabs_dir']}/hive.service.keytab"
+  default['hive']['hive_site']['hive.server2.authentication.kerberos.principal'] = "hive/_HOST@#{node['krb5']['krb5_conf']['realms']['default_realm'].upcase}"
 
-end
-
-# ZooKeeper
-if node['zookeeper'].key?('zoocfg') && node['zookeeper']['zoocfg'].key?('authProvider.1') &&
-  node['zookeeper']['zoocfg']['authProvider.1'] == 'org.apache.zookeeper.server.auth.SASLAuthenticationProvider'
+  # ZooKeeper
 
   # jaas.conf hbase-env.sh zookeeper-env.sh
   %w(hbase zookeeper).each do |client|
@@ -125,8 +115,8 @@ if node['zookeeper'].key?('zoocfg') && node['zookeeper']['zoocfg'].key?('authPro
   default['zookeeper']['jaas']['server'] = node['zookeeper']['jaas']['client']
 
   # zoo.cfg
+  default['zookeeper']['zoocfg']['authProvider.1'] = 'org.apache.zookeeper.server.auth.SASLAuthenticationProvider'
   default['zookeeper']['zoocfg']['jaasLoginRenew'] = '3600000' unless node['zookeeper']['zoocfg']['jaasLoginRenew']
   default['zookeeper']['zoocfg']['kerberos.removeHostFromPrincipal'] = 'true'
   default['zookeeper']['zoocfg']['kerberos.removeRealmFromPrincipal'] = 'true'
-
 end

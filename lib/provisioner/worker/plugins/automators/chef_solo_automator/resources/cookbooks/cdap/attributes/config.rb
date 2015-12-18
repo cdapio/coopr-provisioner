@@ -2,7 +2,7 @@
 # Cookbook Name:: cdap
 # Attribute:: config
 #
-# Copyright © 2013-2014 Cask Data, Inc.
+# Copyright © 2013-2015 Cask Data, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -19,8 +19,8 @@
 
 # Default: conf.chef
 default['cdap']['conf_dir'] = 'conf.chef'
-# Default: 2.7.1-1
-default['cdap']['version'] = '2.7.1-1'
+# Default: 3.2.1-1
+default['cdap']['version'] = '3.2.2-1'
 # cdap-site.xml
 default['cdap']['cdap_site']['root.namespace'] = 'cdap'
 # ideally we could put the macro '/${cdap.namespace}' here but this attribute is used elsewhere in the cookbook
@@ -43,4 +43,39 @@ if node['cdap']['version'].to_f < 2.6
   default['cdap']['cdap_site']['gateway.server.address'] = node['fqdn']
   default['cdap']['cdap_site']['gateway.server.port'] = '10000'
   default['cdap']['cdap_site']['gateway.memory.mb'] = '512'
+end
+
+# HDP 2.2+ support
+hdp_version =
+  if node.key?('hadoop') && node['hadoop'].key?('distribution_version')
+    case node['hadoop']['distribution_version']
+    when '2.2.0.0'
+      '2.2.0.0-2041'
+    when '2.2.1.0'
+      '2.2.1.0-2340'
+    when '2.2.4.2'
+      '2.2.4.2-2'
+    when '2.2.4.4'
+      '2.2.4.4-16'
+    when '2.2.6.0'
+      '2.2.6.0-2800'
+    when '2.2.8.0'
+      '2.2.8.0-3150'
+    when '2.3.0.0'
+      '2.3.0.0-2557'
+    when '2.3.2.0'
+      '2.3.2.0-2950'
+    else
+      node['hadoop']['distribution_version']
+    end
+  end
+
+if node.key?('hadoop') && node['hadoop'].key?('distribution') && node['hadoop'].key?('distribution_version') &&
+   node['hadoop']['distribution'] == 'hdp' && node['hadoop']['distribution_version'].to_f >= 2.2 &&
+   node['cdap']['version'].to_f >= 3.1
+  default['cdap']['cdap_env']['opts'] = "${OPTS} -Dhdp.version=#{hdp_version}"
+  default['cdap']['cdap_env']['spark_home'] = "/usr/hdp/#{hdp_version}/spark"
+  default['cdap']['cdap_site']['app.program.jvm.opts'] = "-XX:MaxPermSize=128M ${twill.jvm.gc.opts} -Dhdp.version=#{hdp_version} -Dspark.yarn.am.extraJavaOptions=-Dhdp.version=#{hdp_version}"
+else
+  default['cdap']['cdap_env']['spark_home'] = '/usr/lib/spark'
 end

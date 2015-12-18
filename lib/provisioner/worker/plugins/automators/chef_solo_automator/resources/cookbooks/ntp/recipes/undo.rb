@@ -4,7 +4,7 @@
 # Author:: Eric G. Wolfe
 #
 # Copyright 2012, Eric G. Wolfe
-# Copyright 2009-2013, Opscode, Inc
+# Copyright 2009-2015, Chef Software, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@
 return 'The ntp::undo recipe does not support Windows' if platform_family?('windows')
 
 service node['ntp']['service'] do
-  supports :status => true, :restart => true
+  supports status: true, restart: true
   action   [:stop, :disable]
 end
 
