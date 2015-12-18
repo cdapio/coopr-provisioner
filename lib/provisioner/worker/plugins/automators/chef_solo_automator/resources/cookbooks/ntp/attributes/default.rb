@@ -2,11 +2,11 @@
 # Cookbook Name:: ntp
 # Attributes:: default
 #
-# Author:: Joshua Timberman (<joshua@opscode.com>)
-# Author:: Tim Smith (<tsmith@limelight.com>)
-# Author:: Charles Johnson (<charles@opscode.com>)
+# Author:: Joshua Timberman (<joshua@chef.io>)
+# Author:: Tim Smith (<tsmith@chef.io>)
+# Author:: Charles Johnson (<charles@chef.io>)
 #
-# Copyright 2009-2013, Opscode, Inc.
+# Copyright 2009-2015, Chef Software, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@
 #
 
 # default attributes for all platforms
-default['ntp']['servers']   = [] # The default recipe sets a list of common NTP servers (COOK-1170)
+default['ntp']['servers'] = [] # The default recipe sets a list of common NTP servers (COOK-1170)
 default['ntp']['peers'] = []
 default['ntp']['restrictions'] = []
 default['ntp']['tinker'] = { 'panic' => 0 }
@@ -47,6 +47,7 @@ default['ntp']['sync_clock'] = false
 default['ntp']['sync_hw_clock'] = false
 default['ntp']['listen'] = nil
 default['ntp']['listen_network'] = nil
+default['ntp']['ignore'] = nil
 default['ntp']['apparmor_enabled'] = false
 default['ntp']['monitor'] = false
 default['ntp']['statistics'] = true
@@ -100,6 +101,7 @@ when 'freebsd'
   default['ntp']['driftfile'] = "#{node['ntp']['varlibdir']}/ntpd.drift"
   default['ntp']['statsdir'] = "#{node['ntp']['varlibdir']}/ntpstats"
   default['ntp']['conf_group'] = 'wheel'
+  default['ntp']['var_owner'] = 'root'
   default['ntp']['var_group'] = 'wheel'
 when 'gentoo'
   default['ntp']['packages'] = %w(ntp)
@@ -115,6 +117,12 @@ when 'solaris2'
   default['ntp']['var_owner'] = 'root'
   default['ntp']['var_group'] = 'sys'
   default['ntp']['leapfile'] = '/etc/inet/ntp.leap'
+when 'pld'
+  default['ntp']['packages'] = %w(ntpd)
+  default['ntp']['conffile'] = '/etc/ntp/ntp.conf'
+  default['ntp']['leapfile'] = '/etc/ntp/ntp.leapseconds'
+  default['ntp']['driftfile'] = "#{node['ntp']['varlibdir']}/drift"
+  default['ntp']['var_owner'] = 'root'
 end
 
 unless node['platform'] == 'windows'
