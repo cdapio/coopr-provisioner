@@ -15,6 +15,3 @@ depends 'krb5_utils'
 %w(amazon centos debian redhat scientific ubuntu).each do |os|
   supports os
 end
-
-source_url 'https://github.com/caskdata/cdap_cookbook'
-issues_url 'https://issues.cask.co/browse/COOK/component/10603'
