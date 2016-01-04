@@ -43,10 +43,12 @@ module Coopr
       def dont_interupt
         @interuptable = false
         @enqueued     = []
+        # rubocop: disable Style/GuardClause
         if block_given?
           yield
           allow_interuptions
         end
+        # rubocop: enable Style/GuardClause
       end
 
       def allow_interuptions

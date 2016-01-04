@@ -84,48 +84,46 @@ module Coopr
 
     # main run block
     def run
-      begin
-        @status = 'STARTING'
-        Thread.abort_on_exception = true
-        # start the api server
-        spawn_sinatra_thread
-        # wait for sinatra to fully initialize
-        sleep 1 until Api.running?
-        # register our own signal handlers
-        setup_signal_traps
-        # spawn the heartbeat, signal-handler, and resource threads
-        spawn_heartbeat_thread
-        spawn_signal_thread
-        spawn_resource_thread
+      @status = 'STARTING'
+      Thread.abort_on_exception = true
+      # start the api server
+      spawn_sinatra_thread
+      # wait for sinatra to fully initialize
+      sleep 1 until Api.running?
+      # register our own signal handlers
+      setup_signal_traps
+      # spawn the heartbeat, signal-handler, and resource threads
+      spawn_heartbeat_thread
+      spawn_signal_thread
+      spawn_resource_thread
 
-        # heartbeat thread will update status to 'OK'
+      # heartbeat thread will update status to 'OK'
 
-        # wait for signal_handler to exit in response to signals
+      # wait for signal_handler to exit in response to signals
+      @signal_thread.join
+      # kill the other threads
+      [@heartbeat_thread, @sinatra_thread, @resource_thread].each do |t|
+        t.kill
+        t.join
+      end
+      log.info 'provisioner gracefully shut down'
+      exit
+    rescue RuntimeError => e
+      log.error "Exception raised in thread: #{e.inspect}, shutting down..."
+      # if signal_handler thread alive, use it to shutdown gracefully
+      if @signal_thread && @signal_thread.alive?
+        Process.kill('TERM', 0)
         @signal_thread.join
-        # kill the other threads
         [@heartbeat_thread, @sinatra_thread, @resource_thread].each do |t|
-          t.kill
-          t.join
+          t.kill if t.alive?
         end
-        log.info "provisioner gracefully shut down"
-        exit
-      rescue RuntimeError => e
-        log.error "Exception raised in thread: #{e.inspect}, shutting down..."
-        # if signal_handler thread alive, use it to shutdown gracefully
-        if @signal_thread && @signal_thread.alive?
-          Process.kill('TERM', 0)
-          @signal_thread.join
-          [@heartbeat_thread, @sinatra_thread, @resource_thread].each do |t|
-            t.kill if t.alive?
-          end
-          log.info "provisioner forced graceful shutdown"
-          exit 1
-        else
-          # last resort, kill entire process group
-          Process.kill('TERM', -Process.getpgrp)
-          log.info "provisioner forced shutdown"
-          exit 1
-        end
+        log.info 'provisioner forced graceful shutdown'
+        exit 1
+      else
+        # last resort, kill entire process group
+        Process.kill('TERM', -Process.getpgrp)
+        log.info 'provisioner forced shutdown'
+        exit 1
       end
     end
 
@@ -141,11 +139,10 @@ module Coopr
         # let sinatra take over from here
         Api.run!
       end
-
     end
 
     def setup_signal_traps
-      @signals = Array.new
+      @signals = []
       %w(CLD TERM INT).each do |signal|
         Signal.trap(signal) do
           @signals << signal
@@ -155,7 +152,7 @@ module Coopr
 
     def spawn_signal_thread
       @signal_thread = Thread.new do
-        log.info "started signal processing thread"
+        log.info 'started signal processing thread'
         loop do
           log.debug "reaping #{@signals.size} signals: #{@signals}" unless @signals.empty?
           signals_processed = {}
@@ -170,7 +167,7 @@ module Coopr
               unless @shutting_down
                 # begin shutdown procedure
                 @shutting_down = true
-                tenantmanagers.each do |k, v|
+                tenantmanagers.each do |_k, v|
                   v.delete
                 end
                 # wait for all workers to shut down
@@ -189,15 +186,15 @@ module Coopr
 
     def spawn_heartbeat_thread
       @heartbeat_thread = Thread.new do
-        log.info "starting heartbeat thread"
+        log.info 'starting heartbeat thread'
         loop do
           register_with_server unless @registered
           uri = "#{@server_uri}/v2/provisioners/#{provisioner_id}/heartbeat"
           begin
             json = heartbeat.to_json
-            resp = Coopr::RestHelper.post("#{uri}", json, :'Coopr-UserID' => "admin")
+            resp = Coopr::RestHelper.post("#{uri}", json, :'Coopr-UserID' => 'admin')
             unless resp.code == 200
-              if(resp.code == 404)
+              if resp.code == 404
                 log.warn "Response code #{resp.code} when sending heartbeat, re-registering provisioner"
                 register_with_server
               else
@@ -214,18 +211,16 @@ module Coopr
 
     def spawn_resource_thread
       @resource_thread = Thread.new do
-        log.info "starting resource thread"
+        log.info 'starting resource thread'
         loop do
-          @tenantmanagers.each do |id, tmgr|
-            if tmgr.resource_sync_needed? && tmgr.num_workers == 0
-              # handle stacked sync calls, last one wins
-              while tmgr.resource_sync_needed?
-                log.debug "resource thread invoking sync for tenant #{tmgr.id}"
-                tmgr.sync
-              end
-              log.debug "done syncing tenant #{tmgr.id}, resuming workers"
-              tmgr.resume
-            end
+          @tenantmanagers.each do |_id, tmgr|
+            next unless tmgr.resource_sync_needed? && tmgr.num_workers == 0
+            while tmgr.resource_sync_needed?
+              log.debug "resource thread invoking sync for tenant #{tmgr.id}"
+              tmgr.sync
+                          end
+            log.debug "done syncing tenant #{tmgr.id}, resuming workers"
+            tmgr.resume
           end
           sleep 1
         end
@@ -243,9 +238,9 @@ module Coopr
       log.info "Registering with server at #{uri}: #{data.to_json}"
 
       begin
-        resp = Coopr::RestHelper.put("#{uri}", data.to_json, :'Coopr-UserID' => "admin")
-        if(resp.code == 200)
-          log.info "Successfully registered"
+        resp = Coopr::RestHelper.put("#{uri}", data.to_json, :'Coopr-UserID' => 'admin')
+        if resp.code == 200
+          log.info 'Successfully registered'
           @registered = true
           # announce provisioner is ready
           @status = 'OK'
@@ -260,7 +255,7 @@ module Coopr
     def register_plugins
       worker_launcher = WorkerLauncher.new(@config)
       worker_launcher.provisioner = @provisioner_id
-      worker_launcher.name = "plugin-registration-worker"
+      worker_launcher.name = 'plugin-registration-worker'
       worker_launcher.register = true
       worker_cmd = worker_launcher.cmd
       log.debug "launching worker to register plugins: #{worker_cmd}"
@@ -271,9 +266,9 @@ module Coopr
       uri = "#{@server_uri}/v2/provisioners/#{@provisioner_id}"
       log.info "Unregistering with server at #{uri}"
       begin
-        resp = Coopr::RestHelper.delete("#{uri}", :'Coopr-UserID' => "admin")
-        if(resp.code == 200)
-          log.info "Successfully unregistered"
+        resp = Coopr::RestHelper.delete("#{uri}", :'Coopr-UserID' => 'admin')
+        if resp.code == 200
+          log.info 'Successfully unregistered'
         else
           log.warn "Response code #{resp.code}, #{resp.to_str} when unregistering with coopr server #{uri}"
         end
@@ -289,7 +284,7 @@ module Coopr
     # api method to add or edit tenant
     def add_tenant(tenantspec)
       unless tenantspec.instance_of?(TenantSpec)
-        raise ArgumentError, "only instances of TenantSpec can be added to provisioner", caller
+        fail ArgumentError, 'only instances of TenantSpec can be added to provisioner', caller
       end
       # validate input
       id = tenantspec.id
@@ -305,7 +300,7 @@ module Coopr
       else
         # new tenant
         log.debug "Adding new tenant: #{id}"
-        #tenantmgr.spawn
+        # tenantmgr.spawn
         tenantmgr.resource_sync_needed
         @tenantmanagers[id] = tenantmgr
       end
@@ -330,7 +325,7 @@ module Coopr
         # update worker counts
         v.verify_workers
         # has this tenant been deleted?
-        if (@terminating_tenants.include?(k) && v.num_workers == 0)
+        if @terminating_tenants.include?(k) && v.num_workers == 0
           @tenantmanagers.delete(k)
           @terminating_tenants.delete(k)
         end
@@ -355,21 +350,23 @@ module Coopr
     # determine ip to register with server from routing info
     # http://coderrr.wordpress.com/2008/05/28/get-your-local-ip-address/
     def local_ip
-      begin
-        server_ip = Resolv.getaddress( @server_uri.sub(%r{^https?://}, '').split(':').first ) rescue '127.0.0.1'
-        orig = Socket.do_not_reverse_lookup
-        Socket.do_not_reverse_lookup = true # turn off reverse DNS resolution temporarily
-        UDPSocket.open do |s|
-          s.connect server_ip, 1
-          s.addr.last
-        end
-      rescue => e
-        log.error "Unable to determine provisioner.register.ip, defaulting to 127.0.0.1. Please set it explicitly. "\
-          "Server may not be able to connect to this provisioner: #{e.inspect}"
-        '127.0.0.1'
-      ensure
-        Socket.do_not_reverse_lookup = orig
+      server_ip = begin
+                    Resolv.getaddress(@server_uri.sub(%r{^https?://}, '').split(':').first)
+                  rescue
+                    '127.0.0.1'
+                  end
+      orig = Socket.do_not_reverse_lookup
+      Socket.do_not_reverse_lookup = true # turn off reverse DNS resolution temporarily
+      UDPSocket.open do |s|
+        s.connect server_ip, 1
+        s.addr.last
       end
+    rescue => e
+      log.error 'Unable to determine provisioner.register.ip, defaulting to 127.0.0.1. Please set it explicitly. '\
+        "Server may not be able to connect to this provisioner: #{e.inspect}"
+      '127.0.0.1'
+    ensure
+      Socket.do_not_reverse_lookup = orig
     end
   end
 end

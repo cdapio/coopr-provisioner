@@ -16,13 +16,12 @@
 # limitations under the License.
 #
 
-
 require_relative 'tenantspec'
 require_relative 'logging'
 require_relative 'workerlauncher'
 require_relative 'resourcemanager'
 
-module Coopr 
+module Coopr
   class TenantManager
     include Logging
     attr_accessor :spec, :resourcemanager
@@ -30,7 +29,7 @@ module Coopr
 
     def initialize(spec, config, provisioner_id)
       unless spec.instance_of?(TenantSpec)
-        raise ArgumentError, "TenantManager needs to be initialized with object of type TenantSpec", caller
+        fail ArgumentError, 'TenantManager needs to be initialized with object of type TenantSpec', caller
       end
       @spec = spec
       @config = config
@@ -39,8 +38,7 @@ module Coopr
       @terminating_workers = []
       @resourcemanager = ResourceManager.new(spec.resourcespec, spec.id, config)
       @sync_requests = 0
-
-    end 
+    end
 
     def id
       @spec.id
@@ -52,7 +50,7 @@ module Coopr
 
     # launch the specified number of worker processes
     def spawn
-      @spec.workers.times do |i|
+      @spec.workers.times do |_i|
         spawn_worker_process
       end
     end
@@ -76,7 +74,6 @@ module Coopr
       @status = 'ACTIVE'
       spawn
     end
-
 
     # check worker processes, called after CLD signal processed (child process termination)
     def verify_workers
@@ -115,7 +112,7 @@ module Coopr
       worker_launcher = WorkerLauncher.new(@config)
       worker_launcher.provisioner = @provisioner_id
       worker_launcher.tenant = id
-      worker_launcher.name = "worker-" + id + "-" + (@workerpids.size + 1).to_s
+      worker_launcher.name = 'worker-' + id + '-' + (@workerpids.size + 1).to_s
       worker_cmd = worker_launcher.cmd
       log.debug "Spawning worker with command: #{worker_cmd}"
       cpid = fork do
@@ -144,7 +141,7 @@ module Coopr
       difference = new_tm.spec.workers - @spec.workers
       if difference > 0
         log.debug "adding #{difference} workers"
-        difference.times do |i|
+        difference.times do |_i|
           spawn_worker_process
         end
       elsif difference < 0
@@ -181,6 +178,5 @@ module Coopr
       @status = 'DELETING'
       terminate_all_worker_processes
     end
-
   end
 end
