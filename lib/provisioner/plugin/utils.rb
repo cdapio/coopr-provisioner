@@ -38,12 +38,12 @@ module Coopr
 
         def to_json(*a)
           result = {
-            "message" => message,
-            "command" => command,
-            "stdout" => @stdout,
-            "stderr" => @stderr,
-            "exit_code" => @exit_code,
-            "exit_signal" => @exit_signal
+            'message' => message,
+            'command' => command,
+            'stdout' => @stdout,
+            'stderr' => @stderr,
+            'exit_code' => @exit_code,
+            'exit_signal' => @exit_signal
           }
           result.to_json(*a)
         end
@@ -56,7 +56,7 @@ module Coopr
         key = `ssh-keyscan -t #{type} #{host} 2>&1 | grep #{keytype}`.split(' ')
         # Bad key type == "unknown key type #{type}"
         fail "Unknown SSH Key Type: #{type}" if key[2] == 'type' || key[2].nil?
-        return key[2]
+        key[2]
       end
 
       # Utility method to run a command over ssh
@@ -69,27 +69,27 @@ module Coopr
         log.debug "---ssh-exec command: #{command}"
         ssh.open_channel do |channel|
           if pty
-            channel.request_pty do |ch, success|
-              raise "no pty!" if !success
+            channel.request_pty do |_ch, success|
+              fail 'no pty!' unless success
             end
           end
-          channel.exec(command) do |ch, success|
+          channel.exec(command) do |_ch, success|
             unless success
               abort "FAILED: couldn't execute command (ssh.channel.exec)"
             end
-            channel.on_data do |ch, data|
+            channel.on_data do |_ch, data|
               stdout_data += data
             end
 
-            channel.on_extended_data do |ch, type, data|
+            channel.on_extended_data do |_ch, _type, data|
               stderr_data += data
             end
 
-            channel.on_request('exit-status') do |ch, data|
+            channel.on_request('exit-status') do |_ch, data|
               exit_code = data.read_long
             end
 
-            channel.on_request('exit-signal') do |ch, data|
+            channel.on_request('exit-signal') do |_ch, data|
               exit_signal = data.read_long
             end
           end

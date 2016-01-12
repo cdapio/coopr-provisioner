@@ -19,7 +19,7 @@ module Coopr
   class SignalHandler
     def initialize(signal)
       @interruptable = false
-      @enqueued     = []
+      @enqueued = []
       trap(signal) do
         if @interruptable
           # log.info 'Gracefully shutting down provisioner...'
@@ -36,7 +36,7 @@ module Coopr
     # the flag and the caller can call `allow_interruptions` themselves.
     def dont_interrupt
       @interruptable = false
-      @enqueued     = []
+      @enqueued = []
       if block_given?
         yield
         allow_interruptions

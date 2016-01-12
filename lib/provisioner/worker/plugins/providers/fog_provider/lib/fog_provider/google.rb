@@ -67,13 +67,17 @@ class FogProviderGoogle < Coopr::Plugin::Provider
 
       @disks = [disk]
 
-      # handle additional data disk
-      if fields['google_data_disk_size_gb'] && fields['google_data_disk_size_gb'].to_i > 0
-        data_disk_name = "#{@providerid}-data"
-        log.debug "Creating data disk: #{data_disk_name} of size #{fields['google_data_disk_size_gb']}"
-        create_disk(data_disk_name, fields['google_data_disk_size_gb'].to_i, @zone_name, nil)
-        data_disk = confirm_disk(data_disk_name)
-        @disks.push(data_disk)
+      # handle additional data disks
+      if fields['google_data_disk_size_gb']
+        disk_sizes = fields['google_data_disk_size_gb'].split(',')
+        disk_sizes.each_with_index do |disk_size, disknum|
+          next unless disk_size.to_i > 0
+          disk_name = "#{@providerid}-data#{disknum == 0 ? '' : disknum + 1}"
+          log.debug "Creating data disk: #{disk_name} of size #{disk_size}"
+          create_disk(disk_name, disk_size.to_i, @zone_name, nil)
+          data_disk = confirm_disk(disk_name)
+          @disks.push(data_disk)
+        end
       end
 
       # create the VM
@@ -195,7 +199,7 @@ class FogProviderGoogle < Coopr::Plugin::Provider
       # Validate connectivity
       log.debug "Attempting to ssh to #{bootstrap_ip} as #{@task['config']['ssh-auth']['user']} with credentials: #{@credentials}"
       Net::SSH.start(bootstrap_ip, @task['config']['ssh-auth']['user'], @credentials) do |ssh|
-        ssh_exec!(ssh, 'ping -c1 www.opscode.com', 'Validating external connectivity and DNS resolution via ping')
+        ssh_exec!(ssh, 'ping -c1 www.google.com', 'Validating external connectivity and DNS resolution via ping')
         ssh_exec!(ssh, "#{sudo} hostname #{hostname}", "Setting hostname to #{hostname}")
       end
 

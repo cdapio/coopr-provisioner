@@ -1,8 +1,9 @@
 # hadoop cookbook
 
-[![Cookbook Version](http://img.shields.io/cookbook/v/hadoop.svg)](https://supermarket.getchef.com/cookbooks/hadoop)
+[![Cookbook Version](http://img.shields.io/cookbook/v/hadoop.svg)](https://supermarket.chef.io/cookbooks/hadoop)
 [![Apache License 2.0](http://img.shields.io/badge/license-apache%202.0-green.svg)](http://opensource.org/licenses/Apache-2.0)
 [![Build Status](http://img.shields.io/travis/caskdata/hadoop_cookbook.svg)](http://travis-ci.org/caskdata/hadoop_cookbook)
+[![Code Climate](https://codeclimate.com/github/caskdata/hadoop_cookbook/badges/gpa.svg)](https://codeclimate.com/github/caskdata/hadoop_cookbook)
 
 # Requirements
 
@@ -24,8 +25,9 @@ For more information, read the [Wrapping this cookbook](https://github.com/caskd
 
 Attributes for this cookbook define the configuration files for Hadoop and its various services. Hadoop configuration files are XML files, with name/value property pairs. The attribute name determines which file the property is placed and the property name. The attribute value is the property value. The attribute `hadoop['core_site']['fs.defaultFS']` will configure a property named `fs.defaultFS` in `core-site.xml` in `hadoop['conf_dir']`. All attribute values are taken as-is and only minimal configuration checking is done on values. It is up to the user to provide a valid configuration for your cluster.
 
-Attribute Tree | File | Location 
+Attribute Tree | File | Location
 -------------- | ---- | --------
+flume['flume_conf'] | flume.conf | `flume['conf_dir']`
 hadoop['capacity_scheduler'] | capacity-scheduler.xml | `hadoop['conf_dir']`
 hadoop['container_executor'] | container-executor.cfg | `hadoop['conf_dir']`
 hadoop['core_site'] | core-site.xml | `hadoop['conf_dir']`
@@ -48,10 +50,14 @@ hbase['log4j'] | log4j.properties | `hbase['conf_dir']`
 hive['hive_env'] | hive-env.sh | `hive['conf_dir']`
 hive['hive_site'] | hive-site.xml | `hive['conf_dir']`
 hive['jaas'] | jaas.conf | `hive['conf_dir']`
+oozie['oozie_env'] | oozie-env.sh | `oozie['conf_dir']`
 oozie['oozie_site'] | oozie-site.xml | `oozie['conf_dir']`
 spark['log4j'] | log4j.properties | `spark['conf_dir']`
 spark['metrics'] | metrics.properties | `spark['conf_dir']`
 spark['spark_env'] | spark-env.sh | `spark['conf_dir']`
+storm['storm_env'] | storm-env.sh | `storm['conf_dir']`
+storm['storm_env'] | storm_env.ini | `storm['conf_dir']`
+storm['storm_conf'] | storm.yaml | `storm['conf_dir']`
 tez['tez_env'] | tez-env.sh | `tez['conf_dir']`
 tez['tez_site'] | tez-site.xml | `tez['conf_dir']`
 zookeeper['jaas'] | jaas.conf | `zookeeper['conf_dir']`
@@ -61,7 +67,7 @@ zookeeper['zoocfg'] | zoo.cfg | `zookeeper['conf_dir']`
 ## Distribution Attributes
 
 * `hadoop['distribution']` - Specifies which Hadoop distribution to use, currently supported: cdh, hdp, bigtop. Default `hdp`
-* `hadoop['distribution_version']` - Specifies which version of `hadoop['distribution']` to use. Default `2.0` if `hadoop['distribution']` is `hdp`, `5` if `hadoop['distribution']` is `cdh`, and `0.8.0` if `hadoop['distribution']` is `bigtop`.  It can also be set to `develop` when `hadoop['distribution']` is `bigtop` to allow installing from development repos without gpg validation. 
+* `hadoop['distribution_version']` - Specifies which version of `hadoop['distribution']` to use. Default `2.0` if `hadoop['distribution']` is `hdp`, `5` if `hadoop['distribution']` is `cdh`, and `0.8.0` if `hadoop['distribution']` is `bigtop`.  It can also be set to `develop` when `hadoop['distribution']` is `bigtop` to allow installing from development repos without gpg validation.
 
 ### APT-specific settings
 
@@ -81,6 +87,7 @@ zookeeper['zoocfg'] | zoo.cfg | `zookeeper['conf_dir']`
 * `oozie['conf_dir']` - The directory used inside `/etc/oozie` and used via the alternatives system. Default `conf.chef`
 * `tez['conf_dir']` - The directory used inside `/etc/tez` and used via the alternatives system. Default `conf.chef`
 * `spark['conf_dir']` - The directory used inside `/etc/spark` and used via the alternatives system. Default `conf.chef`
+* `storm['conf_dir']` - The directory used inside `/etc/storm` and used via the alternatives system. Default `conf.chef`
 * `zookeeper['conf_dir']` - The directory used inside `/etc/zookeeper` and used via the alternatives system. Default `conf.chef`
 
 ## Default Attributes
@@ -120,6 +127,10 @@ zookeeper['zoocfg'] | zoo.cfg | `zookeeper['conf_dir']`
 * `spark` - Sets up configuration and `spark-core` packages.
 * `spark_master` - Sets up a Spark Master.
 * `spark_worker` - Sets up a Spark Worker.
+* `storm` - Sets up `storm` package.
+* `storm_nimbus` - Setups a Storm Nimbus server.
+* `storm_supervisor` - Setups a Storm Supervisor server.
+* `storm_ui` - Setups a Storm UI server.
 * `tez` - Sets up configuration  and `tez` packages.
 * `zookeeper` - Sets up `zookeeper` package.
 * `zookeeper_server` - Sets up a ZooKeeper server.
@@ -131,13 +142,15 @@ Author:: Cask Data, Inc. (<ops@cask.co>)
 # Testing
 
 This cookbook has several ways to test it. It includes code tests, which are done using `foodcritic`, `rubocop`, and `chefspec`.
-It, also, includes functionality testing, provided by `vagrant`.
+It, also, includes functionality testing, provided by `kitchen`.
 
 ```text
-rake foodcritic
-rake rubocop
-rake chefspec
-rake vagrant
+rake chefspec     # Run RSpec code examples
+rake foodcritic   # Foodcritic linter
+rake integration  # Run Test Kitchen integration tests
+rake metadata     # Create metadata.json from metadata.rb
+rake rubocop      # Ruby style guide linter
+rake share        # Share cookbook to community site
 ```
 
 This cookbook requires the `vagrant-omnibus` and `vagrant-berkshelf` Vagrant plugins to be installed.

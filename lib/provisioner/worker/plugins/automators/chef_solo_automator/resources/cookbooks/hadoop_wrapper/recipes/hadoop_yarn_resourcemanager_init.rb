@@ -32,5 +32,17 @@ ruby_block 'initaction-create-yarn-remote-app-log-dir' do
   block do
     resources('execute[yarn-remote-app-log-dir]').run_action(:run)
   end
-  not_if "hdfs dfs -ls #{dfs}#{node['hadoop']['yarn_site']['yarn-remote-app-log-dir']}", :user => 'hdfs'
+end
+
+ruby_block 'initaction-create-yarn-app-mapreduce-am-staging-dir' do
+  block do
+    resources('execute[yarn-app-mapreduce-am-staging-dir]').run_action(:run)
+  end
+end
+
+ruby_block 'initaction-copy-hdp22-mapreduce-tarball' do
+  block do
+    resources('execute[hdp22-mapreduce-tarball]').run_action(:run)
+  end
+  only_if { node['hadoop']['distribution'] == 'hdp' && node['hadoop']['distribution_version'].to_f >= 2.2 }
 end

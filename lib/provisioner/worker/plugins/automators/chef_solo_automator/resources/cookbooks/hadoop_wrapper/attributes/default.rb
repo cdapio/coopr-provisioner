@@ -32,21 +32,6 @@ unless node['hadoop']['yarn_site'].key?('yarn.nodemanager.resource.memory-mb')
   default['hadoop']['yarn_site']['yarn.nodemanager.resource.memory-mb'] = (mem * pct).to_i
 end
 
-# Do the right thing, based on distribution
-if node['hadoop']['distribution'] == 'cdh' && node['hadoop']['distribution_version'].to_i == 4
-  # CDH4 doesn't have https://issues.apache.org/jira/browse/YARN-9 fixed
-  default['hadoop']['yarn_site']['yarn.application.classpath'] = '$HADOOP_CONF_DIR, $HADOOP_COMMON_HOME/*, $HADOOP_COMMON_HOME/lib/*, $HADOOP_HDFS_HOME/*, $HADOOP_HDFS_HOME/lib/*, $HADOOP_MAPRED_HOME/*, $HADOOP_MAPRED_HOME/lib/*, $YARN_HOME/*, $YARN_HOME/lib/*'
-  # CDH4 doesn't have https://issues.apache.org/jira/browse/YARN-1229 fixed
-  default['hadoop']['yarn_site']['yarn.nodemanager.aux-services'] = 'mapreduce.shuffle'
-  default['hadoop']['yarn_site']['yarn.nodemanager.aux-services.mapreduce.shuffle.class'] = 'org.apache.hadoop.mapred.ShuffleHandler'
-else
-  default['hadoop']['yarn_site']['yarn.application.classpath'] = '$HADOOP_CONF_DIR, $HADOOP_COMMON_HOME/*, $HADOOP_COMMON_HOME/lib/*, $HADOOP_HDFS_HOME/*, $HADOOP_HDFS_HOME/lib/*, $HADOOP_MAPRED_HOME/*, $HADOOP_MAPRED_HOME/lib/*, $HADOOP_YARN_HOME/*, $HADOOP_YARN_HOME/lib/*'
-  # Fix for: org.apache.hadoop.yarn.exceptions.InvalidAuxServiceException: The auxService:mapreduce_shuffle does not exist
-  default['hadoop']['yarn_site']['yarn.nodemanager.aux-services'] = 'mapreduce_shuffle'
-  default['hadoop']['yarn_site']['yarn.nodemanager.aux-services.mapreduce_shuffle.class'] = 'org.apache.hadoop.mapred.ShuffleHandler'
-end
-# Set FIFO scheduler
-default['hadoop']['yarn_site']['yarn.resourcemanager.scheduler.class'] = 'org.apache.hadoop.yarn.server.resourcemanager.scheduler.fifo.FifoScheduler'
 # hadoop-metrics.properties
 default['hadoop']['hadoop_metrics']['dfs.class'] = 'org.apache.hadoop.metrics.spi.NullContextWithUpdateThread'
 default['hadoop']['hadoop_metrics']['dfs.period'] = '60'
@@ -62,7 +47,6 @@ default['hadoop']['hadoop_env']['hadoop_jmx_base'] = jmx_base
 default['hadoop']['hadoop_env']['hadoop_namenode_opts'] = '$HADOOP_JMX_BASE -Dcom.sun.management.jmxremote.port=8004'
 default['hadoop']['hadoop_env']['hadoop_secondarynamenode_opts'] = '$HADOOP_JMX_BASE -Dcom.sun.management.jmxremote.port=8005'
 default['hadoop']['hadoop_env']['hadoop_datanode_opts'] = '$HADOOP_JMX_BASE -Dcom.sun.management.jmxremote.port=8006'
-default['hadoop']['hadoop_env']['hadoop_mapred_home'] = '/usr/lib/hadoop-mapreduce'
 # yarn-env.sh
 default['hadoop']['yarn_env']['yarn_opts'] = jmx_base
 default['hadoop']['yarn_env']['yarn_resourcemanager_opts'] = '$YARN_RESOURCEMANAGER_OPTS -Dcom.sun.management.jmxremote.port=8008'

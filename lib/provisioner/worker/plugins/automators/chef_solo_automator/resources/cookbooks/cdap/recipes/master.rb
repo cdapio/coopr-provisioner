@@ -2,7 +2,7 @@
 # Cookbook Name:: cdap
 # Recipe:: master
 #
-# Copyright © 2013-2014 Cask Data, Inc.
+# Copyright © 2013-2015 Cask Data, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -19,10 +19,12 @@
 
 include_recipe 'cdap::default'
 
-pkgs = %w(cdap-hbase-compat-0.94 cdap-hbase-compat-0.96)
-if node['cdap']['version'].to_f >= 2.6 || node['cdap']['version'].split('.')[2].to_i >= 9000
-  pkgs += ['cdap-hbase-compat-0.98']
-end
+# All released versions support HBase 0.96
+pkgs = ['cdap-hbase-compat-0.96']
+pkgs += ['cdap-hbase-compat-0.98'] if node['cdap']['version'].to_f >= 2.6
+pkgs += ['cdap-hbase-compat-1.0', 'cdap-hbase-compat-1.0-cdh'] if node['cdap']['version'].to_f >= 3.1
+pkgs += ['cdap-hbase-compat-1.1'] if node['cdap']['version'].to_f >= 3.2
+pkgs += ['cdap-hbase-compat-0.94'] if node['cdap']['version'].to_f < 3.1
 
 pkgs.each do |pkg|
   package pkg do
@@ -40,12 +42,12 @@ end
 if node['hadoop'].key?('core_site') && node['hadoop']['core_site'].key?('hadoop.security.authentication') &&
    node['hadoop']['core_site']['hadoop.security.authentication'] == 'kerberos'
 
-  if node['cdap'].key?('security') && node['cdap']['security'].key?('cdap_keytab') &&
-     node['cdap']['security'].key?('cdap_principal') &&
+  if node['cdap'].key?('kerberos') && node['cdap']['kerberos'].key?('cdap_keytab') &&
+     node['cdap']['kerberos'].key?('cdap_principal') &&
      node['cdap'].key?('cdap_site') && node['cdap']['cdap_site'].key?('kerberos.auth.enabled') &&
      node['cdap']['cdap_site']['kerberos.auth.enabled'].to_s == 'true'
 
-    my_vars = { :options => node['cdap']['security'] }
+    my_vars = { :options => node['cdap']['kerberos'] }
 
     directory '/etc/default' do
       owner 'root'
@@ -101,7 +103,23 @@ if node['hadoop'].key?('core_site') && node['hadoop']['core_site'].key?('hadoop.
   end
 end
 
+template '/etc/init.d/cdap-master' do
+  source 'cdap-service.erb'
+  mode 0755
+  owner 'root'
+  group 'root'
+  action :create
+  variables node['cdap']['master']
+end
+
 service 'cdap-master' do
   status_command 'service cdap-master status'
+  action node['cdap']['master']['init_actions']
+end
+
+# CDAP Upgrade Tool
+execute 'cdap-upgrade-tool' do
+  command "#{node['cdap']['master']['init_cmd']} run co.cask.cdap.data.tools.UpgradeTool upgrade force"
   action :nothing
+  user node['cdap']['master']['user']
 end

@@ -20,6 +20,6 @@
 
 source 'https://rubygems.org'
 
-gem 'fog', '~> 1.26.0'
-gem 'net-ssh'
+gem 'fog', '~> 1.36.0'
+gem 'net-ssh', '~> 2.6'
 gem 'google-api-client', '~> 0.6', '>= 0.6.2'

@@ -2,7 +2,7 @@
 # Cookbook Name:: cdap
 # Recipe:: init
 #
-# Copyright © 2013-2014 Cask Data, Inc.
+# Copyright © 2013-2015 Cask Data, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,21 +17,60 @@
 # limitations under the License.
 #
 
-include_recipe 'cdap::default'
-
 # We also need the configuration, so we can run HDFS commands
+# Retries allow for orchestration scenarios where HDFS is starting up
 execute 'initaction-create-hdfs-cdap-dir' do
-  not_if  "hdfs dfs -test -d #{node['cdap']['cdap_site']['hdfs.namespace']}", :user => 'hdfs'
-  command "hdfs dfs -mkdir -p #{node['cdap']['cdap_site']['hdfs.namespace']} && hdfs dfs -chown #{node['cdap']['cdap_site']['hdfs.user']} #{node['cdap']['cdap_site']['hdfs.namespace']}"
+  not_if  "hadoop fs -test -d #{node['cdap']['cdap_site']['hdfs.namespace']}", :user => node['cdap']['cdap_site']['hdfs.user']
+  command "hadoop fs -mkdir -p #{node['cdap']['cdap_site']['hdfs.namespace']} && hadoop fs -chown #{node['cdap']['cdap_site']['hdfs.user']} #{node['cdap']['cdap_site']['hdfs.namespace']}"
   timeout 300
-  user 'hdfs'
-  group 'hdfs'
+  user node['cdap']['fs_superuser']
+  retries 3
+  retry_delay 10
+end
+
+# Workaround for CDAP-3817, by pre-creating the transaction service snapshot directory
+tx_snapshot_dir =
+  if node['cdap']['cdap_site'].key?('data.tx.snapshot.dir')
+    node['cdap']['cdap_site']['data.tx.snapshot.dir']
+  else
+    "#{node['cdap']['cdap_site']['hdfs.namespace']}/tx.snapshot"
+  end
+
+execute 'initaction-create-hdfs-tx-snapshot-dir' do
+  not_if  "hadoop fs -test -d #{tx_snapshot_dir}", :user => node['cdap']['cdap_site']['hdfs.user']
+  command "hadoop fs -mkdir -p #{tx_snapshot_dir} && hadoop fs -chown #{node['cdap']['cdap_site']['hdfs.user']} #{tx_snapshot_dir}"
+  timeout 300
+  user node['cdap']['fs_superuser']
+  retries 3
+  retry_delay 10
 end
 
 execute 'initaction-create-hdfs-cdap-user-dir' do
-  not_if  "hdfs dfs -test -d /user/#{node['cdap']['cdap_site']['hdfs.user']}", :user => 'hdfs'
-  command "hdfs dfs -mkdir -p /user/#{node['cdap']['cdap_site']['hdfs.user']} && hdfs dfs -chown #{node['cdap']['cdap_site']['hdfs.user']} /user/#{node['cdap']['cdap_site']['hdfs.user']}"
+  not_if  "hadoop fs -test -d /user/#{node['cdap']['cdap_site']['hdfs.user']}", :user => node['cdap']['cdap_site']['hdfs.user']
+  command "hadoop fs -mkdir -p /user/#{node['cdap']['cdap_site']['hdfs.user']} && hadoop fs -chown #{node['cdap']['cdap_site']['hdfs.user']} /user/#{node['cdap']['cdap_site']['hdfs.user']}"
   timeout 300
-  user 'hdfs'
-  group 'hdfs'
+  user node['cdap']['fs_superuser']
+  retries 3
+  retry_delay 10
+end
+
+%w(cdap yarn mapr).each do |u|
+  execute "initaction-create-hdfs-mr-jhs-staging-intermediate-done-dir-#{u}" do
+    only_if "getent passwd #{u}"
+    not_if "hadoop fs -test -d /tmp/hadoop-yarn/staging/history/done_intermediate/#{u}", :user => u
+    command "hadoop fs -mkdir -p /tmp/hadoop-yarn/staging/history/done_intermediate/#{u} && hadoop fs -chown #{u} /tmp/hadoop-yarn/staging/history/done_intermediate/#{u} && hadoop fs -chmod 1777 /tmp/hadoop-yarn/staging/history/done_intermediate/#{u}"
+    timeout 300
+    user node['cdap']['fs_superuser']
+    retries 3
+    retry_delay 10
+  end
+  execute "initaction-create-hdfs-mr-jhs-staging-done-dir-#{u}" do
+    only_if "getent passwd #{u}"
+    not_if "hadoop fs -test -d /tmp/hadoop-yarn/staging/history/done/#{u}", :user => u
+    command "hadoop fs -mkdir -p /tmp/hadoop-yarn/staging/history/done/#{u} && hadoop fs -chown #{u} /tmp/hadoop-yarn/staging/history/done/#{u} && hadoop fs -chmod 1777 /tmp/hadoop-yarn/staging/history/done/#{u}"
+    timeout 300
+    user node['cdap']['fs_superuser']
+    retries 3
+    retry_delay 10
+  end
 end

@@ -87,7 +87,9 @@ class FogProviderJoyent < Coopr::Plugin::Provider
       # Wait until the server is ready
       fail "Server #{server.name} is in ERROR state" if server.state == 'ERROR'
       log.debug "waiting for server to come up: #{providerid}"
+      start = Time.now
       server.wait_for(600) { ready? }
+      log.debug "server wait took #{Time.now - start} seconds"
 
       bootstrap_ip = ip_address(server)
       if bootstrap_ip.nil?
@@ -128,8 +130,13 @@ class FogProviderJoyent < Coopr::Plugin::Provider
 
       # Validate connectivity
       Net::SSH.start(bootstrap_ip, @task['config']['ssh-auth']['user'], @credentials) do |ssh|
-        ssh_exec!(ssh, 'ping -c1 www.opscode.com', 'Validating external connectivity and DNS resolution via ping')
+        ssh_exec!(ssh, 'ping -c1 www.joyent.com', 'Validating external connectivity and DNS resolution via ping')
         ssh_exec!(ssh, "#{sudo} hostname #{@task['config']['hostname']}", 'Temporarily setting hostname')
+        # Check and make sure firstboot is done running
+        beginning = Time.now
+        ssh_exec!(ssh, 'cproc="smartdc/firstboot"; uproc="cloud-init"; for i in {1..240}; do if pgrep $cproc > /dev/null || pgrep $uproc > /dev/null; then sleep 1; else break; fi; done', 'Waiting until ${cproc} or ${uproc} are done running')
+        log.debug "firstboot & cloud-init process check took #{Time.now - beginning} seconds"
+
         # Check for /dev/vdb
         begin
           vdb1 = true
@@ -137,7 +144,6 @@ class FogProviderJoyent < Coopr::Plugin::Provider
           # test for vdb1
           begin
             ssh_exec!(ssh, 'test -e /dev/vdb1', 'Checking for /dev/vdb1')
-            ssh_exec!(ssh, 'if grep "vdb1 /data " /proc/mounts ; then /bin/false ; fi', 'Checking if /dev/vdb1 mounted already')
           rescue
             vdb1 = false
             begin
@@ -158,20 +164,22 @@ class FogProviderJoyent < Coopr::Plugin::Provider
         #   centos: vdb1 already mounted at /data
         if vdb1
           # TODO: check that vdb1 is mounted at /data, for now assume it is
-          log.debug 'Assuming /dev/vdb1 is mounted at /data, if this is not the case, file an issue'
+          log.debug 'Assuming /dev/vdb1 is mounted at /data or at /mnt, if this is not the case, file an issue'
         elsif vdb
           begin
-            mounted = false
-            ssh_exec!(ssh, 'if grep "vdb /data " /proc/mounts ; then /bin/false ; fi', 'Checking if /dev/vdb mounted already')
+            data_mounted = false
+            ssh_exec!(ssh, 'if grep "vdb /data " /proc/mounts ; then echo "/dev/vdb is mounted"; else /bin/false ; fi', 'Checking in /proc/mounts whether /dev/vdb mounted already')
+            data_mounted = true
           rescue
-            mounted = true
+            log.debug 'Disk /dev/vdb is not mounted to /data'
           end
-          # If mounted = true, we're done
-          unless mounted
-            # disk isn't mounted at /data, could be mounted elsewhere
+          # If data_mounted = true, we're done
+          unless data_mounted
+            # disk isn't mounted at /data, could be mounted elsewhere (e.g. /mnt)
             begin
-              # Are we mounted?
-              ssh_exec!(ssh, 'mount | grep ^/dev/vdb 2>&1 >/dev/null', 'Checking if /dev/vdb is unmounted')
+              # Are we mounted? # if we are, set unmount to true
+              unmount = false
+              ssh_exec!(ssh, 'if mount | grep "^/dev/vdb " ; then echo "Disk /dev/vdb is mounted" ; else /bin/false ; fi', 'Confirm /dev/vdb is mounted')
               unmount = true
             rescue
               log.debug 'Disk /dev/vdb is not mounted'

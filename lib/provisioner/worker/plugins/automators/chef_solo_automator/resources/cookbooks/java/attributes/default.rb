@@ -1,9 +1,9 @@
 #
-# Author:: Seth Chisamore (<schisamo@opscode.com>)
+# Author:: Seth Chisamore (<schisamo@chef.io>)
 # Cookbook Name:: java
 # Attributes:: default
 #
-# Copyright 2010, Opscode, Inc.
+# Copyright 2010-2015, Chef Software, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -26,11 +26,14 @@ default['java']['accept_license_agreement'] = false
 default['java']['set_default'] = true
 default['java']['alternatives_priority'] = 1062
 default['java']['set_etc_environment'] = false
+default['java']['use_alt_suffix'] = true
+default['java']['reset_alternatives'] = true
 
 # the following retry parameters apply when downloading oracle java
 default['java']['ark_retries'] = 0
 default['java']['ark_retry_delay'] = 2
 default['java']['ark_timeout'] = 600
+default['java']['ark_download_timeout'] = 600
 
 case node['platform_family']
 when "windows"
@@ -38,6 +41,8 @@ when "windows"
   default['java']['windows']['url'] = nil
   default['java']['windows']['checksum'] = nil
   default['java']['windows']['package_name'] = "Java(TM) SE Development Kit 7 (64-bit)"
+when "mac_os_x"
+  default['java']['install_flavor'] = "homebrew"
 else
   default['java']['install_flavor'] = "openjdk"
 end
@@ -120,16 +125,16 @@ default['java']['jdk']['8']['bin_cmds'] = [ "appletviewer", "apt", "ControlPanel
                                             "rmic", "rmid", "rmiregistry", "schemagen", "serialver", "servertool", "tnameserv",
                                             "unpack200", "wsgen", "wsimport", "xjc"]
 
-# Oracle doesn't seem to publish SHA256 checksums for Java releases, so we use MD5 instead.
-# Official checksums for the latest release can be found at https://www.oracle.com/webfolder/s/digest/8u31checksum.html
+# Oracle just started publishing SHA256 checksums for Java releases with 8u51, so we use MD5 instead.
+# Official checksums for the latest release can be found at https://www.oracle.com/webfolder/s/digest/8u60checksum.html
 
 # x86_64
-default['java']['jdk']['8']['x86_64']['url'] = 'http://download.oracle.com/otn-pub/java/jdk/8u31-b13/jdk-8u31-linux-x64.tar.gz'
-default['java']['jdk']['8']['x86_64']['checksum'] = '173e24bc2d5d5ca3469b8e34864a80da'
+default['java']['jdk']['8']['x86_64']['url'] = 'http://download.oracle.com/otn-pub/java/jdk/8u65-b17/jdk-8u65-linux-x64.tar.gz'
+default['java']['jdk']['8']['x86_64']['checksum'] = '196880a42c45ec9ab2f00868d69619c0'
 
 # i586
-default['java']['jdk']['8']['i586']['url'] = 'http://download.oracle.com/otn-pub/java/jdk/8u31-b13/jdk-8u31-linux-i586.tar.gz'
-default['java']['jdk']['8']['i586']['checksum'] = '4e9aec24367672412c7d10105a2a2bbb'
+default['java']['jdk']['8']['i586']['url'] = 'http://download.oracle.com/otn-pub/java/jdk/8u65-b17/jdk-8u65-linux-i586.tar.gz'
+default['java']['jdk']['8']['i586']['checksum'] = '7b715e1fe2316c94aaa968b23ce49c9a'
 
 
 default['java']['oracle']['jce']['enabled'] = false

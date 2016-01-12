@@ -16,7 +16,7 @@
 # limitations under the License.
 #
 
-module Coopr 
+module Coopr
   # simple specification for a tenant's required resources
   class ResourceSpec
     attr_accessor :resources, :resource_formats, :resource_permissions
@@ -46,23 +46,19 @@ module Coopr
             h_id.each do |resource_type, h_resource|
               next if h_resource.nil?
               format = nil
-              if h_resource.key?('format')
-                format = h_resource['format']
-              end
+              format = h_resource['format'] if h_resource.key?('format')
               permissions = nil
               if h_resource.key?('permissions')
                 permissions = h_resource['permissions']
               end
-              if h_resource.key?('active')
-                # example h_resource['active'] array: [{"name" => "hadoop", "version" => "2"}]
-                h_resource['active'].each do |nv|
-                  name = nv['name']
-                  version = nv['version']
-                  resource_name = %W( #{type} #{id} #{resource_type} #{name}).join('/')
-                  @resources[resource_name] = version
-                  @resource_formats[resource_name] = format
-                  @resource_permissions[resource_name] = permissions unless permissions.nil?
-                end
+              next unless h_resource.key?('active')
+              h_resource['active'].each do |nv|
+                name = nv['name']
+                version = nv['version']
+                resource_name = %W( #{type} #{id} #{resource_type} #{name}).join('/')
+                @resources[resource_name] = version
+                @resource_formats[resource_name] = format
+                @resource_permissions[resource_name] = permissions unless permissions.nil?
               end
             end
           end
@@ -72,8 +68,8 @@ module Coopr
 
     # define two ResourceSpecs as equal if @resources hash has same contents
     def ==(other)
-      @resources == other.resources && @resource_formats == other.resource_formats \
-                    && @resource_permissions == other.resource_permissions
+      @resources == other.resources && @resource_formats == other.resource_formats && \
+        @resource_permissions == other.resource_permissions
     end
   end
 end

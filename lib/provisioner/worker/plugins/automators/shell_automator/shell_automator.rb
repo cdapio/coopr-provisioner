@@ -47,8 +47,10 @@ class ShellAutomator < Coopr::Plugin::Automator
     # name of tarball to generate
     @lib_tar = %W[ #{work_dir} #{tenant} automatortypes shell lib.tar.gz ].join('/')
 
+    #remote coopr directory
+    @remote_coopr_dir = "/var/cache/coopr"
     # remote storage directory
-    @remote_cache_dir = "/var/cache/coopr/shell_automator"
+    @remote_cache_dir = "#{@remote_coopr_dir}/shell_automator"
     # remote script location to be exported in $PATH
     @remote_scripts_dir = "#{@remote_cache_dir}/scripts"
     # remote lib location
@@ -197,6 +199,7 @@ class ShellAutomator < Coopr::Plugin::Automator
     begin
       Net::SSH.start(ipaddress, sshauth['user'], @credentials) do |ssh|
         ssh_exec!(ssh, "#{sudo} mkdir -p #{@remote_cache_dir}", "Creating remote cache dir")
+        ssh_exec!(ssh,"#{sudo} chmod a+x #{@remote_coopr_dir}","Granting execute permissions on #{@remote_coopr_dir}")
         ssh_exec!(ssh, "#{sudo} chown -R #{sshauth['user']} #{@remote_cache_dir}", "Changing cache dir owner to #{sshauth['user']}")
       end
     rescue Net::SSH::AuthenticationFailed

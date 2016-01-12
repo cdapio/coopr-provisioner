@@ -22,7 +22,9 @@ include_recipe 'hadoop::default'
 include_recipe 'hadoop::hive_metastore'
 
 # Set up our database
-if node['hive'].key?('hive_site') && node['hive']['hive_site'].key?('javax.jdo.option.ConnectionURL')
+if node['hive'].key?('hive_site') && node['hive']['hive_site'].key?('javax.jdo.option.ConnectionURL') &&
+   node['hive']['hive_site'].key?('javax.jdo.option.ConnectionDriverName') &&
+   node['hive']['hive_site']['javax.jdo.option.ConnectionDriverName'] != 'org.apache.derby.jdbc.EmbeddedDriver'
   jdo_array = node['hive']['hive_site']['javax.jdo.option.ConnectionURL'].split(':')
   hive_uris = node['hive']['hive_site']['hive.metastore.uris'].gsub('thrift://', '').gsub(':9083', '').split(',')
   hive_uris.push('localhost')
@@ -36,7 +38,7 @@ if node['hive'].key?('hive_site') && node['hive']['hive_site'].key?('javax.jdo.o
     if node['hive'].key?('hive_site') && node['hive']['hive_site'].key?('javax.jdo.option.ConnectionPassword')
       node['hive']['hive_site']['javax.jdo.option.ConnectionPassword']
     end
-  sql_dir = '/usr/lib/hive/scripts/metastore/upgrade'
+  sql_dir = "#{hadoop_lib_dir}/hive/scripts/metastore/upgrade"
 
   case db_type
   when 'mysql'

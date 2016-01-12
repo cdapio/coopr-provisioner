@@ -2,7 +2,7 @@
 # Cookbook Name:: hadoop_wrapper
 # Recipe:: hive_init
 #
-# Copyright © 2013 Cask Data, Inc.
+# Copyright © 2013-2015 Cask Data, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -21,11 +21,8 @@ include_recipe 'hadoop_wrapper::default'
 include_recipe 'hadoop::default'
 include_recipe 'hadoop::hive'
 
-dfs = node['hadoop']['core_site']['fs.defaultFS']
-
 ruby_block 'initaction-create-hive-hdfs-homedir' do
   block do
     resources('execute[hive-hdfs-homedir]').run_action(:run)
   end
-  not_if "hdfs dfs -test -d #{dfs}/user/hive", :user => 'hdfs'
 end

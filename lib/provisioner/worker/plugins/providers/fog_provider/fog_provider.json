@@ -242,11 +242,11 @@
             "tip": "SSH username. A corresponding key must be configured in the portal"
           },
           "google_data_disk_size_gb": {
-            "label": "Data disk size in GB",
+            "label": "Data disk size(s) in GB",
             "type": "text",
             "default": 200,
             "override": true,
-            "tip": "Size of the persistent data disk to be created and mounted"
+            "tip": "Size of the persistent data disk to be created and mounted. Multiple disks can be specified as a comma-separated list"
           },
           "zone_name": {
             "label": "Zone",
@@ -255,13 +255,16 @@
               "asia-east1-a",
               "asia-east1-b",
               "asia-east1-c",
-              "europe-west1-a",
               "europe-west1-b",
               "europe-west1-c",
               "europe-west1-d",
               "us-central1-a",
               "us-central1-b",
-              "us-central1-f"
+              "us-central1-c",
+              "us-central1-f",
+              "us-east1-b",
+              "us-east1-c",
+              "us-east1-d"
             ],
             "default": "us-central1-a",
             "override": true,

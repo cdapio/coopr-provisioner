@@ -25,7 +25,7 @@ require 'rubygems/package'
 require 'zlib'
 require_relative '../lib/provisioner/rest-helper'
 
-# ./data-uploader [-u http://localhost:55054] [-t superadmin] [-U admin] upload|stage|sync \ 
+# ./data-uploader [-u http://localhost:55054] [-t superadmin] [-U admin] upload|stage|sync \
 #   ./my/local/cookbooks/hadoop automatortypes/chef-solo/cookbooks/hadoop
 
 # Parse command line options.
@@ -67,7 +67,7 @@ begin
   end
   op.parse!(ARGV)
 rescue OptionParser::InvalidArgument, OptionParser::InvalidOption
-  puts "Invalid Argument/Options: #{$!}"
+  puts "Invalid Argument/Options: #{$ERROR_INFO}"
   puts op # prints usage
   exit 1
 end
@@ -88,7 +88,7 @@ options[:target] = ARGV.shift
 Coopr::RestHelper.cert_path = options[:cert_path] || ENV['TRUST_CERT_PATH']
 Coopr::RestHelper.cert_pass = options[:cert_pass] || ENV['TRUST_CERT_PASSWORD']
 
-module Coopr 
+module Coopr
   module DataUploader
     # class representing the resource to be uploaded
     class Resource
@@ -153,7 +153,13 @@ module Coopr
         uri = %W( #{@options[:uri]} v2/plugins #{@options[:plugin_type]} #{@options[:plugin_name]}).join('/')
         resp = Coopr::RestHelper.get(uri, @headers)
         if resp.code == 200
-          resp_plugin = JSON.parse(resp.to_str)
+          begin
+            resp_plugin = JSON.parse(resp.to_str)
+          rescue JSON::ParserError => e
+            raise "Error parsing response from server #{@options[:uri]}: #{e.class}. " \
+                 "content-type #{resp.headers[:content_type]}\n" \
+                 "Are you connecting to the right server:port?\n"
+          end
           if resp_plugin.key?('resourceTypes') && resp_plugin['resourceTypes'].key?(@options[:resource_type])
             resp_resource = resp_plugin['resourceTypes'][@options[:resource_type]]
             if resp_resource.key?('format')
@@ -271,7 +277,7 @@ module Coopr
         Gem::Package::TarWriter.new(tarfile) do |tar|
           Dir[path, File.join(path_dir, "#{path_base}/**/*")].each do |file|
             mode = File.stat(file).mode
-            relative_file = file.sub(/^#{Regexp.escape path_dir}\/?/, '')
+            relative_file = file.sub(%r{^#{Regexp.escape path_dir}/?}, '')
 
             if File.directory?(file)
               tar.mkdir relative_file, mode
@@ -319,7 +325,8 @@ begin
     ldr.sync
   end
 rescue ArgumentError => e
-  puts op # prints usage
+  puts "Argument Error: #{e.message}"
+  puts 'run with  -h or --help to get usage help'
   exit 1
 rescue => e
   puts "Error: #{e.message} #{e.backtrace}"

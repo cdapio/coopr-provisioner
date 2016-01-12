@@ -2,7 +2,7 @@
 # Cookbook Name:: cdap
 # Recipe:: fullstack
 #
-# Copyright © 2013-2014 Cask Data, Inc.
+# Copyright © 2013-2015 Cask Data, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -19,6 +19,8 @@
 
 include_recipe 'cdap::default'
 
-%w(gateway kafka master web_app).each do |recipe|
+ui_recipe = node['cdap']['version'].to_i < 3 ? 'web_app' : 'ui'
+
+%W(cli gateway kafka master #{ui_recipe}).each do |recipe|
   include_recipe "cdap::#{recipe}"
 end

@@ -16,9 +16,8 @@
 # limitations under the License.
 #
 
-
-unless $:.include?(File.dirname(__FILE__) + '/../lib')
-  $: << File.dirname(__FILE__) + '/../lib'
+unless $LOAD_PATH.include?(File.dirname(__FILE__) + '/../lib')
+  $LOAD_PATH << File.dirname(__FILE__) + '/../lib'
 end
 
 require 'provisioner/worker'
