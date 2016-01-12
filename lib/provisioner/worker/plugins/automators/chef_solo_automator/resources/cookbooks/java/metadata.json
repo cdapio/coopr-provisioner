@@ -63,7 +63,7 @@
     "java::windows": "Installs the JDK on Windows",
     "java::homebrew": "Installs the JDK on Mac OS X via Homebrew"
   },
-  "version": "1.36.0",
+  "version": "1.37.0",
   "source_url": "",
   "issues_url": "",
   "privacy": false
