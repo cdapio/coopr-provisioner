@@ -25,3 +25,16 @@ pf = node['platform_family']
     end
   end
 end
+
+case pf
+when 'debian'
+  execute 'update-apt-packages' do
+    command 'apt-get update && apt-get upgrade -y && apt-get install -y unattended-upgrades'
+    not_if { node['coopr_packages']['skip_updates'].to_s == 'true' }
+  end
+when 'rhel'
+  execute 'update-yum-packages' do
+    command 'yum makecache && yum upgrade -y'
+    not_if { node['coopr_packages']['skip_updates'].to_s == 'true' }
+  end
+end
