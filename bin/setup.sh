@@ -24,7 +24,7 @@ export COOPR_SERVER_URI=${COOPR_SERVER_URI:-http://localhost:55054}
 export COOPR_HOME=${COOPR_HOME:-/opt/coopr}
 export COOPR_RUBY=${COOPR_RUBY:-${COOPR_HOME}/provisioner/embedded/bin/ruby}
 
-export COOPR_PROVISIONER_PLUGIN_DIR=${COOPR_PROVISIONER_PLUGIN_DIR:-${COOPR_HOME}/provisioner/lib/worker/plugins}
+export COOPR_PROVISIONER_PLUGIN_DIR=${COOPR_PROVISIONER_PLUGIN_DIR:-${COOPR_HOME}/provisioner/lib/provisioner/worker/plugins}
 
 
 wait_for_plugin_registration () {
