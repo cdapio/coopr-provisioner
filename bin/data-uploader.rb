@@ -171,7 +171,7 @@ module Coopr
             raise "plugin #{@options[:plugin_type]} #{@options[:plugin_name]} has not registered resource type #{@options[:resource_type]} at server #{uri}"
           end
         else
-          raise "non-ok response code #{resp.code} from server at: #{:uri}"
+          raise "non-ok response code #{resp.code} from server at: #{uri}"
         end
       end
 

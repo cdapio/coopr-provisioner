@@ -77,11 +77,9 @@ module Coopr
         if @task['config'].key?('ssh_host_keys') && @task['config']['ssh_host_keys'].key?(type)
           message = "SSH host key verification failed for #{@task['config']['hostname']}/#{host}"
           raise message unless @task['config']['ssh_host_keys'][type] == ssh_keyscan(host, type)
-          return true
         else
           message = "SSH Host key not stored for #{@task['config']['hostname']}... Skipping verification"
           log.warn message
-          return true
         end
       end
 

@@ -118,13 +118,12 @@ module Coopr
           t.kill if t.alive?
         end
         log.info 'provisioner forced graceful shutdown'
-        exit 1
       else
         # last resort, kill entire process group
         Process.kill('TERM', -Process.getpgrp)
         log.info 'provisioner forced shutdown'
-        exit 1
       end
+      exit 1
     end
 
     def spawn_sinatra_thread
