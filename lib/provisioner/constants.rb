@@ -17,24 +17,24 @@
 
 module Coopr
   # configuration constants
-  PROVISIONER_SERVER_URI = 'provisioner.server.uri'
-  PROVISIONER_BIND_IP = 'provisioner.bind.ip'
-  PROVISIONER_BIND_PORT = 'provisioner.bind.port'
-  PROVISIONER_REGISTER_IP = 'provisioner.register.ip'
-  PROVISIONER_DAEMONIZE = 'provisioner.daemonize'
-  PROVISIONER_DATA_DIR = 'provisioner.data.dir'
-  PROVISIONER_WORK_DIR = 'provisioner.work.dir'
-  PROVISIONER_CAPACITY = 'provisioner.capacity'
-  PROVISIONER_HEARTBEAT_INTERVAL = 'provisioner.heartbeat.interval'
-  PROVISIONER_LOG_DIR = 'provisioner.log.dir'
-  PROVISIONER_LOG_ROTATION_SHIFT_AGE = 'provisioner.log.rotation.shift.age'
-  PROVISIONER_LOG_ROTATION_SHIFT_SIZE = 'provisioner.log.rotation.shift.size'
-  PROVISIONER_LOG_LEVEL = 'provisioner.log.level'
-  PROVISIONER_WORKER_POLL_INTERVAL = 'provisioner.worker.poll.interval'
-  PROVISIONER_WORKER_POLL_ERROR_INTERVAL = 'provisioner.worker.poll.error.interval'
-  TRUST_CERT_PATH = 'trust.cert.path'
-  TRUST_CERT_PASS = 'trust.cert.pass'
+  PROVISIONER_SERVER_URI = 'provisioner.server.uri'.freeze
+  PROVISIONER_BIND_IP = 'provisioner.bind.ip'.freeze
+  PROVISIONER_BIND_PORT = 'provisioner.bind.port'.freeze
+  PROVISIONER_REGISTER_IP = 'provisioner.register.ip'.freeze
+  PROVISIONER_DAEMONIZE = 'provisioner.daemonize'.freeze
+  PROVISIONER_DATA_DIR = 'provisioner.data.dir'.freeze
+  PROVISIONER_WORK_DIR = 'provisioner.work.dir'.freeze
+  PROVISIONER_CAPACITY = 'provisioner.capacity'.freeze
+  PROVISIONER_HEARTBEAT_INTERVAL = 'provisioner.heartbeat.interval'.freeze
+  PROVISIONER_LOG_DIR = 'provisioner.log.dir'.freeze
+  PROVISIONER_LOG_ROTATION_SHIFT_AGE = 'provisioner.log.rotation.shift.age'.freeze
+  PROVISIONER_LOG_ROTATION_SHIFT_SIZE = 'provisioner.log.rotation.shift.size'.freeze
+  PROVISIONER_LOG_LEVEL = 'provisioner.log.level'.freeze
+  PROVISIONER_WORKER_POLL_INTERVAL = 'provisioner.worker.poll.interval'.freeze
+  PROVISIONER_WORKER_POLL_ERROR_INTERVAL = 'provisioner.worker.poll.error.interval'.freeze
+  TRUST_CERT_PATH = 'trust.cert.path'.freeze
+  TRUST_CERT_PASS = 'trust.cert.pass'.freeze
 
   # api version
-  PROVISIONER_API_VERSION = 'v2'
+  PROVISIONER_API_VERSION = 'v2'.freeze
 end

@@ -36,20 +36,20 @@ module Coopr
     end
 
     def self.level=(level)
-      case level
-      when /debug/i
-        @level = ::Logger::DEBUG
-      when /info/i
-        @level = ::Logger::INFO
-      when /warn/i
-        @level = ::Logger::WARN
-      when /error/i
-        @level = ::Logger::ERROR
-      when /fatal/i
-        @level = ::Logger::FATAL
-      else
-        @level = ::Logger::INFO
-      end
+      @level = case level
+               when /debug/i
+                 ::Logger::DEBUG
+               when /info/i
+                 ::Logger::INFO
+               when /warn/i
+                 ::Logger::WARN
+               when /error/i
+                 ::Logger::ERROR
+               when /fatal/i
+                 ::Logger::FATAL
+               else
+                 ::Logger::INFO
+               end
     end
 
     def self.shift_age=(shift_age)
@@ -66,11 +66,11 @@ module Coopr
 
     def self.log
       unless @logger
-        if @out
-          @logger = ::Logger.new(@out, @shift_age.to_i, @shift_size.to_i)
-        else
-          @logger = ::Logger.new(STDOUT)
-        end
+        @logger = if @out
+                    ::Logger.new(@out, @shift_age.to_i, @shift_size.to_i)
+                  else
+                    ::Logger.new(STDOUT)
+                  end
         @logger.level = @level
         @logger.formatter = proc do |severity, datetime, _progname, msg|
           "#{datetime} #{@process_name} #{severity}: #{msg}\n"

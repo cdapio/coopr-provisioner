@@ -68,7 +68,7 @@ module Coopr
           remove('hostname' => hostname, 'ipaddress' => ipaddress, 'sshauth' => sshauth, 'fields' => fields)
           return @result
         else
-          fail "unhandled automator task type: #{task['taskName']}"
+          raise "unhandled automator task type: #{task['taskName']}"
         end
       end
 
@@ -76,7 +76,7 @@ module Coopr
         log.debug "Verifying SSH host key for #{@task['config']['hostname']}/#{host}"
         if @task['config'].key?('ssh_host_keys') && @task['config']['ssh_host_keys'].key?(type)
           message = "SSH host key verification failed for #{@task['config']['hostname']}/#{host}"
-          fail message unless @task['config']['ssh_host_keys'][type] == ssh_keyscan(host, type)
+          raise message unless @task['config']['ssh_host_keys'][type] == ssh_keyscan(host, type)
           return true
         else
           message = "SSH Host key not stored for #{@task['config']['hostname']}... Skipping verification"
@@ -88,43 +88,43 @@ module Coopr
       def bootstrap(_inputmap)
         @result['status'] = 1
         @result['message'] = "Unimplemented task bootstrap in class #{self.class.name}"
-        fail "Unimplemented task bootstrap in class #{self.class.name}"
+        raise "Unimplemented task bootstrap in class #{self.class.name}"
       end
 
       def install(_inputmap)
         @result['status'] = 1
         @result['message'] = "Unimplemented task install in class #{self.class.name}"
-        fail "Unimplemented task install in class #{self.class.name}"
+        raise "Unimplemented task install in class #{self.class.name}"
       end
 
       def configure(_inputmap)
         @result['status'] = 1
         @result['message'] = "Unimplemented task configure in class #{self.class.name}"
-        fail "Unimplemented task configure in class #{self.class.name}"
+        raise "Unimplemented task configure in class #{self.class.name}"
       end
 
       def init(_inputmap)
         @result['status'] = 1
         @result['message'] = "Unimplemented task initialize in class #{self.class.name}"
-        fail "Unimplemented task initialize in class #{self.class.name}"
+        raise "Unimplemented task initialize in class #{self.class.name}"
       end
 
       def start(_inputmap)
         @result['status'] = 1
         @result['message'] = "Unimplemented task start in class #{self.class.name}"
-        fail "Unimplemented task start in class #{self.class.name}"
+        raise "Unimplemented task start in class #{self.class.name}"
       end
 
       def stop(_inputmap)
         @result['status'] = 1
         @result['message'] = "Unimplemented task stop in class #{self.class.name}"
-        fail "Unimplemented task stop in class #{self.class.name}"
+        raise "Unimplemented task stop in class #{self.class.name}"
       end
 
       def remove(_inputmap)
         @result['status'] = 1
         @result['message'] = "Unimplemented task remove in class #{self.class.name}"
-        fail "Unimplemented task remove in class #{self.class.name}"
+        raise "Unimplemented task remove in class #{self.class.name}"
       end
     end
   end

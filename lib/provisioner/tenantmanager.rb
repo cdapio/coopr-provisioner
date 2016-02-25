@@ -29,7 +29,7 @@ module Coopr
 
     def initialize(spec, config, provisioner_id)
       unless spec.instance_of?(TenantSpec)
-        fail ArgumentError, 'TenantManager needs to be initialized with object of type TenantSpec', caller
+        raise ArgumentError, 'TenantManager needs to be initialized with object of type TenantSpec', caller
       end
       @spec = spec
       @config = config
@@ -90,7 +90,7 @@ module Coopr
             # all good, child is running
           else
             # this should never happen
-            fail "Process.waitpid returned something other than nil or expected pid: #{ret.inspect}"
+            raise "Process.waitpid returned something other than nil or expected pid: #{ret.inspect}"
           end
         rescue Errno::ECHILD
           # pid exists but is not my child
@@ -154,7 +154,7 @@ module Coopr
         end
 
         if pids_to_kill.size != difference.abs
-          fail "attempting to kill #{difference.abs} workers but could not find enough running workers to kill"
+          raise "attempting to kill #{difference.abs} workers but could not find enough running workers to kill"
         end
 
         pids_to_kill.each do |pid|

@@ -58,7 +58,7 @@ module Coopr
             log.debug "pluginmanager scanning #{jsonfile}"
             jsondata = JSON.parse(IO.read(jsonfile))
 
-            fail "missing 'name' field when loading plugin #{jsonfile}" unless jsondata.key?('name')
+            raise "missing 'name' field when loading plugin #{jsonfile}" unless jsondata.key?('name')
             p_name = jsondata['name']
             # p_description = jsondata['description'] || "No description found"
             p_providertypes = jsondata['providertypes'] || []
@@ -67,37 +67,37 @@ module Coopr
             log.debug "plugin \"#{p_name}\" configures providers: #{p_providertypes} and automators #{p_automatortypes}"
 
             p_providertypes.each do |providertype|
-              fail "declared providertype \"#{providertype}\" is not defined" unless jsondata.key?(providertype)
-              fail "declared providertype \"#{providertype}\" already defined in another plugin" if @providermap.key?(providertype)
+              raise "declared providertype \"#{providertype}\" is not defined" unless jsondata.key?(providertype)
+              raise "declared providertype \"#{providertype}\" already defined in another plugin" if @providermap.key?(providertype)
 
-              fail "providertype \"#{providertype}\" does not define an implementor classname" unless jsondata[providertype].key?('classname')
+              raise "providertype \"#{providertype}\" does not define an implementor classname" unless jsondata[providertype].key?('classname')
               # require every .rb file in the plugin top-level directory
               Dir["#{File.dirname(jsonfile)}/*.rb"].each { |file| require file }
               # check ancestor to determine plugin type
               klass = Object.const_get(jsondata[providertype]['classname'])
               if klass.ancestors.include? Object.const_get('Coopr').const_get('Plugin').const_get('Provider')
-                fail "plugin \"#{p_name}\" attempting to load duplicate provider type \"#{providertype}\"" if @providermap.key?(providertype)
+                raise "plugin \"#{p_name}\" attempting to load duplicate provider type \"#{providertype}\"" if @providermap.key?(providertype)
                 @providermap.merge!({ providertype => jsondata[providertype] })
               else
-                fail "Declared provider \"#{providertype}\" implementation class " \
+                raise "Declared provider \"#{providertype}\" implementation class " \
                   "\"#{jsondata[providertype]['classname']}\" must extend Coopr::Plugin::Provider class"
               end
             end
 
             p_automatortypes.each do |automatortype|
-              fail "declared automatortype \"#{automatortype}\" is not defined" unless jsondata.key?(automatortype)
-              fail "declared automatortype \"#{automatortype}\" already defined in another plugin" if @providermap.key?(automatortype)
+              raise "declared automatortype \"#{automatortype}\" is not defined" unless jsondata.key?(automatortype)
+              raise "declared automatortype \"#{automatortype}\" already defined in another plugin" if @providermap.key?(automatortype)
 
-              fail "automatortype \"#{automatortype}\" does not define an implentor classname" unless jsondata[automatortype].key?('classname')
+              raise "automatortype \"#{automatortype}\" does not define an implentor classname" unless jsondata[automatortype].key?('classname')
               # require every .rb file in the plugin top-level directory
               Dir["#{File.dirname(jsonfile)}/*.rb"].each { |file| require file }
               # check ancestor to determine plugin type
               klass = Object.const_get(jsondata[automatortype]['classname'])
               if klass.ancestors.include? Object.const_get('Coopr').const_get('Plugin').const_get('Automator')
-                fail "plugin \"#{p_name}\" attempting to load duplicate automator type \"#{automatortype}\"" if @automatormap.key?(automatortype)
+                raise "plugin \"#{p_name}\" attempting to load duplicate automator type \"#{automatortype}\"" if @automatormap.key?(automatortype)
                 @automatormap.merge!({ automatortype => jsondata[automatortype] })
               else
-                fail "Declared automator \"#{automatortype}\" implementation class " \
+                raise "Declared automator \"#{automatortype}\" implementation class " \
                   "\"#{jsondata[automatortype]['classname']}\" must extend Coopr::Plugin::Automator class"
               end
             end
@@ -127,7 +127,7 @@ module Coopr
           log.debug "registering provider/automator type: #{name}"
           json = JSON.generate(json_obj)
           # TODO: config options for registration user/tenant
-          resp = Coopr::RestHelper.put("#{uri}", json, :'Coopr-UserID' => 'admin', :'Coopr-TenantID' => 'superadmin')
+          resp = Coopr::RestHelper.put(uri.to_s, json, :'Coopr-UserID' => 'admin', :'Coopr-TenantID' => 'superadmin')
           if resp.code == 200
             log.info "Successfully registered #{name}"
           else
@@ -153,7 +153,7 @@ module Coopr
             return @providermap[providerName]['classname']
           end
         end
-        fail "No registered provider for #{providerName}"
+        raise "No registered provider for #{providerName}"
       end
 
       # returns registered class name for given automator plugin
@@ -163,7 +163,7 @@ module Coopr
             return @automatormap[automatorName]['classname']
           end
         end
-        fail "No registered automator for #{automatorName}"
+        raise "No registered automator for #{automatorName}"
       end
 
       # returns all registered automators, used for bootstrap task

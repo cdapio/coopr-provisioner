@@ -211,7 +211,7 @@ module Coopr
         result = combinedresult
       else
         log.error "Unhandled task of type #{task['taskName']}"
-        fail "Unhandled task of type #{task['taskName']}"
+        raise "Unhandled task of type #{task['taskName']}"
       end
       result
     end

@@ -32,7 +32,7 @@ module Coopr
     end
 
     def prod_cmd
-      cmd = "#{File.join(RbConfig::CONFIG['bindir'], RbConfig::CONFIG['ruby_install_name'])}"
+      cmd = File.join(RbConfig::CONFIG['bindir'], RbConfig::CONFIG['ruby_install_name']).to_s
       cmd += " #{File.dirname(__FILE__)}/../../bin/worker"
       cmd += " --config-file #{@config.site_file}" unless @config.site_file.nil?
       cmd += " --provisioner #{@provisioner}" unless @provisioner.nil?
@@ -43,7 +43,7 @@ module Coopr
     end
 
     def test_cmd
-      cmd = "#{File.join(RbConfig::CONFIG['bindir'], RbConfig::CONFIG['ruby_install_name'])}"
+      cmd = File.join(RbConfig::CONFIG['bindir'], RbConfig::CONFIG['ruby_install_name']).to_s
       cmd += " #{File.dirname(__FILE__)}/../../spec/worker.rb"
       cmd += " #{@name}" unless @name.nil?
       cmd

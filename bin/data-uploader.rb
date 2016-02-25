@@ -107,33 +107,33 @@ module Coopr
       def basic_validate
         # action required
         unless @options[:action] =~ /^(upload|stage|sync)$/i
-          fail ArgumentError, 'missing or invalid action argument: must be one of "upload", "stage", or "sync"'
+          raise ArgumentError, 'missing or invalid action argument: must be one of "upload", "stage", or "sync"'
         end
         # path required
         if @options[:path].nil?
-          fail ArgumentError, 'missing local-path argument'
+          raise ArgumentError, 'missing local-path argument'
         elsif !File.exist?(@options[:path])
-          fail ArgumentError, "local-path argument supplied, but no such file or directory: #{@options[:path]}"
+          raise ArgumentError, "local-path argument supplied, but no such file or directory: #{@options[:path]}"
         end
         # api target required
         if @options[:target].nil?
-          fail ArgumentError, 'missing remote-target argument'
+          raise ArgumentError, 'missing remote-target argument'
         else
           plugin_type, plugin_name, resource_type, resource_name = @options[:target].split('/')
           unless plugin_type =~ /^(automatortypes|providertypes)$/i
-            fail ArgumentError, "invalid remote-target argument, must begin with 'automatortypes/' or 'providertypes/': #{@options[:target]}"
+            raise ArgumentError, "invalid remote-target argument, must begin with 'automatortypes/' or 'providertypes/': #{@options[:target]}"
           end
           @options[:plugin_type] = plugin_type
           if plugin_name.nil?
-            fail ArgumentError, "invalid remote-target argument, must be of format 'plugin_type/plugin_name/resource_type/resource_name'': #{@options[:target]}"
+            raise ArgumentError, "invalid remote-target argument, must be of format 'plugin_type/plugin_name/resource_type/resource_name'': #{@options[:target]}"
           end
           @options[:plugin_name] = plugin_name
           if resource_type.nil?
-            fail ArgumentError, "invalid remote-target argument, must be of format 'plugin_type/plugin_name/resource_type/resource_name'': #{@options[:target]}"
+            raise ArgumentError, "invalid remote-target argument, must be of format 'plugin_type/plugin_name/resource_type/resource_name'': #{@options[:target]}"
           end
           @options[:resource_type] = resource_type
           if resource_name.nil?
-            fail ArgumentError, "invalid remote-target argument, must be of format 'plugin_type/plugin_name/resource_type/resource_name'': #{@options[:target]}"
+            raise ArgumentError, "invalid remote-target argument, must be of format 'plugin_type/plugin_name/resource_type/resource_name'': #{@options[:target]}"
           end
           @options[:resource_name] = resource_name
         end
@@ -143,7 +143,7 @@ module Coopr
         uri = %W( #{@options[:uri]} status ).join('/')
         resp = Coopr::RestHelper.get(uri, @headers)
         unless resp.code == 200
-          fail "non-ok response code #{resp.code} from server at: #{uri}"
+          raise "non-ok response code #{resp.code} from server at: #{uri}"
         end
       end
 
@@ -165,13 +165,13 @@ module Coopr
             if resp_resource.key?('format')
               @expected_format = resp_resource['format']
             else
-              fail "plugin plugin #{@options[:plugin_type]} #{@options[:plugin_name]}, resource #{@options[:resource_type]} does not have a registered format"
+              raise "plugin plugin #{@options[:plugin_type]} #{@options[:plugin_name]}, resource #{@options[:resource_type]} does not have a registered format"
             end
           else
-            fail "plugin #{@options[:plugin_type]} #{@options[:plugin_name]} has not registered resource type #{@options[:resource_type]} at server #{uri}"
+            raise "plugin #{@options[:plugin_type]} #{@options[:plugin_name]} has not registered resource type #{@options[:resource_type]} at server #{uri}"
           end
         else
-          fail "non-ok response code #{resp.code} from server at: #{:uri}"
+          raise "non-ok response code #{resp.code} from server at: #{:uri}"
         end
       end
 
@@ -181,13 +181,13 @@ module Coopr
         when 'archive'
           unless local_path_is_tgz?
             unless local_path_is_directory?
-              fail "server resource registered as archive, but local-path argument is not a directory or .tgz archive: #{@options[:path]}"
+              raise "server resource registered as archive, but local-path argument is not a directory or .tgz archive: #{@options[:path]}"
             end
           end
         when 'file'
-          fail "server resource registered as file, but local-path argument is not a file: #{@options[:path]}" unless local_path_is_file?
+          raise "server resource registered as file, but local-path argument is not a file: #{@options[:path]}" unless local_path_is_file?
         else
-          fail "unknown expected format from server: #{@expected_format}"
+          raise "unknown expected format from server: #{@expected_format}"
         end
         @options[:format] = @expected_format
       end
@@ -216,7 +216,7 @@ module Coopr
           upload_file_resource
         else
           # this should get caught in validate
-          fail "unknown expected format: #{@options[:format]}"
+          raise "unknown expected format: #{@options[:format]}"
         end
       end
 
@@ -238,7 +238,7 @@ module Coopr
           puts "upload successful for #{uri}, version: #{resp_obj['version']}" unless options[:quiet]
           @upload_results = resp_obj
         else
-          fail "non-ok response code #{resp.code} from server at: #{uri}"
+          raise "non-ok response code #{resp.code} from server at: #{uri}"
         end
       end
 
@@ -249,7 +249,7 @@ module Coopr
         if resp.code == 200
           puts "stage successful for #{uri}" unless options[:quiet]
         else
-          fail "stage request at #{uri} failed with code #{resp.code}"
+          raise "stage request at #{uri} failed with code #{resp.code}"
         end
       end
 
@@ -260,7 +260,7 @@ module Coopr
         if resp.code == 200
           puts 'sync successful' unless options[:quiet]
         else
-          fail "non-ok response code: #{resp.code} from server for sync request: #{uri}"
+          raise "non-ok response code: #{resp.code} from server for sync request: #{uri}"
         end
       end
 
