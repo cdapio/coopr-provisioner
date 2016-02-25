@@ -45,7 +45,7 @@ module Coopr
           delete('providerid' => task['config']['providerid'], 'fields' => task['config']['provider']['provisioner'])
           return @result
         else
-          fail "unhandled provider task type: #{task['taskName']}"
+          raise "unhandled provider task type: #{task['taskName']}"
         end
       end
 
@@ -55,20 +55,20 @@ module Coopr
         # fields under 'result' will be passed to subsequent tasks
         @result['result']['providerid'] = 'exampleid'
         @result['result']['foo'] = 'bar'
-        fail "Unimplemented task create in class #{self.class.name}"
+        raise "Unimplemented task create in class #{self.class.name}"
       end
 
       def confirm(_inputmap)
         @result['status'] = 1
         @result['message'] = "Unimplemented task create in class #{self.class.name}"
         @result['result']['ipaddress'] = '1.2.3.4'
-        fail "Unimplemented task confirm in class #{self.class.name}"
+        raise "Unimplemented task confirm in class #{self.class.name}"
       end
 
       def delete(_inputmap)
         @result['status'] = 1
         @result['message'] = "Unimplemented task create in class #{self.class.name}"
-        fail "Unimplemented task delete in class #{self.class.name}"
+        raise "Unimplemented task delete in class #{self.class.name}"
       end
     end
   end

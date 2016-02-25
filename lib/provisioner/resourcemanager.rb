@@ -81,7 +81,7 @@ module Coopr
       when 'archive'
         sync_archive_resource(resource, version)
       else
-        fail "Unknown format for resource #{resource} version #{version}: #{format}"
+        raise "Unknown format for resource #{resource} version #{version}: #{format}"
       end
       log.debug "synced resource #{resource} version #{version}"
     end

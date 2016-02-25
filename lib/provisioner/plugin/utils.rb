@@ -55,7 +55,7 @@ module Coopr
         # TODO: find a way to do this in Ruby
         key = `ssh-keyscan -t #{type} #{host} 2>&1 | grep #{keytype}`.split(' ')
         # Bad key type == "unknown key type #{type}"
-        fail "Unknown SSH Key Type: #{type}" if key[2] == 'type' || key[2].nil?
+        raise "Unknown SSH Key Type: #{type}" if key[2] == 'type' || key[2].nil?
         key[2]
       end
 
@@ -70,7 +70,7 @@ module Coopr
         ssh.open_channel do |channel|
           if pty
             channel.request_pty do |_ch, success|
-              fail 'no pty!' unless success
+              raise 'no pty!' unless success
             end
           end
           channel.exec(command) do |_ch, success|
@@ -99,7 +99,7 @@ module Coopr
         log.debug "stderr: #{stderr_data}"
         log.debug "stdout: #{stdout_data}"
 
-        fail CommandExecutionError.new(command, stdout_data, stderr_data, exit_code, exit_signal), message unless exit_code == 0
+        raise CommandExecutionError.new(command, stdout_data, stderr_data, exit_code, exit_signal), message unless exit_code == 0
 
         [stdout_data, stderr_data, exit_code, exit_signal]
       end

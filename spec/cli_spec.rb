@@ -21,9 +21,9 @@ require File.dirname(__FILE__) + '/../lib/provisioner/cli.rb'
 describe 'Provisioner::CLI' do
   it 'can parse command line arguments' do
     options = Coopr::CLI.read([
-      '-c', '/tmp/config.xml',
-      '-r'
-    ])
+                                '-c', '/tmp/config.xml',
+                                '-r'
+                              ])
     expected = {
       configfile: '/tmp/config.xml',
       register: true
