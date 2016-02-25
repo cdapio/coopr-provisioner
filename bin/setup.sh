@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Copyright © 2012-2015 Cask Data, Inc.
+# Copyright © 2012-2016 Cask Data, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -24,7 +24,8 @@ export COOPR_SERVER_URI=${COOPR_SERVER_URI:-http://localhost:55054}
 export COOPR_HOME=${COOPR_HOME:-/opt/coopr}
 export COOPR_RUBY=${COOPR_RUBY:-${COOPR_HOME}/provisioner/embedded/bin/ruby}
 
-export COOPR_PROVISIONER_PLUGIN_DIR=${COOPR_HOME}/provisioner/lib/worker/plugins
+export COOPR_PROVISIONER_PLUGIN_DIR=${COOPR_PROVISIONER_PLUGIN_DIR:-${COOPR_HOME}/provisioner/lib/provisioner/worker/plugins}
+
 
 wait_for_plugin_registration () {
   RETRIES=0
@@ -46,7 +47,7 @@ wait_for_plugin_registration () {
 }
 
 load_bundled_data ( ) {
-  __skriptz=$(ls -1 ${COOPR_HOME}/provisioner/lib/provisioner/worker/plugins/*/*/load-bundled-data.sh 2>&1)
+  __skriptz=$(ls -1 ${COOPR_PROVISIONER_PLUGIN_DIR}/*/*/load-bundled-data.sh 2>&1)
   if [ "${__skriptz}" != "" ]; then
     for __i in ${__skriptz}; do
       ${__i} || return 1
