@@ -22,6 +22,7 @@ group :dependencies do
   # These gems are used by the provisioner
   gem 'json'
   gem 'logger'
+  gem 'mime-types', '< 3.0'
   gem 'net-scp'
   gem 'rest_client', '~> 1.7'
   gem 'sinatra', '~> 1.4'
