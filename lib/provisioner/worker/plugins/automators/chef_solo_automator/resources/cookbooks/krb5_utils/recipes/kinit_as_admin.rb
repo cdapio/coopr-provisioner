@@ -1,8 +1,8 @@
 #
 # Cookbook Name:: krb5_utils
-# Recipe:: default
+# Recipe:: kinit_as_admin
 #
-# Copyright © 2013-2016 Cask Data, Inc.
+# Copyright © 2016 Cask Data, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -19,11 +19,13 @@
 
 include_recipe 'krb5::default'
 
-# Install 'kstart' for k5start command
-include_recipe 'yum-epel::default' if node['platform_family'] == 'rhel'
-package 'kstart'
+execute 'kdestroy' do
+  command 'kdestroy'
+  action :run
+  only_if { node['krb5_utils']['destroy_before_kinit'].to_s == 'true' }
+end
 
-# Generate any defined keytabs
-unless node['krb5_utils']['krb5_service_keytabs'].empty? && node['krb5_utils']['krb5_user_keytabs'].empty?
-  include_recipe 'krb5_utils::generate_keytabs'
+execute 'kinit-as-admin-user' do
+  command "echo #{node['krb5_utils']['admin_password']} | kinit #{node['krb5_utils']['admin_principal']}"
+  action :run
 end
