@@ -32,14 +32,14 @@ else
     directory ntpdir do
       owner node['ntp']['var_owner']
       group node['ntp']['var_group']
-      mode  '0755'
+      mode '0755'
     end
   end
 
   cookbook_file node['ntp']['leapfile'] do
     owner node['ntp']['conf_owner']
     group node['ntp']['conf_group']
-    mode  '0644'
+    mode '0644'
     source 'ntp.leapseconds'
     notifies :restart, "service[#{node['ntp']['service']}]"
   end
@@ -47,7 +47,7 @@ else
   include_recipe 'ntp::apparmor' if node['ntp']['apparmor_enabled']
 end
 
-unless node['ntp']['servers'].size > 0
+if node['ntp']['servers'].empty?
   node.default['ntp']['servers'] = [
     '0.pool.ntp.org',
     '1.pool.ntp.org',
@@ -78,10 +78,10 @@ node.default['ntp']['tinker']['panic'] = 0 if node['virtualization'] &&
                                               node['ntp']['disable_tinker_panic_on_virtualization_guest']
 
 template node['ntp']['conffile'] do
-  source   'ntp.conf.erb'
-  owner    node['ntp']['conf_owner']
-  group    node['ntp']['conf_group']
-  mode     '0644'
+  source 'ntp.conf.erb'
+  owner node['ntp']['conf_owner']
+  group node['ntp']['conf_group']
+  mode '0644'
   notifies :restart, "service[#{node['ntp']['service']}]" unless node['ntp']['conf_restart_immediate']
   notifies :restart, "service[#{node['ntp']['service']}]", :immediately if node['ntp']['conf_restart_immediate']
   variables(
@@ -89,15 +89,15 @@ template node['ntp']['conffile'] do
   )
 end
 
-if node['ntp']['sync_clock']
+if node['ntp']['sync_clock'] && !platform_family?('windows')
   execute "Stop #{node['ntp']['service']} in preparation for ntpdate" do
-    command '/bin/true'
+    command node['platform_family'] == 'freebsd' ? '/usr/bin/true' : '/bin/true'
     action :run
     notifies :stop, "service[#{node['ntp']['service']}]", :immediately
   end
 
   execute 'Force sync system clock with ntp server' do
-    command 'ntpd -q'
+    command "ntpd -q -u #{node['ntp']['var_owner']}"
     action :run
     notifies :start, "service[#{node['ntp']['service']}]"
   end
@@ -106,10 +106,13 @@ end
 execute 'Force sync hardware clock with system clock' do
   command 'hwclock --systohc'
   action :run
-  only_if { node['ntp']['sync_hw_clock'] && !platform_family?('windows') }
+  only_if { node['ntp']['sync_hw_clock'] && !(platform_family?('windows') || platform_family?('freebsd')) }
 end
 
 service node['ntp']['service'] do
   supports status: true, restart: true
-  action   [:enable, :start]
+  action [:enable, :start]
+  timeout 120 if platform_family?('windows')
+  retries 3
+  retry_delay 5
 end

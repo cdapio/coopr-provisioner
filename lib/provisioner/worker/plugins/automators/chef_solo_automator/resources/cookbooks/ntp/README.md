@@ -1,5 +1,5 @@
 # NTP Cookbook
-[![Build Status](https://secure.travis-ci.org/gmiranda23/ntp.svg?branch=master)](http://travis-ci.org/gmiranda23/ntp) [![Cookbook Version](https://img.shields.io/cookbook/v/ntp.svg)](https://supermarket.chef.io/cookbooks/ntp)
+[![Build Status](https://travis-ci.org/gmiranda23/ntp.svg?branch=master)](http://travis-ci.org/gmiranda23/ntp) [![Cookbook Version](https://img.shields.io/cookbook/v/ntp.svg)](https://supermarket.chef.io/cookbooks/ntp)
 
 Installs and configures ntp. On Windows systems it uses the Meinberg port of the standard NTPd client to Windows.
 
@@ -7,7 +7,10 @@ Installs and configures ntp. On Windows systems it uses the Meinberg port of the
 ### Platforms
 - Debian-family Linux Distributions
 - RedHat-family Linux Distributions
+- Fedora
 - Gentoo Linux
+- Arch Linux
+- openSUSE
 - FreeBSD
 - Windows
 
@@ -104,7 +107,14 @@ Installs and configures ntp. On Windows systems it uses the Meinberg port of the
 - `ntp['localhost']['noquery']` (applies to NTP Servers and Clients)
   - Boolean. Defaults to false. Set to true if using ntp < 4.2.8 or any unpatched ntp version to mitigate CVE-2014-9293 / CVE-2014-9294 / CVE-2014-9295
 
-### Platform specific
+- `ntp['orphan']['enabled']`
+  - Boolean, enables orphan mode if set to true
+
+- `ntp['orphan']['stratum']`
+  - Number. Defaults to 5, recommended value for stratum is 2 more than the worst-case externally-reachable source of time
+
+### Automatically Set Attributes
+These attributes are set based on platform / system information provided by Ohai
 - `ntp['packages']`
   - Array, the packages to install
   - Default, ntp for everything, ntpdate depending on platform. Not applicable for
@@ -253,7 +263,7 @@ This section details "quick development" steps.
 - Contributor:: Brad Knowles ([bknowles@momentumsi.com](mailto:bknowles@momentumsi.com))
 
 ```text
-Copyright 2009-2015, Chef Software, Inc.
+Copyright 2009-2016, Chef Software, Inc.
 Copyright 2012, Eric G. Wolfe
 Copyright 2012, Fletcher Nichol
 Copyright 2012, Webtrends, Inc.

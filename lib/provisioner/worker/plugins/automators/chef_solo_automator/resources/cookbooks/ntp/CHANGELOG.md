@@ -1,6 +1,28 @@
 # ntp Cookbook CHANGELOG
 This file is used to list changes made in each version of the ntp cookbook.
 
+## v1.11.0 (2016-03-29)
+- When force setting the clock run ntp as the ntp user to ensure we don't set file ownership to root
+- Added optional support for orphan mode
+- Require windows cookbook 1.38.0 to resolve several issues with the older cookbook versions
+- Add support for using keys
+
+## v1.10.1 (2016-02-04)
+- Update the Readme to include openSUSE and Arch Linux
+- Guard the timeout set in the service to prevent failures on old chef releases
+
+## v1.10.0 (2016-02-04)
+- Fixed compatibility with FreeBSD hosts by skipping the sync with the hardware clock and using the proper path to the "true" command
+- Fixed compatibility with Windows by extending the service start timeout, introducing retries, and excluding Windows from the hardware sync logic
+- Changed the default array of packages to install from ntp and ntpdate to just ntp.  ntpdate is used on Debian and modern RHEL/Fedora hosts only. This gives us out of the box support for Arch and Suse
+- Ensure that Fedora systems also install ntpdate
+- Updated test dependencies to the latest
+- Updated test documentation to point to the official Chef testing documentation
+- Expanded the Test Kitchen config with better support for FreeBSD/Fedora and new Windows boxes
+
+## v1.9.2 (2016-02-04)
+- **PR [#121]** - Remove nomodify config from loopback
+
 ## v1.9.1 (2016-01-07)
 - **PR [#132]** - Update ntp.leapseconds
 
@@ -28,7 +50,7 @@ This file is used to list changes made in each version of the ntp cookbook.
 - Remove the outdated contributing.md doc from the Opscode days
 
 ## v1.8.6 (2015-05-14)
-- **PR [#102]( 102)** - Update leapseconds file to 3660249600 (through C49)
+- **PR [#102](102)** - Update leapseconds file to 3660249600 (through C49)
 - Gemfile parity with ChefDK 0.5.1
 - .kitchen.yml platform updates to current bento boxes
 
