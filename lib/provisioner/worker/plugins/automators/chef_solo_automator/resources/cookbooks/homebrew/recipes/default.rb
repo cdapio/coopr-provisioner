@@ -27,13 +27,15 @@ homebrew_go = "#{Chef::Config[:file_cache_path]}/homebrew_go"
 Chef::Log.debug("Homebrew owner is '#{homebrew_owner}'")
 
 remote_file homebrew_go do
-  source 'https://raw.githubusercontent.com/Homebrew/install/master/install'
+  source node['homebrew']['installer']['url']
+  checksum node['homebrew']['installer']['checksum'] unless node['homebrew']['installer']['checksum'].nil?
   mode 00755
 end
 
 execute 'install homebrew' do
   command homebrew_go
-  user node['homebrew']['owner'] || homebrew_owner
+  environment lazy { { 'HOME' => ::Dir.home(homebrew_owner), 'USER' => homebrew_owner } }
+  user homebrew_owner
   not_if { ::File.exist? '/usr/local/bin/brew' }
 end
 
@@ -43,6 +45,7 @@ if node['homebrew']['auto-update']
   end
 
   execute 'update homebrew from github' do
+    environment lazy { { 'HOME' => ::Dir.home(homebrew_owner), 'USER' => homebrew_owner } }
     user homebrew_owner
     command '/usr/local/bin/brew update || true'
   end
