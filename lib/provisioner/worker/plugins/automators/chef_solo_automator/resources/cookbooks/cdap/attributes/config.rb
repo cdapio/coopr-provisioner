@@ -2,7 +2,7 @@
 # Cookbook Name:: cdap
 # Attribute:: config
 #
-# Copyright © 2013-2015 Cask Data, Inc.
+# Copyright © 2013-2016 Cask Data, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -19,8 +19,8 @@
 
 # Default: conf.chef
 default['cdap']['conf_dir'] = 'conf.chef'
-# Default: 3.2.1-1
-default['cdap']['version'] = '3.2.2-1'
+# Default: 3.3.0-1
+default['cdap']['version'] = '3.3.0-1'
 # cdap-site.xml
 default['cdap']['cdap_site']['root.namespace'] = 'cdap'
 # ideally we could put the macro '/${cdap.namespace}' here but this attribute is used elsewhere in the cookbook
@@ -67,6 +67,12 @@ hdp_version =
       '2.3.0.0-2557'
     when '2.3.2.0'
       '2.3.2.0-2950'
+    when '2.3.4.0'
+      '2.3.4.0-3485'
+    when '2.3.4.7'
+      '2.3.4.7-4'
+    when '2.4.0.0'
+      '2.4.0.0-169'
     else
       node['hadoop']['distribution_version']
     end
@@ -76,8 +82,10 @@ if node.key?('hadoop') && node['hadoop'].key?('distribution') && node['hadoop'].
    node['hadoop']['distribution'] == 'hdp' && node['hadoop']['distribution_version'].to_f >= 2.2 &&
    node['cdap']['version'].to_f >= 3.1
   default['cdap']['cdap_env']['opts'] = "${OPTS} -Dhdp.version=#{hdp_version}"
-  default['cdap']['cdap_env']['spark_home'] = "/usr/hdp/#{hdp_version}/spark"
   default['cdap']['cdap_site']['app.program.jvm.opts'] = "-XX:MaxPermSize=128M ${twill.jvm.gc.opts} -Dhdp.version=#{hdp_version} -Dspark.yarn.am.extraJavaOptions=-Dhdp.version=#{hdp_version}"
-else
+  if node['cdap']['version'].to_f < 3.4
+    default['cdap']['cdap_env']['spark_home'] = "/usr/hdp/#{hdp_version}/spark"
+  end
+elsif node['cdap']['version'].to_f < 3.4 # CDAP 3.4 determines SPARK_HOME on its own (CDAP-5086)
   default['cdap']['cdap_env']['spark_home'] = '/usr/lib/spark'
 end
