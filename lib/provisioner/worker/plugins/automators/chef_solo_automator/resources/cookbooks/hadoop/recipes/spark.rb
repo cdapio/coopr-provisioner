@@ -23,7 +23,7 @@ pkg =
   if node['hadoop']['distribution'] == 'cdh'
     'spark-core'
   else
-    'spark'
+    hadoop_package('spark')
   end
 
 package pkg do
@@ -31,7 +31,7 @@ package pkg do
   only_if { (node['hadoop']['distribution'] == 'cdh' || hdp22?) && node['spark']['release']['install'].to_s == 'false' }
 end
 
-package 'spark-python' do
+package hadoop_package('spark-python') do
   action :install
   only_if { (node['hadoop']['distribution'] == 'cdh' || hdp22?) && node['spark']['release']['install'].to_s == 'false' }
 end
@@ -145,15 +145,15 @@ template "#{spark_conf_dir}/spark-env.sh" do
   only_if { node['spark'].key?('spark_env') && !node['spark']['spark_env'].empty? }
 end # End spark-env.sh
 
-# Start spark-defaults.xml
-template "#{spark_conf_dir}/spark-defaults.xml" do
-  source 'generic-site.xml.erb'
+# Start spark-defaults.conf
+template "#{spark_conf_dir}/spark-defaults.conf" do
+  source 'generic.properties.erb'
   mode '0644'
   owner 'root'
   group 'root'
-  variables :options => node['spark']['spark_defaults']
+  variables :properties => node['spark']['spark_defaults']
   only_if { node['spark'].key?('spark_defaults') && !node['spark']['spark_defaults'].empty? }
-end # End spark-defaults.xml
+end # End spark-defaults.conf
 
 # Setup metrics.properties log4j.properties
 %w(metrics log4j).each do |propfile|
