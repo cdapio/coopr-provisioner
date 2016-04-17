@@ -1,6 +1,9 @@
 sysctl cookbook
 ===============
+[![Cookbook Version](https://img.shields.io/cookbook/v/sysctl.svg?style=flat)](https://supermarket.chef.io/cookbooks/sysctl)
+[![Dependency Status](http://img.shields.io/gemnasium/svanzoest-cookbooks/sysctl.svg?style=flat)](https://gemnasium.com/svanzoest-cookbooks/syctl)
 [![Build Status](https://travis-ci.org/svanzoest-cookbooks/sysctl.png?branch=master)](https://travis-ci.org/svanzoest-cookbooks/sysctl)
+[![License](https://img.shields.io/badge/license-Apache_2-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0)
 [![Gitter](https://badges.gitter.im/Join Chat.svg)](https://gitter.im/svanzoest-cookbooks/sysctl?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 Description
@@ -18,6 +21,7 @@ Platforms
 * PLD Linux
 * Exherbo
 * Arch Linux
+* Suse
 
 Usage
 =======
@@ -99,38 +103,6 @@ The cookbook also includes an Ohai 7 plugin that can be installed by adding `sys
 
 To see ohai plugin output manually, you can run `ohai -d /etc/chef/ohai_plugins sys` on the command line.
 
-# Development
-
-We have written unit tests using [chefspec](http://code.sethvargo.com/chefspec/) and integration tests in [serverspec](http://serverspec.org/) executed via [test-kitchen](http://kitchen.ci). Much of the tooling around this cookbook is exposed via guard and test kitchen, so it is highly recommended to learn more about those tools. The easiest way to get started is to install the [Chef Development Kit](https://downloads.chef.io/chef-dk/)
-
-## Running tests
-
-The following commands will run the tests:
-
-```
-chef exec bundle install
-chef exec rubocop
-chef exec foodcritic .
-chef exec rspec
-chef exec kitchen test default-ubuntu-1404
-chef exec kitchen test default-centos-70
-```
-
-The above will do ruby style ([rubocop](https://github.com/bbatsov/rubocop)) and cookbook style ([foodcritic](http://www.foodcritic.io/)) checks followed by rspec unit tests ensuring proper cookbook operation. Integration tests will be run next on two separate linux platforms (Ubuntu 14.04 LTS Precise 64-bit and CentOS 7.0). Please run the tests on any pull requests that you are about to submit and write tests for defects or new features to ensure backwards compatibility and a stable cookbook that we can all rely upon.
-
-## Running tests continuously with guard
-
-This cookbook is also setup to run the checks while you work via the [guard gem](http://guardgem.org/).
-
-```
-bundle install
-bundle exec guard start
-```
-
-## ChefSpec LWRP Matchers
-
-The cookbook exposes a chefspec matcher to be used by wrapper cookbooks to test the cookbooks LWRP. See `library/matchers.rb` for basic usage.
-
 # Links
 
 There are a lot of different documents that talk about system control parameters, the hope here is to point to some of the most useful ones to provide more guidance as to what the possible kernel parameters are and what they mean.
@@ -146,3 +118,36 @@ There are a lot of different documents that talk about system control parameters
 * [Adventures in Linux TCP Tuning (Nov 2013)](http://thesimplecomputer.info/adventures-in-linux-tcp-tuning-page2/)
 * [Part 1: Lessons learned tuning TCP and Nginx in EC2 (Jan 2014)](http://engineering.chartbeat.com/2014/01/02/part-1-lessons-learned-tuning-tcp-and-nginx-in-ec2/)
 * [How to harden a new server with Chef](http://lollyrock.com/articles/how-to-harden-a-new-server/) about the [TelekomLabs Hardening Framework](http://telekomlabs.github.io/) (May 2014)
+
+# Development
+
+We have written unit tests using [chefspec](http://code.sethvargo.com/chefspec/) and integration tests in [serverspec](http://serverspec.org/) executed via [test-kitchen](http://kitchen.ci). Much of the tooling around this cookbook is exposed via guard and test kitchen, so it is highly recommended to learn more about those tools. The easiest way to get started is to install the [Chef Development Kit](https://downloads.chef.io/chef-dk/)
+
+## Running tests
+
+The following commands will run the tests:
+
+```
+chef exec bundle install
+chef exec rubocop
+chef exec foodcritic .
+chef exec rspec
+chef exec kitchen test default-ubuntu-1404
+chef exec kitchen test default-centos-72
+```
+
+The above will do ruby style ([rubocop](https://github.com/bbatsov/rubocop)) and cookbook style ([foodcritic](http://www.foodcritic.io/)) checks followed by rspec unit tests ensuring proper cookbook operation. Integration tests will be run next on two separate linux platforms (Ubuntu 14.04 LTS Precise 64-bit and CentOS 7.2). Please run the tests on any pull requests that you are about to submit and write tests for defects or new features to ensure backwards compatibility and a stable cookbook that we can all rely upon.
+
+## Running tests continuously with guard
+
+This cookbook is also setup to run the checks while you work via the [guard gem](http://guardgem.org/).
+
+```
+bundle install
+bundle exec guard start
+```
+
+## ChefSpec LWRP Matchers
+
+The cookbook exposes a chefspec matcher to be used by wrapper cookbooks to test the cookbooks LWRP. See `library/matchers.rb` for basic usage.
+
