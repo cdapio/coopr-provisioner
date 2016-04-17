@@ -17,6 +17,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+use_inline_resources if defined?(use_inline_resources)
+
 include Windows::Helper
 
 def load_current_resource
@@ -37,11 +39,12 @@ def font_exists?
 end
 
 def get_cookbook_font
-  cookbook_file @new_resource.file do
-    action    :create
+  font_file = @new_resource.file
+  cookbook_file font_file do
+    action    :nothing
     cookbook  cookbook_name.to_s unless cookbook_name.nil?
-    path      win_friendly_path(::File.join(ENV['TEMP'], @new_resource.file))
-  end
+    path      win_friendly_path(::File.join(ENV['TEMP'], font_file))
+  end.run_action(:create)
 end
 
 def del_cookbook_font
@@ -58,7 +61,7 @@ def install_font
   Chef::Log.debug("Installing font: #{@new_resource.file}")
 end
 
-def action_install
+action :install do
   unless font_exists?
     get_cookbook_font
     install_font
