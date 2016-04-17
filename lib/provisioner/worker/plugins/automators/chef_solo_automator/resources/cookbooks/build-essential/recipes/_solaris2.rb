@@ -2,7 +2,7 @@
 # Cookbook Name:: build-essential
 # Recipe:: solaris2
 #
-# Copyright 2013, Chef Software, Inc.
+# Copyright 2013-2016, Chef Software, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -19,14 +19,7 @@
 
 case node['platform_version'].to_f
 when 5.10
-  # You should install the following packages from the Solaris 10 DVD:
-  #
-  #   SUNWbison
-  #   SUNWgcc
-  #   SUNWggrp
-  #   SUNWgmake
-  #   SUNWgtar
-  #
+  Chef::Log.warn('build-essential does not support Solaris 10. You will need to install SUNWbison, SUNWgcc, SUNWggrp, SUNWgmake, and SUNWgtar from the Solaris DVD')
 when 5.11
   potentially_at_compile_time do
     package 'autoconf'
@@ -44,5 +37,5 @@ when 5.11
     package 'ucb'
   end
 else
-  fail "Sorry, we don't support Solaris version #{node['platform_version']} at this juncture."
+  raise "Sorry, we don't support Solaris version #{node['platform_version']} at this juncture."
 end

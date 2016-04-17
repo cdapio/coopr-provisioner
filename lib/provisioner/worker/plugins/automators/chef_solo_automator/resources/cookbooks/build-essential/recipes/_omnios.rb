@@ -2,7 +2,7 @@
 # Cookbook Name:: build-essential
 # Recipe:: omnios
 #
-# Copyright 2013, Chef Software, Inc.
+# Copyright 2013-2016, Chef Software, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -18,7 +18,11 @@
 #
 
 potentially_at_compile_time do
-  package 'developer/gcc47'
+  if node['platform_version'].to_i < 151_008
+    package 'developer/gcc47'
+  else
+    package 'developer/gcc48'
+  end
   package 'developer/object-file'
   package 'developer/linker'
   package 'developer/library/lint'
