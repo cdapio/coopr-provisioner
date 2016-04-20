@@ -22,4 +22,9 @@ source 'https://rubygems.org'
 
 gem 'fog', '~> 1.36.0'
 gem 'net-ssh', '~> 2.6'
-gem 'google-api-client', '~> 0.6', '>= 0.6.2'
+
+if RUBY_VERSION.to_f < 2.0
+  gem 'google-api-client', '~> 0.6', '>= 0.6.2', '< 0.9.5'
+else
+  gem 'google-api-client', '~> 0.6', '>= 0.6.2'
+end
