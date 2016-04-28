@@ -49,3 +49,8 @@ unless node['coopr_base'].key?('no_users') && node['coopr_base']['no_users'].to_
     include_recipe 'sudo'
   end
 end
+
+# Include any configured recipes
+node['coopr_base']['include_recipe'].each do |recipe|
+  include_recipe recipe
+end

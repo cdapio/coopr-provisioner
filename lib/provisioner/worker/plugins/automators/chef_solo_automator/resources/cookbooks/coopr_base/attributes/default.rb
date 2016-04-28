@@ -29,6 +29,9 @@ end
 
 default['coopr_base']['use_epel'] = true
 
+# List of recipes to be run, in order, after other coopr_base recipes
+default['coopr_base']['include_recipe'] = []
+
 default['apt']['compile_time_update'] = true
 # Default group used in Chef's users::sysadmins recipe
 default['authorization']['sudo']['groups'] = ['sysadmin']
