@@ -18,7 +18,7 @@
 #
 
 # Install common packages
-%w(install upgrade remove).each do |act|
+%w(remove install upgrade).each do |act|
   node['coopr_packages']['common'][act].each do |cb|
     package cb do
       action act.to_sym
@@ -28,7 +28,7 @@ end
 
 # Install platform-specific packages
 pf = node['platform_family']
-%w(install upgrade remove).each do |act|
+%w(remove install upgrade).each do |act|
   node['coopr_packages'][pf][act].each do |cb|
     package cb do
       action act.to_sym
