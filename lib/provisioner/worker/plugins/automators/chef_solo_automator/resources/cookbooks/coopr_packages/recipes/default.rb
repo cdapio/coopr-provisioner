@@ -2,7 +2,7 @@
 # Cookbook Name:: coopr_packages
 # Recipe:: default
 #
-# Copyright © 2015 Cask Data, Inc.
+# Copyright © 2015-2016 Cask Data, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,8 +17,18 @@
 # limitations under the License.
 #
 
+# Install common packages
+%w(remove install upgrade).each do |act|
+  node['coopr_packages']['common'][act].each do |cb|
+    package cb do
+      action act.to_sym
+    end
+  end
+end
+
+# Install platform-specific packages
 pf = node['platform_family']
-%w(install upgrade remove).each do |act|
+%w(remove install upgrade).each do |act|
   node['coopr_packages'][pf][act].each do |cb|
     package cb do
       action act.to_sym
@@ -26,6 +36,7 @@ pf = node['platform_family']
   end
 end
 
+# Upgrade packages
 case pf
 when 'debian'
   execute 'update-apt-packages' do
