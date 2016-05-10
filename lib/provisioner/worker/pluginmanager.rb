@@ -51,8 +51,8 @@ module Coopr
         # old: ./plugins/['providers']/[plugin-name]/*.json new: ./plugins/[plugin-name]/*.json
         (Dir["#{File.expand_path(File.dirname(__FILE__))}/plugins/*/*/*.json"] +
          Dir["#{File.expand_path(File.dirname(__FILE__))}/plugins/*/*.json"] # +
-        # TODO: Add this back once we figure out how to pass the work_dir to PluginManager
-        # Dir["#{@plugin_env[:work_dir]}/plugins/*/*.json"]
+          # TODO: Add this back once we figure out how to pass the work_dir to PluginManager
+          # Dir["#{@plugin_env[:work_dir]}/plugins/*/*.json"]
         ).each do |jsonfile|
           begin
             log.debug "pluginmanager scanning #{jsonfile}"
