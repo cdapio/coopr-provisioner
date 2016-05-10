@@ -69,7 +69,7 @@ if node['hive'].key?('hive_site') && node['hive']['hive_site'].key?('javax.jdo.o
     mysql_database 'import-hive-schema' do
       connection mysql_connection_info
       database_name db_name
-      sql lazy { ::File.open(Dir.glob("#{sql_dir}/mysql/hive-schema-*").sort_by! { |s| s[/\d+/].to_i }.last).read }
+      sql lazy { ::File.open(Dir.glob("#{sql_dir}/mysql/hive-schema-*").sort_by! { |s| Gem::Version.new(s.split('/').last.gsub('hive-schema-', '').gsub('.mysql.sql', '')) }.last).read }
       action :query
     end
     hive_uris.each do |hive_host|
