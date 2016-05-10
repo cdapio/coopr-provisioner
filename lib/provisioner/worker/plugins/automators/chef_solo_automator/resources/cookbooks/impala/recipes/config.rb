@@ -37,8 +37,6 @@ end
 
 # Setup /etc/default/impala
 if node['impala'].key?('config')
-  my_vars = { :options => node['impala']['config'] }
-
   impala_log_dir =
     if node['impala']['config'].key?('impala_log_dir')
       node['impala']['config']['impala_log_dir']
@@ -73,9 +71,20 @@ if node['impala'].key?('config')
     owner node['impala']['user']
     group node['impala']['group']
     action :create
-    variables my_vars
+    variables :options => node['impala']['config']
   end
 end # End /etc/default/impala
+
+# COOK-91 Setup hive-site.xml
+template "#{impala_conf_dir}/hive-site.xml" do
+  source 'generic-site.xml.erb'
+  mode '0644'
+  owner node['impala']['user']
+  group node['impala']['group']
+  action :create
+  variables :options => node['hive']['hive_site']
+  only_if { node.key?('hive') && node['hive'].key?('hive_site') && !node['hive']['hive_site'].empty? }
+end # End hive-site.xml
 
 # Update alternatives to point to our configuration
 execute 'update impala-conf alternatives' do
