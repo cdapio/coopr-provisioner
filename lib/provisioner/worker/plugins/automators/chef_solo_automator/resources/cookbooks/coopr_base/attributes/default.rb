@@ -17,6 +17,11 @@
 # limitations under the License.
 #
 
+if node.key?('base')
+  Chef::Log.warn('Old "base" attributes found! Converting to "coopr_base"... use node[:coopr_base] going forward!')
+  node.default['coopr_base'] = node['base'].merge(node['coopr_base'])
+end
+
 default['coopr_base']['use_epel'] = true
 
 default['apt']['compile_time_update'] = true
