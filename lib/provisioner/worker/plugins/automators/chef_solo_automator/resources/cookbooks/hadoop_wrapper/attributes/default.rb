@@ -24,11 +24,11 @@ default['hadoop']['yarn_site']['yarn.nodemanager.delete.debug-delay-sec'] = '864
 # Memory for YARN
 unless node['hadoop']['yarn_site'].key?('yarn.nodemanager.resource.memory-mb')
   mem = (node['memory']['total'].to_i / 1000)
-  if node['hadoop'].key?('yarn') && node['hadoop']['yarn'].key?('memory_percent')
-    pct = (node['hadoop']['yarn']['memory_percent'].to_f / 100)
-  else
-    pct = 0.50
-  end
+  pct = if node['hadoop'].key?('yarn') && node['hadoop']['yarn'].key?('memory_percent')
+          (node['hadoop']['yarn']['memory_percent'].to_f / 100)
+        else
+          0.50
+        end
   default['hadoop']['yarn_site']['yarn.nodemanager.resource.memory-mb'] = (mem * pct).to_i
 end
 

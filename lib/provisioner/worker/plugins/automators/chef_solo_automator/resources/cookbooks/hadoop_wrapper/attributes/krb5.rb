@@ -17,6 +17,7 @@ if node['hadoop'].key?('core_site') && node['hadoop']['core_site'].key?('hadoop.
   default['krb5_utils']['krb5_service_keytabs']['hive'] = { 'owner' => 'hive', 'group' => 'hadoop', 'mode' => '0640' }
   default['krb5_utils']['krb5_service_keytabs']['jhs'] = { 'owner' => 'mapred', 'group' => 'hadoop', 'mode' => '0640' }
   default['krb5_utils']['krb5_service_keytabs']['mapred'] = { 'owner' => 'mapred', 'group' => 'hadoop', 'mode' => '0640' }
+  default['krb5_utils']['krb5_service_keytabs']['spark'] = { 'owner' => 'spark', 'group' => 'hadoop', 'mode' => '0640' }
   default['krb5_utils']['krb5_service_keytabs']['yarn'] = { 'owner' => 'yarn', 'group' => 'hadoop', 'mode' => '0640' }
   default['krb5_utils']['krb5_service_keytabs']['zookeeper'] = { 'owner' => 'zookeeper', 'group' => 'hadoop', 'mode' => '0640' }
   default['krb5_utils']['krb5_user_keytabs']['yarn'] = { 'owner' => 'yarn', 'group' => 'hadoop', 'mode' => '0640' }
@@ -101,6 +102,13 @@ if node['hadoop'].key?('core_site') && node['hadoop']['core_site'].key?('hadoop.
   default['hive']['hive_site']['hive.server2.authentication'] = 'KERBEROS'
   default['hive']['hive_site']['hive.server2.authentication.kerberos.keytab'] = "#{node['krb5_utils']['keytabs_dir']}/hive.service.keytab"
   default['hive']['hive_site']['hive.server2.authentication.kerberos.principal'] = "hive/_HOST@#{node['krb5']['krb5_conf']['realms']['default_realm'].upcase}"
+
+  # Spark
+
+  # spark-defaults.conf
+  default['spark']['spark_defaults']['spark.history.kerberos.enabled'] = 'true'
+  default['spark']['spark_defaults']['spark.history.kerberos.principal'] = "spark/_HOST@#{node['krb5']['krb5_conf']['realms']['default_realm'].upcase}"
+  default['spark']['spark_defaults']['spark.history.kerberos.keytab'] = "#{node['krb5_utils']['keytabs_dir']}/spark.service.keytab"
 
   # ZooKeeper
 
