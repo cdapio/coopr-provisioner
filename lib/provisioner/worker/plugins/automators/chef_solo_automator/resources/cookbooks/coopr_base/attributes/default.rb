@@ -19,7 +19,12 @@
 
 if node.key?('base')
   Chef::Log.warn('Old "base" attributes found! Converting to "coopr_base"... use node[:coopr_base] going forward!')
-  node.default['coopr_base'] = node['base'].merge(node['coopr_base'])
+  node.default['coopr_base'] =
+    if node.key?('coopr_base')
+      node['base'].merge(node['coopr_base'])
+    else
+      node['base']
+    end
 end
 
 default['coopr_base']['use_epel'] = true
