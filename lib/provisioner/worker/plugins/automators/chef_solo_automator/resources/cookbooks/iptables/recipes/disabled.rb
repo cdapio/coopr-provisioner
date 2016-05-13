@@ -2,7 +2,7 @@
 # Cookbook Name:: iptables
 # Recipe:: default
 #
-# Copyright 2008-2009, Opscode, Inc.
+# Copyright 2008-2016, Chef Software, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,8 +17,17 @@
 # limitations under the License.
 #
 
-package "iptables" 
-service "iptables" do
-      action [ :disable, :stop ]
-      supports :status => true, :start => true, :stop => true, :restart => true
+include_recipe 'iptables::_package'
+
+service 'iptables' do
+  action [:disable, :stop]
+  supports status: true, start: true, stop: true, restart: true
+  only_if { node['platform_family'] == 'rhel' }
+end
+
+# Necessary so that if iptables::disable is used and then later
+# it is re-enabled without any rules changes, the templates will run the rebuilt script
+directory '/etc/iptables.d' do
+  action :delete
+  recursive true
 end

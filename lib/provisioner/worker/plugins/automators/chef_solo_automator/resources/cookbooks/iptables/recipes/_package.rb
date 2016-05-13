@@ -1,8 +1,8 @@
 #
 # Cookbook Name:: iptables
-# Definition:: iptables_rule
+# Recipe:: _package
 #
-# Copyright 2008-2009, Opscode, Inc.
+# Copyright 2008-2016, Chef Software, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,20 +17,8 @@
 # limitations under the License.
 #
 
-define :iptables_rule, :enable => true, :source => nil, :variables => {}, :cookbook => nil do
-  template_source = params[:source] ? params[:source] : "#{params[:name]}.erb"
-  
-  template "/etc/iptables.d/#{params[:name]}" do
-    source template_source
-    mode 0644
-    cookbook params[:cookbook] if params[:cookbook]
-    variables params[:variables]
-    backup false
-    notifies :run, resources(:execute => "rebuild-iptables")
-    if params[:enable]
-      action :create
-    else
-      action :delete
-    end
-  end
+if platform_family?('rhel') && node['platform_version'].to_i == 7
+  package 'iptables-services'
+else
+  package 'iptables'
 end

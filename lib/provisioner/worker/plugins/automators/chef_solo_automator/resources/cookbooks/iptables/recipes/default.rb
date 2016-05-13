@@ -2,7 +2,7 @@
 # Cookbook Name:: iptables
 # Recipe:: default
 #
-# Copyright 2008-2009, Opscode, Inc.
+# Copyright 2008-2016, Chef Software, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,45 +17,55 @@
 # limitations under the License.
 #
 
+include_recipe 'iptables::_package'
 
-
-if platform_family?("rhel") && node["platform_version"].to_i == 7
-  package "iptables-services"
-else
-  package "iptables"
-end
-
-execute "rebuild-iptables" do
-  command "/usr/sbin/rebuild-iptables"
+execute 'rebuild-iptables' do
+  command '/usr/sbin/rebuild-iptables'
   action :nothing
 end
 
-directory "/etc/iptables.d" do
+directory '/etc/iptables.d' do
   action :create
 end
 
-template "/usr/sbin/rebuild-iptables" do
-  source "rebuild-iptables.erb"
-  mode 0755
+template '/usr/sbin/rebuild-iptables' do
+  source 'rebuild-iptables.erb'
+  mode '0755'
   variables(
-    :hashbang => ::File.exist?('/usr/bin/ruby') ? '/usr/bin/ruby' : '/opt/chef/embedded/bin/ruby'
+    hashbang: ::File.exist?('/usr/bin/ruby') ? '/usr/bin/ruby' : '/opt/chef/embedded/bin/ruby'
   )
 end
 
-case node[:platform]
-when "ubuntu", "debian"
-  iptables_save_file = "/etc/iptables/general"
-
-  template "/etc/network/if-pre-up.d/iptables_load" do
-    source "iptables_load.erb"
-    mode 0755
-    variables :iptables_save_file => iptables_save_file
-  end
+# debian based systems load iptables during the interface activation
+template '/etc/network/if-pre-up.d/iptables_load' do
+  source 'iptables_load.erb'
+  mode '0755'
+  variables iptables_save_file: '/etc/iptables/general'
+  only_if { platform_family?('debian') }
 end
 
-if node["iptables"]["install_rules"]
-  iptables_rule "all_established"
-  iptables_rule "all_icmp"
-  iptables_rule "prefix"
-  iptables_rule "postfix"
+# iptables service exists only on RHEL based systems
+if platform_family?('rhel') || platform_family?('fedora')
+  file '/etc/sysconfig/iptables' do
+    content '# Chef managed placeholder to allow iptables service to start'
+    action :create_if_missing
+  end
+
+  template '/etc/sysconfig/iptables-config' do
+    source 'iptables-config.erb'
+    mode '600'
+    variables config: node['iptables']['iptables_sysconfig']
+  end
+
+  template '/etc/sysconfig/ip6tables-config' do
+    source 'iptables-config.erb'
+    mode '600'
+    variables config: node['iptables']['ip6tables_sysconfig']
+  end
+
+  service 'iptables' do
+    action [:enable, :start]
+    supports status: true, start: true, stop: true, restart: true
+    not_if { platform_family?('fedora') }
+  end
 end
