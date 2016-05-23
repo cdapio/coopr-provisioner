@@ -75,7 +75,8 @@ class DockerAutomator < Coopr::Plugin::Automator
     when 0
       fail "Image #{image_name} not found!"
     else
-      fail "More than one image found for #{image_name}!"
+      log.debug "More than one image found for #{image_name}!"
+      return true
     end
   end
 
