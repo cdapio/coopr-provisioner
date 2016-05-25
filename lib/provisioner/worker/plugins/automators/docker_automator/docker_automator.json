@@ -12,19 +12,19 @@
             "label": "Image Name",
             "override": false,
             "type": "text",
-            "tip": "The Image name on Docker Hub"
+            "tip": "Image name in NAME[:TAG] format"
           },
           "publish_ports": {
             "label": "Container ports to publish",
             "override": true,
             "type": "text",
-            "tip": "Comma-separated list of container ports to publish"
+            "tip": "Comma-separated list of local:container or just container ports to publish"
           },
           "command": {
-            "label": "Docker CMD to run, including arguments",
+            "label": "Docker CMD",
             "override": true,
             "type": "text",
-            "tip": "Command to append to \"docker run\" command line"
+            "tip": "Docker CMD to append to \"docker run\" command line, including arguments"
           }
         },
         "required": [
