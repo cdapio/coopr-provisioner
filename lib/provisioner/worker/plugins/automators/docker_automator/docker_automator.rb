@@ -89,7 +89,13 @@ class DockerAutomator < Coopr::Plugin::Automator
     ports = @task['config']['ports'] ? @task['config']['ports'] : []
     # TODO: check for port conflicts and error
     @fields['publish_ports'].split(',').each do |port|
-      portmap = "#{portmap}-p #{port}:#{port} " # extra space at end
+      if port.include?(':') # Mapping is host:container
+        portmap = "#{portmap}-p #{port} " # extra space at end
+      else
+        portmap = "#{portmap}-p #{port}:#{port} " # extra space at end
+      end
+      # Drop container-side port, if specified
+      port = port.split(':').first
       if !ports.nil? && ports.include?(port)
         raise "Port #{port} already in use on this host!"
       else
