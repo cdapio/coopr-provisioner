@@ -16,9 +16,15 @@
           },
           "publish_ports": {
             "label": "Container ports to publish",
-            "override": false,
+            "override": true,
             "type": "text",
             "tip": "Comma-separated list of container ports to publish"
+          },
+          "command": {
+            "label": "Command to run, including arguments",
+            "override": true,
+            "type": "text",
+            "tip": "Command to append to \"docker run\" command line"
           }
         },
         "required": [
