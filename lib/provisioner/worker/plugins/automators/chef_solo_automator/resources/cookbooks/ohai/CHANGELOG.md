@@ -2,6 +2,21 @@
 
 This file is used to list changes made in each version of the ohai cookbook.
 
+## v4.0.2 (2016-05-23)
+
+- Resolve failures on Windows nodes
+
+## v4.0.1 (2016-05-19)
+
+- Added .rb to the name of the plugins so they actually load
+- Added testing to ensure the plugins are being loaded in the chef run
+
+## v4.0.0 (2016-05-18)
+
+### BREAKING CHANGE:
+
+The 4.0 release of the Ohai cookbook removes the previous cookbook_file behavior that required forking the cookbook and adding your own plugins. Instead the cookbook ships with a new ohai_plugin custom resource for installing plugins. In addition to this new custom resource the cookbook now requires Chef 12+. See the readme and test recipe for examples. If you require Chef 11 support you'll need to pin to version 3.0 in your environment.
+
 ## v3.0.1 (2016-03-14)
 
 - Fixed the Chefspec matchers
