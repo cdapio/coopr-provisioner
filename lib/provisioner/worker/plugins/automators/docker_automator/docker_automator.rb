@@ -73,7 +73,7 @@ class DockerAutomator < Coopr::Plugin::Automator
     when 1
       return true
     when 0
-      fail "Image #{image_name} not found!"
+      raise "Image #{image_name} not found!"
     else
       log.debug "More than one image found for #{image_name}!"
       return true
@@ -91,7 +91,7 @@ class DockerAutomator < Coopr::Plugin::Automator
     @fields['publish_ports'].split(',').each do |port|
       portmap = "#{portmap}-p #{port}:#{port} " # extra space at end
       if !ports.nil? && ports.include?(port)
-        fail "Port #{port} already in use on this host!"
+        raise "Port #{port} already in use on this host!"
       else
         ports += [port]
       end
@@ -100,9 +100,9 @@ class DockerAutomator < Coopr::Plugin::Automator
     portmap
   end
 
-  def run_container(image_name)
+  def run_container(image_name, command = nil)
     # TODO: make this smarter (run vs start, etc)
-    docker_command("run -d #{portmap} #{image_name}")
+    docker_command("run -d #{portmap} #{image_name} #{command}")
   end
 
   def start_container(id)
@@ -123,6 +123,7 @@ class DockerAutomator < Coopr::Plugin::Automator
     @ipaddress = inputmap['ipaddress']
     @fields = inputmap['fields']
     @image_name = @fields && @fields.key?('image_name') ? @fields['image_name'].gsub(/\s+/, '') : nil
+    @command = @fields && @fields.key?('command') ? @fields['command'] : nil
   end
 
   # bootstrap remote machine: check for docker
@@ -175,7 +176,7 @@ class DockerAutomator < Coopr::Plugin::Automator
     parse_inputmap(inputmap)
     write_ssh_file
     log.debug "Attempting ssh into ip: #{@ipaddress}, user: #{@sshuser}"
-    @result['result'][@image_name]['id'] = run_container(@image_name)[0].chomp
+    @result['result'][@image_name]['id'] = run_container(@image_name, @command)[0].chomp
     @result['result']['ports'] = @ports
     @result['status'] = 0
     log.debug "DockerAutomator start completed successfully: #{@result}"
