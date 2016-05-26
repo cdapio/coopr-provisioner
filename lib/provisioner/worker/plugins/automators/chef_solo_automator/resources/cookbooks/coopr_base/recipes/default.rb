@@ -23,6 +23,11 @@ when 'debian'
   include_recipe 'apt::default'
 when 'rhel'
   include_recipe 'yum-epel::default' if node['coopr_base']['use_epel'].to_s == 'true'
+  # The SCL repository has moved... temporary workaround
+  yum_package 'centos-release-scl' do
+    action :install
+    only_if 'yum list installed | grep centos-release-SCL'
+  end
 end
 
 # We always run our dns, firewall, hosts, and packages cookbooks
