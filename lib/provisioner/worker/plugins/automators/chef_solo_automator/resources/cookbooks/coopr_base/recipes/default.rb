@@ -22,6 +22,10 @@ case node['platform_family']
 when 'debian'
   include_recipe 'apt::default'
 when 'rhel'
+  # The SCL repository has moved... temporary workaround
+  r = yum_repository('CentOS-SCL') { action :nothing }
+  r.run_action( :delete)
+
   include_recipe 'yum-epel::default' if node['coopr_base']['use_epel'].to_s == 'true'
   # The SCL repository has moved... temporary workaround
   yum_package 'centos-release-scl' do
