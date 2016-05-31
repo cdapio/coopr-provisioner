@@ -14,6 +14,24 @@
             "type": "text",
             "tip": "Image name in NAME[:TAG] format"
           },
+          "environment_variables": {
+            "label": "Environment variables",
+            "override": true,
+            "type": "text",
+            "tip": "Comma-separated list of environment variables/values to set within container"
+          },
+          "links": {
+            "label": "Links to containers",
+            "override": true,
+            "type": "text",
+            "tip": "Comma-separated list of links to another container"
+          },
+          "volumes": {
+            "label": "Volumes to mount into container",
+            "override": true,
+            "type": "text",
+            "tip": "Comma-separated list of local:container volumes to bind mount"
+          },
           "publish_ports": {
             "label": "Container ports to publish",
             "override": true,
