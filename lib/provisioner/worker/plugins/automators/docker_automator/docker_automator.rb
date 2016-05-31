@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
 # encoding: UTF-8
 #
-# Copyright © 2012-2015 Cask Data, Inc.
+# Copyright © 2012-2016 Cask Data, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -106,9 +106,41 @@ class DockerAutomator < Coopr::Plugin::Automator
     portmap
   end
 
+  def envmap
+    envmap = ''
+    # TODO: allow commas inside quotes
+    @fields['environment_variables'].split(',').each do |env|
+      envmap = "#{envmap}-e #{env} "
+    end
+    envmap
+  end
+
+  def linkmap
+    linkmap = ''
+    @fields['links'].split(',').each do |link|
+      linkmap = "#{linkmap}--link #{link} "
+    end
+    linkmap
+  end
+
+  def volmap
+    volmap = ''
+    @fields['volumes'].split(',').each do |vol|
+      volmap = "#{volmap}-v #{vol} "
+      vol.split(':').each do |dir|
+        ::FileUtils.mkdir_p dir
+      end
+    end
+    volmap
+  end
+
+  def container_name(image_name)
+    "--name coopr-#{image_name.split('/').last}"
+  end
+
   def run_container(image_name, command = nil)
     # TODO: make this smarter (run vs start, etc)
-    docker_command("run -d #{portmap} #{image_name} #{command}")
+    docker_command("run -d #{portmap} #{envmap} #{linkmap} #{volmap} #{container_name(image_name)} #{image_name} #{command}")
   end
 
   def start_container(id)
