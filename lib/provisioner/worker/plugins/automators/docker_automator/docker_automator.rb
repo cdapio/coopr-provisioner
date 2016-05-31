@@ -107,31 +107,19 @@ class DockerAutomator < Coopr::Plugin::Automator
   end
 
   def envmap
-    envmap = ''
     # TODO: allow commas inside quotes
-    @fields['environment_variables'].split(',').each do |env|
-      envmap = "#{envmap}-e #{env} "
-    end
-    envmap
+    @fields['environment_variables'].split(',').map {|x| "-e #{x}" }.join(' ')
   end
 
   def linkmap
-    linkmap = ''
-    @fields['links'].split(',').each do |link|
-      linkmap = "#{linkmap}--link #{link} "
-    end
-    linkmap
+    @fields['links'].split(',').map {|x| "--link #{x}" }.join(' ')
   end
 
   def volmap
-    volmap = ''
     @fields['volumes'].split(',').each do |vol|
-      volmap = "#{volmap}-v #{vol} "
-      vol.split(':').each do |dir|
-        ::FileUtils.mkdir_p dir
-      end
+      ::FileUtils.mkdir_p vol.split(':').first
     end
-    volmap
+    @fields['volumes'].split(',').map {|x| "-v #{x}" }.join(' ')
   end
 
   def container_name(image_name)
