@@ -55,16 +55,22 @@ class DockerAutomator < Coopr::Plugin::Automator
     File.open(outfile, 'wb', mode) { |f| f.write(Base64.decode64(string)) }
   end
 
-  def docker_command(cmd)
+  def remote_command(cmd)
     # do we need sudo bash?
     sudo = 'sudo' unless @sshuser == 'root'
     Net::SSH.start(@ipaddress, @sshuser, @credentials) do |ssh|
-      ssh_exec!(ssh, "#{sudo} docker #{cmd}", "Running: docker #{cmd}")
+      ssh_exec!(ssh, "#{sudo} #{cmd}", "Running: #{cmd}")
     end
   rescue CommandExecutionError
-    raise $!, "Docker command failed on #{@ipaddress}: docker #{cmd}"
+    raise $!, "Remote command failed on #{@ipaddress}: #{cmd}"
   rescue Net::SSH::AuthenticationFailed
     raise $!, "SSH Authentication failure for #{@ipaddress}: #{$!}", $!.backtrace
+  end
+
+  def docker_command(cmd)
+    remote_command("docker #{cmd}")
+  rescue CommandExecutionError
+    raise $!, "Docker command failed on #{@ipaddress}: docker #{cmd}"
   end
 
   def search_image(image_name)
@@ -108,18 +114,15 @@ class DockerAutomator < Coopr::Plugin::Automator
 
   def envmap
     # TODO: allow commas inside quotes
-    @fields['environment_variables'].split(',').map {|x| "-e #{x}" }.join(' ')
+    @fields['environment_variables'].split(',').map {|x| "-e #{x}" }.join(' ') if @fields.key?('environment_variables')
   end
 
   def linkmap
-    @fields['links'].split(',').map {|x| "--link #{x}" }.join(' ')
+    @fields['links'].split(',').map {|x| "--link #{x}" }.join(' ') if @fields.key?('links')
   end
 
   def volmap
-    @fields['volumes'].split(',').each do |vol|
-      ::FileUtils.mkdir_p vol.split(':').first
-    end
-    @fields['volumes'].split(',').map {|x| "-v #{x}" }.join(' ')
+    @fields['volumes'].split(',').map {|x| "-v #{x}" }.join(' ') if @fields.key?('volumes')
   end
 
   def container_name(image_name)
@@ -157,7 +160,6 @@ class DockerAutomator < Coopr::Plugin::Automator
     log.debug "DockerAutomator performing bootstrap task #{@task['taskId']}"
     parse_inputmap(inputmap)
     write_ssh_file
-
     log.debug "Attempting ssh into ip: #{@ipaddress}, user: #{@sshuser}"
     begin
       Net::SSH.start(@ipaddress, @sshuser, @credentials) do |ssh|
@@ -166,7 +168,6 @@ class DockerAutomator < Coopr::Plugin::Automator
     rescue Net::SSH::AuthenticationFailed
       raise $!, "SSH Authentication failure for #{@ipaddress}: #{$!}", $!.backtrace
     end
-
     @result['status'] = 0
     log.debug "DockerAutomator bootstrap completed successfully: #{@result}"
     @result
@@ -179,6 +180,9 @@ class DockerAutomator < Coopr::Plugin::Automator
     parse_inputmap(inputmap)
     write_ssh_file
     log.debug "Attempting ssh into ip: #{@ipaddress}, user: #{@sshuser}"
+    @fields['volumes'].split(',').each do |vol|
+      remote_command("mkdir -p #{vol.split(':').first}")
+    end if @fields.key?('volumes')
     pull_image(@image_name) if search_image(@image_name)
     @result['status'] = 0
     log.debug "DockerAutomator install completed successfully: #{@result}"
