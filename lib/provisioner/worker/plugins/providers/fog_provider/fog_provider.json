@@ -249,7 +249,7 @@
             "tip": "Size of the persistent data disk to be created and mounted. Multiple disks can be specified as a comma-separated list"
           },
           "google_root_disk_size_gb": {
-            "label": "Root disk size(s) in GB",
+            "label": "Root disk size in GB",
             "type": "text",
             "default": 10,
             "override": true,
