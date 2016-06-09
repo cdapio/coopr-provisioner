@@ -31,9 +31,6 @@ class FogProviderGoogle < Coopr::Plugin::Provider
   @server_confirm_timeout = 600
   @disk_confirm_timeout = 120
 
-  # Root disk size in GB
-  @root_disk_size = 10
-
   class << self
     attr_accessor :p12_key_dir, :ssh_key_dir
     attr_accessor :server_confirm_timeout, :disk_confirm_timeout
@@ -62,7 +59,7 @@ class FogProviderGoogle < Coopr::Plugin::Provider
 
       # disks are managed separately, so CREATE must first create and confirm the disk to be used
       # handle boot disk
-      create_disk(@providerid, @root_disk_size, @zone_name, @image)
+      create_disk(@providerid, @google_root_disk_size_gb, @zone_name, @image)
       disk = confirm_disk(@providerid)
 
       @disks = [disk]
