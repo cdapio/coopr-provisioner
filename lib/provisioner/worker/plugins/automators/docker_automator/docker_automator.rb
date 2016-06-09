@@ -118,15 +118,15 @@ class DockerAutomator < Coopr::Plugin::Automator
 
   def envmap
     # TODO: allow commas inside quotes
-    @envs.split(',').map {|x| "-e #{x}" }.join(' ')
+    @envs.map {|x| "-e #{x}" }.join(' ')
   end
 
   def linkmap
-    @links.split(',').map {|x| "--link #{x}" }.join(' ')
+    @links.map {|x| "--link #{x}" }.join(' ')
   end
 
   def volmap
-    @vols.split(',').map {|x| "-v #{x}" }.join(' ')
+    @vols.map {|x| "-v #{x}" }.join(' ')
   end
 
   def container_name(image_name)
@@ -134,15 +134,16 @@ class DockerAutomator < Coopr::Plugin::Automator
   end
 
   def setup_host_volumes(volumes)
-    volumes.split(',').each do |vol|
+    volumes.each do |volume|
+      dir = volume.split(':').first
       # Does the host-side exist, if so, do nothing
       begin
-        remote_command("test -d #{vol.split(':').first}")
+        remote_command("test -d #{dir}")
         continue
       # Directory doesn't exist, create it and change ownership
       rescue CommandExecutionError
-        remote_command("mkdir -p #{vol.split(':').first}", true)
-        remote_command("chown -R #{@sshuser} #{vol.split(':').first}", true)
+        remote_command("mkdir -p #{dir}", true)
+        remote_command("chown -R #{@sshuser} #{dir}", true)
       end
     end
 
@@ -170,9 +171,9 @@ class DockerAutomator < Coopr::Plugin::Automator
     @fields = inputmap['fields']
     @image_name = @fields && @fields.key?('image_name') ? @fields['image_name'].gsub(/\s+/, '') : nil
     @command = @fields && @fields.key?('command') ? @fields['command'] : nil
-    @envs = @fields && @fields.key?('environment_variables') ? @fields['environment_variables'] : nil
-    @links = @fields && @fields.key?('links') ? @fields['links'] : nil
-    @vols = @fields && @fields.key?('volumes') ? @fields['volumes'] : nil
+    @envs = @fields && @fields.key?('environment_variables') ? @fields['environment_variables'].split(',') : []
+    @links = @fields && @fields.key?('links') ? @fields['links'].split(',') : []
+    @vols = @fields && @fields.key?('volumes') ? @fields['volumes'].split(',') : []
   end
 
   # bootstrap remote machine: check for docker
