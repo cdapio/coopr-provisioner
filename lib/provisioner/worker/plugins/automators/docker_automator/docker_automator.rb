@@ -55,9 +55,13 @@ class DockerAutomator < Coopr::Plugin::Automator
     File.open(outfile, 'wb', mode) { |f| f.write(Base64.decode64(string)) }
   end
 
-  def remote_command(cmd)
-    # do we need sudo bash?
-    sudo = 'sudo' unless @sshuser == 'root'
+  def remote_command(cmd, root=false)
+    sudo =
+      if root == false || @sshuser == 'root'
+        nil
+      else
+        'sudo'
+      end
     Net::SSH.start(@ipaddress, @sshuser, @credentials) do |ssh|
       ssh_exec!(ssh, "#{sudo} #{cmd}", "Running: #{cmd}")
     end
@@ -114,20 +118,33 @@ class DockerAutomator < Coopr::Plugin::Automator
 
   def envmap
     # TODO: allow commas inside quotes
-    @fields['environment_variables'].split(',').map {|x| "-e #{x}" }.join(' ') if @fields.key?('environment_variables')
+    @envs.map {|x| "-e #{x}" }.join(' ')
   end
 
   def linkmap
-    @fields['links'].split(',').map {|x| "--link #{x}" }.join(' ') if @fields.key?('links')
+    @links.map {|x| "--link #{x}" }.join(' ')
   end
 
   def volmap
-    @fields['volumes'].split(',').map {|x| "-v #{x}" }.join(' ') if @fields.key?('volumes')
+    @vols.map {|x| "-v #{x}" }.join(' ')
   end
 
   def container_name(image_name)
     "--name coopr-#{image_name.split('/').last}"
   end
+
+  def setup_host_volumes(volumes)
+    volumes.each do |volume|
+      dir = volume.split(':').first
+      begin
+        # Does the host-side exist, if so, do nothing
+        remote_command("test -d #{dir}")
+      rescue CommandExecutionError
+        # Directory doesn't exist, create it and change ownership
+        remote_command("mkdir -p #{dir}", true)
+        remote_command("chown -R #{@sshuser} #{dir}", true)
+      end
+    end
 
   def run_container(image_name, command = nil)
     # TODO: make this smarter (run vs start, etc)
@@ -153,6 +170,9 @@ class DockerAutomator < Coopr::Plugin::Automator
     @fields = inputmap['fields']
     @image_name = @fields && @fields.key?('image_name') ? @fields['image_name'].gsub(/\s+/, '') : nil
     @command = @fields && @fields.key?('command') ? @fields['command'] : nil
+    @envs = @fields && @fields.key?('environment_variables') ? @fields['environment_variables'].split(',') : []
+    @links = @fields && @fields.key?('links') ? @fields['links'].split(',') : []
+    @vols = @fields && @fields.key?('volumes') ? @fields['volumes'].split(',') : []
   end
 
   # bootstrap remote machine: check for docker
@@ -180,9 +200,7 @@ class DockerAutomator < Coopr::Plugin::Automator
     parse_inputmap(inputmap)
     write_ssh_file
     log.debug "Attempting ssh into ip: #{@ipaddress}, user: #{@sshuser}"
-    @fields['volumes'].split(',').each do |vol|
-      remote_command("mkdir -p #{vol.split(':').first}")
-    end if @fields.key?('volumes')
+    setup_host_volumes(@vols)
     pull_image(@image_name) if search_image(@image_name)
     @result['status'] = 0
     log.debug "DockerAutomator install completed successfully: #{@result}"
