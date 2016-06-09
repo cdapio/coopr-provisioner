@@ -145,6 +145,7 @@ class DockerAutomator < Coopr::Plugin::Automator
         remote_command("chown -R #{@sshuser} #{dir}", true)
       end
     end
+  end
 
   def run_container(image_name, command = nil)
     # TODO: make this smarter (run vs start, etc)
