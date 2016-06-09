@@ -136,12 +136,11 @@ class DockerAutomator < Coopr::Plugin::Automator
   def setup_host_volumes(volumes)
     volumes.each do |volume|
       dir = volume.split(':').first
-      # Does the host-side exist, if so, do nothing
       begin
+        # Does the host-side exist, if so, do nothing
         remote_command("test -d #{dir}")
-        continue
-      # Directory doesn't exist, create it and change ownership
       rescue CommandExecutionError
+        # Directory doesn't exist, create it and change ownership
         remote_command("mkdir -p #{dir}", true)
         remote_command("chown -R #{@sshuser} #{dir}", true)
       end
