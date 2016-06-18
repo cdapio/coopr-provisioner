@@ -416,6 +416,16 @@
             "type": "text",
             "tip": "Name of the SSH private key resource uploaded to the server"
           },
+          "floating_ip": {
+            "type": "checkbox",
+            "label": "Floating IP",
+            "tip": "Request a floating IP address for each node"
+          },
+          "network_ids": {
+            "label": "Network IDs",
+            "type": "text",
+            "tip": "Comma separated list of the UUID(s) of the network(s) for the server to attach"
+          },
           "openstack_ssl_verify_peer": {
             "label": "Verify SSL peers",
             "type": "checkbox",
