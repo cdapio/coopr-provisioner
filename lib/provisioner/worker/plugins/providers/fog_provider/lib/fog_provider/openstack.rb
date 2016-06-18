@@ -50,7 +50,7 @@ class FogProviderOpenstack < Coopr::Plugin::Provider
       }
 
       create_options[:user_data] = open(File.join(Dir.pwd, self.class.user_data_dir, @user_data_resource), &:read) if @user_data_resource
-      create_options[:nics] = @network_ids.split(',').map { |nic| nic_id = { 'net_id' => nic.strip } } if @network_ids
+      create_options[:nics] = @network_ids.split(',').map { |nic| { 'net_id' => nic.strip } } if @network_ids
 
       server = connection.servers.create(create_options)
 
@@ -201,9 +201,8 @@ class FogProviderOpenstack < Coopr::Plugin::Provider
 
   def connection
     # Create connection
-    # rubocop:disable UselessAssignment
     @connection ||= begin
-      connection = Fog::Compute.new(
+      Fog::Compute.new(
         provider: 'OpenStack',
         openstack_auth_url: @openstack_auth_url,
         openstack_username: @api_user,
@@ -214,13 +213,12 @@ class FogProviderOpenstack < Coopr::Plugin::Provider
         }
       )
     end
-    # rubocop:enable UselessAssignment
   end
 
   def connection_network
     # Create connection to Network service
     @connection_network ||= begin
-      connection = Fog::Network.new(
+      Fog::Network.new(
         provider: 'OpenStack',
         openstack_auth_url: @openstack_auth_url,
         openstack_username: @api_user,
