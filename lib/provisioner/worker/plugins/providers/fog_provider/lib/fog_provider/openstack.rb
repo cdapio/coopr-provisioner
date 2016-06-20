@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
 # encoding: UTF-8
 #
-# Copyright © 2012-2014 Cask Data, Inc.
+# Copyright © 2012-2016 Cask Data, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -49,8 +49,8 @@ class FogProviderOpenstack < Coopr::Plugin::Provider
         key_name: @ssh_keypair
       }
 
-      create_options.merge!(user_data: open(File.join(Dir.pwd, self.class.user_data_dir, @user_data_resource)) { |f| f.read }) if @user_data_resource
-      create_options.merge!(nics: @network_ids.split(',').map { |nic| nic_id = { 'net_id' => nic.strip } }) if @network_ids
+      create_options[:user_data] = open(File.join(Dir.pwd, self.class.user_data_dir, @user_data_resource), &:read) if @user_data_resource
+      create_options[:nics] = @network_ids.split(',').map { |nic| { 'net_id' => nic.strip } } if @network_ids
 
       server = connection.servers.create(create_options)
 
@@ -87,7 +87,7 @@ class FogProviderOpenstack < Coopr::Plugin::Provider
       log.debug "Invoking server confirm for id: #{providerid}"
       server = connection.servers.get(providerid)
       # Wait until the server is ready
-      fail "Server #{server.name} is in ERROR state" if server.state == 'ERROR'
+      raise "Server #{server.name} is in ERROR state" if server.state == 'ERROR'
       log.debug "waiting for server to come up: #{providerid}"
       server.wait_for(600) { ready? }
 
@@ -95,7 +95,7 @@ class FogProviderOpenstack < Coopr::Plugin::Provider
       if @floating_ip
         addresses = connection.addresses
         free_floating = addresses.find_index { |a| a.fixed_ip.nil? }
-        fail 'No available floating IP found' if free_floating.nil?
+        raise 'No available floating IP found' if free_floating.nil?
         floating_address = addresses[free_floating].ip
         server.associate_address(floating_address)
         # a bit of a hack, but server.reload takes a long time
@@ -108,7 +108,7 @@ class FogProviderOpenstack < Coopr::Plugin::Provider
         server.addresses.first[1][0]['addr']
       if bootstrap_ip.nil?
         log.error 'No IP address available for bootstrapping.'
-        fail 'No IP address available for bootstrapping.'
+        raise 'No IP address available for bootstrapping.'
       else
         log.debug "Bootstrap IP address #{bootstrap_ip}"
       end
@@ -177,7 +177,7 @@ class FogProviderOpenstack < Coopr::Plugin::Provider
       # Delete server
       log.debug 'Invoking server delete'
       begin
-        fail ArgumentError if providerid.nil? || providerid.empty?
+        raise ArgumentError if providerid.nil? || providerid.empty?
         server = connection.servers.get(providerid)
         server.destroy
       rescue ArgumentError
@@ -201,9 +201,8 @@ class FogProviderOpenstack < Coopr::Plugin::Provider
 
   def connection
     # Create connection
-    # rubocop:disable UselessAssignment
     @connection ||= begin
-      connection = Fog::Compute.new(
+      Fog::Compute.new(
         provider: 'OpenStack',
         openstack_auth_url: @openstack_auth_url,
         openstack_username: @api_user,
@@ -214,7 +213,38 @@ class FogProviderOpenstack < Coopr::Plugin::Provider
         }
       )
     end
-    # rubocop:enable UselessAssignment
+  end
+
+  def connection_network
+    # Create connection to Network service
+    @connection_network ||= begin
+      Fog::Network.new(
+        provider: 'OpenStack',
+        openstack_auth_url: @openstack_auth_url,
+        openstack_username: @api_user,
+        openstack_tenant: @openstack_tenant,
+        openstack_api_key: @api_password,
+        connection_options: {
+          ssl_verify_peer: @openstack_ssl_verify_peer
+        }
+      )
+    end
+  end
+
+  def network_names
+    # returns an array of the network names corresponding to the current @network_ids
+    @network_names ||= begin
+      network_names = []
+
+      all_networks = connection_network.networks
+      if all_networks
+        @network_ids.split(',').each do |id|
+          found_network = all_networks.find { |n| n.id == id }
+          network_names.push(found_network.name) if found_network.name
+        end
+      end
+      network_names
+    end
   end
 
   def ip_address(server, network = 'public')
@@ -223,15 +253,54 @@ class FogProviderOpenstack < Coopr::Plugin::Provider
   end
 
   def extract_ipv4_address(ip_addresses)
-    address = ip_addresses.select { |ip| ip['version'] == 4 }.first
+    address = ip_addresses.find { |ip| ip['version'] == 4 }
     address ? address['addr'] : ''
   end
 
   def primary_private_ip_address(addresses)
+    # OS-EXT-IP metadata extension strongly recommended
+    # First determine list of network names to consider
+    # Historically 'private' was assumed.
+    # Instead, search through any specified @network_ids in order, and return the first address of type 'fixed'
+    # Fall back to 'private' as before
+    names = network_names
+    names.push('private')
+
+    names.each do |name|
+      next unless addresses[name]
+      addresses[name].reverse_each do |addr|
+        return addr['addr'] if addr['OS-EXT-IPS:type'] == 'fixed'
+      end
+    end
+
+    # Fall back default
     return addresses['private'].last['addr'] if addresses['private']
   end
 
+  def attached_floating_ip_address(addresses)
+    # requires OS-EXT-IP extension metadata
+    names = network_names
+    names.push('private')
+
+    names.each do |name|
+      next unless addresses[name]
+      addresses[name].reverse_each do |addr|
+        return addr['addr'] if addr['OS-EXT-IPS:type'] == 'floating'
+      end
+    end
+  end
+
   def primary_public_ip_address(addresses)
+    # OS-EXT-IP metadata extension strongly recommended
+    # Historically 'public' was assumed.
+    # Instead, search through any specified @network_ids in order, and return the first address of type 'floating'
+    # Fall back to 'public' as before
+
+    # Assume floating ip is public
+    floating_ip = attached_floating_ip_address(addresses)
+    return floating_ip if floating_ip
+
+    # Fall back to default behavior
     return addresses['public'].last['addr'] if addresses['public']
   end
 end
