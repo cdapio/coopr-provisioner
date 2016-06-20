@@ -106,7 +106,7 @@ class ShellAutomator < Coopr::Plugin::Automator
     shellargs = fields['args']
 
     # do we need sudo bash?
-    sudo = 'sudo' unless sshauth['user'] == 'root'
+    sudo = 'sudo -E' unless sshauth['user'] == 'root'
 
     write_ssh_file
     @ssh_file = @task['config']['ssh-auth']['identityfile'] unless @ssh_keyfile.nil?
@@ -159,7 +159,7 @@ class ShellAutomator < Coopr::Plugin::Automator
     ipaddress = inputmap['ipaddress']
 
     # do we need sudo bash?
-    sudo = 'sudo' unless sshauth['user'] == 'root'
+    sudo = 'sudo -E' unless sshauth['user'] == 'root'
 
     write_ssh_file
     @ssh_file = @task['config']['ssh-auth']['identityfile'] unless @ssh_keyfile.nil?
