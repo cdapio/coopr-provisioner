@@ -419,11 +419,13 @@
           "floating_ip": {
             "type": "checkbox",
             "label": "Floating IP",
+            "override": true,
             "tip": "Request a floating IP address for each node"
           },
           "network_ids": {
             "label": "Network IDs",
             "type": "text",
+            "override": true,
             "tip": "Comma separated list of the UUID(s) of the network(s) for the server to attach"
           },
           "openstack_ssl_verify_peer": {
@@ -455,16 +457,6 @@
             "type": "text",
             "label": "Availability Zone",
             "tip": "Openstack Availability Zone"
-          },
-          "floating_ip": {
-            "type": "checkbox",
-            "label": "Floating IP",
-            "tip": "Request a floating IP address for each node"
-          },
-          "network_ids": {
-            "label": "Network IDs",
-            "type": "text",
-            "tip": "Comma separated list of the UUID(s) of the network(s) for the server to attach"
           },
           "user_data_resource": {
             "label": "User Data Resource Name",
