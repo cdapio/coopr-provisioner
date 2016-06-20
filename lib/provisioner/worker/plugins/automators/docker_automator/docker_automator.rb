@@ -60,7 +60,7 @@ class DockerAutomator < Coopr::Plugin::Automator
       if root == false || @sshuser == 'root'
         nil
       else
-        'sudo'
+        'sudo -E'
       end
     Net::SSH.start(@ipaddress, @sshuser, @credentials) do |ssh|
       ssh_exec!(ssh, "#{sudo} #{cmd}", "Running: #{cmd}")
