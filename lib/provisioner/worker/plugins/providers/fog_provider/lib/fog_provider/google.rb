@@ -365,11 +365,7 @@ class FogProviderGoogle < Coopr::Plugin::Provider
         fail "Disk #{disk.name} already exists with different specifications"
       end
     end
-    if source_image.nil?
-      log.debug "Creating disk #{name} with size: #{size_gb}"
-    else
-      log.debug "Creating disk #{name} with size: #{size_gb}, image: #{source_image}"
-    end
+    log.debug "Creating disk #{name} with args: #{args}"
     disk = connection.disks.create(args)
     disk.name
   end
