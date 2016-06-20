@@ -70,7 +70,6 @@ class FogProviderGoogle < Coopr::Plugin::Provider
         disk_sizes.each_with_index do |disk_size, disknum|
           next unless disk_size.to_i > 0
           disk_name = "#{@providerid}-data#{disknum == 0 ? '' : disknum + 1}"
-          log.debug "Creating data disk: #{disk_name} of size #{disk_size}"
           create_disk(disk_name, disk_size.to_i, @zone_name, nil)
           data_disk = confirm_disk(disk_name)
           @disks.push(data_disk)
@@ -366,6 +365,7 @@ class FogProviderGoogle < Coopr::Plugin::Provider
         fail "Disk #{disk.name} already exists with different specifications"
       end
     end
+    log.debug "Creating disk #{name} with args: #{args}"
     disk = connection.disks.create(args)
     disk.name
   end
