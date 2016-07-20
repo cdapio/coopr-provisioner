@@ -20,7 +20,11 @@ gem 'rake'
 
 group :dependencies do
   # These gems are used by the provisioner
-  gem 'json'
+  if RUBY_VERSION.to_f < 2.0
+    gem 'json', '< 2.0'
+  else
+    gem 'json'
+  end
   gem 'logger'
   gem 'mime-types', '< 3.0'
   gem 'net-scp'
@@ -31,7 +35,6 @@ group :dependencies do
 end
 
 group :test do
-  gem 'rake'
   gem 'rack-test', '~> 0.6'
   gem 'rspec', '~> 3.0'
   gem 'rubocop', '~> 0.24'
