@@ -55,7 +55,7 @@ module Coopr
               h_resource['active'].each do |nv|
                 name = nv['name']
                 version = nv['version']
-                resource_name = %W( #{type} #{id} #{resource_type} #{name}).join('/')
+                resource_name = %W(#{type} #{id} #{resource_type} #{name}).join('/')
                 @resources[resource_name] = version
                 @resource_formats[resource_name] = format
                 @resource_permissions[resource_name] = permissions unless permissions.nil?

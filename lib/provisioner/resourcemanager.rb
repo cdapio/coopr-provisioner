@@ -37,8 +37,8 @@ module Coopr
       @resourcespec = resourcespec
       @config = config
       @tenant = tenant
-      @datadir = %W( #{config.get(PROVISIONER_DATA_DIR)} #{tenant} ).join('/')
-      @workdir = %W( #{config.get(PROVISIONER_WORK_DIR)} #{tenant} ).join('/')
+      @datadir = %W(#{config.get(PROVISIONER_DATA_DIR)} #{tenant}).join('/')
+      @workdir = %W(#{config.get(PROVISIONER_WORK_DIR)} #{tenant}).join('/')
       @active = {}
     end
 
@@ -91,7 +91,7 @@ module Coopr
       fetch_resource(resource, version) do |download_file|
         # move downloaded file to its place in data dir
         # ex: data/tenant1/automatortype/chef-solo/roles/cluster.json/1/cluster.json
-        data_file = %W( #{@datadir} #{resource} #{version} #{resource.split('/')[-1]}).join('/')
+        data_file = %W(#{@datadir} #{resource} #{version} #{resource.split('/')[-1]}).join('/')
         log.debug "storing fetched file #{download_file} into data dir: #{data_file}"
         # set file permissions if specified
         if @resourcespec.resource_permissions.key?(resource) && !@resourcespec.resource_permissions[resource].nil?
@@ -107,7 +107,7 @@ module Coopr
     # sync a resource to the local data directory as an exploded archive
     def sync_archive_resource(resource, version)
       fetch_resource(resource, version) do |archive|
-        dest_dir = %W( #{@datadir} #{resource} #{version} ).join('/')
+        dest_dir = %W(#{@datadir} #{resource} #{version}).join('/')
         log.debug "exploding fetched archive #{archive} into data dir: #{dest_dir}"
         # process the tar.gz
         Gem::Package::TarReader.new(Zlib::GzipReader.open(archive)) do |targz|
@@ -145,7 +145,7 @@ module Coopr
 
     # fetches a resource from the server to a tmp directory, yields the file location to a block
     def fetch_resource(resource, version)
-      uri = %W( #{@config.get(PROVISIONER_SERVER_URI)} v2/tenants/#{@tenant} #{resource} versions #{version} ).join('/')
+      uri = %W(#{@config.get(PROVISIONER_SERVER_URI)} v2/tenants/#{@tenant} #{resource} versions #{version}).join('/')
       log.debug "fetching resource at #{uri} for tenant #{@tenant}"
       begin
         response = Coopr::RestHelper.get(uri, 'Coopr-UserID' => 'admin', 'Coopr-TenantID' => @tenant)
@@ -161,7 +161,7 @@ module Coopr
 
       # write the response to tmp file
       tmpdir = Dir.mktmpdir
-      tmpfile = %W( #{tmpdir} #{resource.split('/')[-1]} ).join('/')
+      tmpfile = %W(#{tmpdir} #{resource.split('/')[-1]}).join('/')
       File.open(tmpfile, 'w') do |f|
         f.write response.body
       end
@@ -173,7 +173,7 @@ module Coopr
     # deletes a resource from the local data directory
     def delete_resource(resource, version)
       log.debug "deleting resource #{resource} #{version}"
-      data_file = %W( #{@datadir} #{resource} #{version} #{resource.split('/')[-1]}).join('/')
+      data_file = %W(#{@datadir} #{resource} #{version} #{resource.split('/')[-1]}).join('/')
       # delete either the file or directory from data dir
       File.delete data_file if File.file? data_file
       FileUtils.rm_rf data_file if File.directory? data_file
@@ -185,8 +185,8 @@ module Coopr
         log.error "attempt to activate resource #{resource} version #{version} but it is not synced from server"
         return
       end
-      data_file = %W( #{@datadir} #{resource} #{version} #{resource.split('/')[-1]}).join('/')
-      work_link = %W( #{@workdir} #{resource} ).join('/')
+      data_file = %W(#{@datadir} #{resource} #{version} #{resource.split('/')[-1]}).join('/')
+      work_link = %W(#{@workdir} #{resource}).join('/')
       deactivate_resource(resource) if File.symlink?(work_link)
       FileUtils.mkdir_p(File.dirname(work_link))
       File.symlink data_file, work_link
@@ -195,7 +195,7 @@ module Coopr
 
     # deactivate a resource by removing the work dir symlink
     def deactivate_resource(resource)
-      work_link = %W( #{@workdir} #{resource} ).join('/')
+      work_link = %W(#{@workdir} #{resource}).join('/')
       log.debug "deactivating: #{work_link}"
       File.delete(work_link) if File.symlink?(work_link)
       log.debug "deactivated resource #{resource}"
@@ -203,7 +203,7 @@ module Coopr
 
     # get active version for a given resource
     def active_version(resource)
-      work_link = %W( #{@workdir} #{resource} ).join('/')
+      work_link = %W(#{@workdir} #{resource}).join('/')
       return nil unless File.symlink? work_link
       target = File.readlink(work_link)
       target.split('/')[-2]
@@ -211,7 +211,7 @@ module Coopr
 
     # determine if a versioned resource exists in the data dir
     def synced?(resource, version)
-      data = %W( #{@datadir} #{resource} #{version} #{resource.split('/')[-1]}).join('/')
+      data = %W(#{@datadir} #{resource} #{version} #{resource.split('/')[-1]}).join('/')
 
       # if data is a directory, its an archive resource and its synced
       return true if File.directory?(data)
