@@ -9,7 +9,7 @@ module CopiedFromChef
 require "chef_compat/copied_from_chef/chef/resource/action_class"
 require "chef_compat/copied_from_chef/chef/provider"
 require "chef_compat/copied_from_chef/chef/mixin/properties"
-require "chef_compat/copied_from_chef/chef/mixin/powershell_out"
+require "chef_compat/copied_from_chef/chef/dsl/universal"
 class Chef < (defined?(::Chef) ? ::Chef : Object)
   class Resource < (defined?(::Chef::Resource) ? ::Chef::Resource : Object)
     include Chef::Mixin::Properties
@@ -192,6 +192,9 @@ super if defined?(::Chef::Resource)
     class << self
     end
     @@sorted_descendants = nil
+    module DeprecatedLWRPClass
+      CopiedFromChef.extend_chef_module(::Chef::Resource::DeprecatedLWRPClass, self) if defined?(::Chef::Resource::DeprecatedLWRPClass)
+    end
     private
   end
 end
