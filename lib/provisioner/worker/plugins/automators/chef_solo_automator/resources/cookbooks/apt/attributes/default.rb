@@ -36,6 +36,7 @@ codename = node.attribute?('lsb') ? node['lsb']['codename'] : 'notlinux'
 default['apt']['unattended_upgrades']['allowed_origins'] = [
   "#{node['platform'].capitalize} #{codename}"
 ]
+default['apt']['unattended_upgrades']['origins_patterns'] = []
 default['apt']['unattended_upgrades']['package_blacklist'] = []
 default['apt']['unattended_upgrades']['auto_fix_interrupted_dpkg'] = false
 default['apt']['unattended_upgrades']['minimal_steps'] = false
@@ -46,6 +47,7 @@ default['apt']['unattended_upgrades']['remove_unused_dependencies'] = false
 default['apt']['unattended_upgrades']['automatic_reboot'] = false
 default['apt']['unattended_upgrades']['automatic_reboot_time'] = 'now'
 default['apt']['unattended_upgrades']['dl_limit'] = nil
+default['apt']['unattended_upgrades']['random_sleep'] = nil
 
 default['apt']['confd']['install_recommends'] = true
 default['apt']['confd']['install_suggests'] = false
