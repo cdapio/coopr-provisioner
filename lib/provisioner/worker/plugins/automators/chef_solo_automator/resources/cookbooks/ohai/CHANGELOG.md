@@ -2,6 +2,21 @@
 
 This file is used to list changes made in each version of the ohai cookbook.
 
+## v4.2.0 (2016-07-19)
+
+- Added the ability to specify the source cookbook for the cookbook_file or template used in the ohai_plugin resource.
+- Added chef_version to the metadata
+- Added testing on openSUSE and switched from Rubocop to Cookstyle
+
+## v4.1.1 (2016-06-16)
+
+- Fixed error in notifies reload for the delete action
+- Bump the compat_resource requirement from 12.9+ to 12.10+ to prevent random failures
+
+## v4.1.0 (2016-05-26)
+
+- Added the ability to use templates and pass in variables with the plugin custom resource
+
 ## v4.0.2 (2016-05-23)
 
 - Resolve failures on Windows nodes
