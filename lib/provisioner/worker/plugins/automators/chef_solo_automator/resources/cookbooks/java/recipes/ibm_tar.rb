@@ -17,16 +17,18 @@
 
 require 'uri'
 
+include_recipe 'java::notify'
+
 source_url = node['java']['ibm']['url']
 jdk_uri = ::URI.parse(source_url)
 jdk_filename = ::File.basename(jdk_uri.path)
 
 unless valid_ibm_jdk_uri?(source_url)
-  fail "You must set the attribute `node['java']['ibm']['url']` to a valid URI"
+  raise "You must set the attribute `node['java']['ibm']['url']` to a valid URI"
 end
 
 unless jdk_filename =~ /\.(tar.gz|tgz)$/
-  fail "The attribute `node['java']['ibm']['url']` must specify a .tar.gz file"
+  raise "The attribute `node['java']['ibm']['url']` must specify a .tar.gz file"
 end
 
 remote_file "#{Chef::Config[:file_cache_path]}/#{jdk_filename}" do
@@ -64,6 +66,7 @@ execute 'untar-ibm-java' do
   cwd Chef::Config[:file_cache_path]
   command "tar xzf ./#{jdk_filename} -C #{node['java']['java_home']} --strip 1"
   notifies :set, 'java_alternatives[set-java-alternatives]', :immediately
+  notifies :write, 'log[jdk-version-changed]', :immediately
   creates "#{node['java']['java_home']}/jre/bin/java"
 end
 

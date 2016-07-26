@@ -4,7 +4,7 @@ maintainer_email  'info@agileorbit.com'
 license           'Apache 2.0'
 description       'Installs Java runtime.'
 long_description  IO.read(File.join(File.dirname(__FILE__), 'README.md'))
-version           '1.39.0'
+version           '1.41.0'
 
 recipe 'java::default', 'Installs Java runtime'
 recipe 'java::default_java_symlink', 'Updates /usr/lib/jvm/default-java'
@@ -19,6 +19,7 @@ recipe 'java::set_attributes_from_version', 'Sets various attributes that depend
 recipe 'java::set_java_home', 'Sets the JAVA_HOME environment variable'
 recipe 'java::windows', 'Installs the JDK on Windows'
 recipe 'java::homebrew', 'Installs the JDK on Mac OS X via Homebrew'
+recipe 'java::oracle_jce', 'Installs the Java Crypto Extension for strong encryption'
 
 %w(
   debian
@@ -41,7 +42,10 @@ recipe 'java::homebrew', 'Installs the JDK on Mac OS X via Homebrew'
 end
 
 depends 'apt'
+depends 'windows'
+depends 'homebrew'
 
-suggests 'homebrew'
-suggests 'windows'
+source_url 'https://github.com/agileorbit-cookbooks/java' if respond_to?(:source_url)
+issues_url 'https://github.com/agileorbit-cookbooks/java/issues' if respond_to?(:issues_url)
+
 suggests 'aws'

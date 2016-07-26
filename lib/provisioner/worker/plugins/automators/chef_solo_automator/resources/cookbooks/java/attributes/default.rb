@@ -42,6 +42,7 @@ when 'windows'
   default['java']['windows']['checksum'] = nil
   default['java']['windows']['package_name'] = 'Java(TM) SE Development Kit 7 (64-bit)'
   default['java']['windows']['public_jre_home'] = nil
+  default['java']['windows']['owner'] = 'administrator'
 when 'mac_os_x'
   default['java']['install_flavor'] = 'homebrew'
 else
@@ -130,12 +131,12 @@ default['java']['jdk']['8']['bin_cmds'] = %w(appletviewer apt ControlPanel extch
 # Official checksums for the latest release can be found at https://www.oracle.com/webfolder/s/digest/8u60checksum.html
 
 # x86_64
-default['java']['jdk']['8']['x86_64']['url'] = 'http://download.oracle.com/otn-pub/java/jdk/8u65-b17/jdk-8u65-linux-x64.tar.gz'
-default['java']['jdk']['8']['x86_64']['checksum'] = '196880a42c45ec9ab2f00868d69619c0'
+default['java']['jdk']['8']['x86_64']['url'] = 'http://download.oracle.com/otn-pub/java/jdk/8u91-b14/jdk-8u91-linux-x64.tar.gz'
+default['java']['jdk']['8']['x86_64']['checksum'] = '3f3d7d0cd70bfe0feab382ed4b0e45c0'
 
 # i586
-default['java']['jdk']['8']['i586']['url'] = 'http://download.oracle.com/otn-pub/java/jdk/8u65-b17/jdk-8u65-linux-i586.tar.gz'
-default['java']['jdk']['8']['i586']['checksum'] = '7b715e1fe2316c94aaa968b23ce49c9a'
+default['java']['jdk']['8']['i586']['url'] = 'http://download.oracle.com/otn-pub/java/jdk/8u91-b14/jdk-8u91-linux-i586.tar.gz'
+default['java']['jdk']['8']['i586']['checksum'] = 'f18cbe901f2c77630f1e301cea32b259'
 
 default['java']['oracle']['jce']['enabled'] = false
 default['java']['oracle']['jce']['8']['url'] = 'http://download.oracle.com/otn-pub/java/jce/8/jce_policy-8.zip'

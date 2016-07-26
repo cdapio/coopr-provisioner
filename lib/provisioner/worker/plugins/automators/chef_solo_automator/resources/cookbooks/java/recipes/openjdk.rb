@@ -19,6 +19,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+include_recipe 'java::notify'
+
 unless node.recipe?('java::default')
   Chef::Log.warn('Using java::default instead is recommended.')
 
@@ -40,7 +42,7 @@ if platform_requires_license_acceptance?
   end
 end
 
-if node['platform'] == 'ubuntu'
+if node['platform'] == 'ubuntu' && node['platform_version'] < '15.10'
   include_recipe 'apt'
   apt_repository 'openjdk-r-ppa' do
     uri 'ppa:openjdk-r'
@@ -51,24 +53,24 @@ end
 node['java']['openjdk_packages'].each do |pkg|
   package pkg do
     version node['java']['openjdk_version'] if node['java']['openjdk_version']
+    notifies :write, 'log[jdk-version-changed]', :immediately
   end
 end
 
-if platform_family?('debian', 'rhel', 'fedora')
-  java_alternatives 'set-java-alternatives' do
-    java_location jdk.java_home
-    default node['java']['set_default']
-    priority jdk.alternatives_priority
-    case node['java']['jdk_version'].to_s
-    when '6'
-      bin_cmds node['java']['jdk']['6']['bin_cmds']
-    when '7'
-      bin_cmds node['java']['jdk']['7']['bin_cmds']
-    when '8'
-      bin_cmds node['java']['jdk']['8']['bin_cmds']
-    end
-    action :set
+java_alternatives 'set-java-alternatives' do
+  java_location jdk.java_home
+  default node['java']['set_default']
+  priority jdk.alternatives_priority
+  case node['java']['jdk_version'].to_s
+  when '6'
+    bin_cmds node['java']['jdk']['6']['bin_cmds']
+  when '7'
+    bin_cmds node['java']['jdk']['7']['bin_cmds']
+  when '8'
+    bin_cmds node['java']['jdk']['8']['bin_cmds']
   end
+  action :set
+  only_if { platform_family?('debian', 'rhel', 'fedora') }
 end
 
 if node['java']['set_default'] && platform_family?('debian')

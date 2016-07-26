@@ -19,18 +19,20 @@
 
 case node['platform_family']
 when 'rhel', 'fedora'
-  case node['java']['install_flavor']
-  when 'oracle'
-    node.default['java']['java_home'] = '/usr/lib/jvm/java'
-  when 'oracle_rpm'
-    node.default['java']['java_home'] = '/usr/java/latest'
-  else
-    node.default['java']['java_home'] = "/usr/lib/jvm/java-1.#{node['java']['jdk_version']}.0"
-  end
+  node.default['java']['java_home'] = case node['java']['install_flavor']
+                                      when 'oracle'
+                                        '/usr/lib/jvm/java'
+                                      when 'oracle_rpm'
+                                        '/usr/java/latest'
+                                      else
+                                        "/usr/lib/jvm/java-1.#{node['java']['jdk_version']}.0"
+                                      end
   node.default['java']['openjdk_packages'] = ["java-1.#{node['java']['jdk_version']}.0-openjdk", "java-1.#{node['java']['jdk_version']}.0-openjdk-devel"]
 when 'freebsd'
   node.default['java']['java_home'] = "/usr/local/openjdk#{node['java']['jdk_version']}"
-  node.default['java']['openjdk_packages'] = ["openjdk#{node['java']['jdk_version']}"]
+  jdk_version = node['java']['jdk_version']
+  openjdk_package = jdk_version == '7' ? 'openjdk' : "openjdk#{node['java']['jdk_version']}"
+  node.default['java']['openjdk_packages'] = [openjdk_package]
 when 'arch'
   node.default['java']['java_home'] = "/usr/lib/jvm/java-#{node['java']['jdk_version']}-openjdk"
   node.default['java']['openjdk_packages'] = ["openjdk#{node['java']['jdk_version']}"]
@@ -47,7 +49,7 @@ when 'smartos'
   node.default['java']['openjdk_packages'] = ["sun-jdk#{node['java']['jdk_version']}", "sun-jre#{node['java']['jdk_version']}"]
 when 'windows'
   # Do nothing otherwise we will fall through to the else and set java_home to an invalid path, causing the installer to popup a dialog
-when 'macosx'
+when 'mac_os_x'
   # Nothing. Homebrew driven.
 else
   node.default['java']['java_home'] = '/usr/lib/jvm/default-java'

@@ -27,12 +27,12 @@ directory '/etc/profile.d' do
   mode 00755
 end
 
-file '/etc/profile.d/jdk.sh' do
-  content "export JAVA_HOME=#{node['java']['java_home']}"
+template '/etc/profile.d/jdk.sh' do
+  source 'jdk.sh.erb'
   mode 00755
 end
 
-if node['java']['set_etc_environment']
+if node['java']['set_etc_environment'] # ~FC023 -- Fails unit test to use guard
   ruby_block 'Set JAVA_HOME in /etc/environment' do
     block do
       file = Chef::Util::FileEdit.new('/etc/environment')

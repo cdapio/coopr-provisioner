@@ -2,6 +2,44 @@ Java Cookbook CHANGELOG
 =======================
 This file is used to list changes made in each version of the Java cookbook.
 
+v1.41.0 - 7/15/2016
+-----
+- Feature: Add new resource for cookbooks to subscribe to, see README
+- Use a remote_file resource for JCE download instead of curl in an execute block.
+- Since v1.40.4 Travis deploys cookbook to supermarket - expect more frequent,
+  smaller releases.
+
+v1.40.4 - 7/12/2016
+-----
+- Automated deploy, no cookbook changes.
+
+v1.40.3 - 7/12/2016
+-----
+- Attempt to have travis publish this.
+- Mac depends on homebrew.
+- Fixed typo in platform family spelling for OS X
+- fix openjdk version logic for freebsd
+- Enable Ark provider to handle URI with get parameters
+
+v1.40.1 - 7/8/2016
+-----
+- Fixed: JAVA_HOME not set on systems with restrictive umask #359
+
+v1.40 - 6/29/2016
+-----
+- Travis build green
+- Add Windows JCE support
+- Changes to prevent re-execution of resource creating file '/etc/profile.d/jdk.sh'
+- Fix JDK checksum
+- Update ibm_jdk.installer.properties.erb for IBM JDK 1.8
+- Install OpenJDK from distribution if Ubuntu version >= 15.10
+- Fixes #342 - Tar is included in macosx and homebrews package is gnutar which
+  causes this to fail
+- Add 12.04 to jdk8 test suite
+- Add source and issues urls to supermarket
+- Distinguishing the Java version for installing on the Mac OS X
+- Doc and cruft cleanup
+
 v1.39 - 1/14/2016
 -----
 - Travis debugging only, no code changes.

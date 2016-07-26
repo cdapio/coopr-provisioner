@@ -1,5 +1,7 @@
-java [![travis-badge](https://travis-ci.org/agileorbit-cookbooks/java.svg)](https://travis-ci.org/agileorbit-cookbooks/java)
+java cookbook
 =====
+[![travis-badge](https://travis-ci.org/agileorbit-cookbooks/java.svg)](https://travis-ci.org/agileorbit-cookbooks/java)
+[![Cookbook Version](https://img.shields.io/cookbook/v/java.svg)](https://supermarket.chef.io/cookbooks/java)
 
 This cookbook installs a Java JDK/JRE. It defaults to installing
 OpenJDK, but it can also install Oracle and IBM JDKs.
@@ -218,8 +220,10 @@ replacing `40` with the most current version in your local repo.
 
 ### windows
 
-Because there is no easy way to pull the java msi off oracle's site,
-this recipe requires you to host it internally on your own http repo.
+Because as of 26 March 2012 you can no longer directly download the 
+JDK msi from Oracle's website without using a special cookie. This recipe
+requires you to set `node['java']['oracle']['accept_oracle_download_terms']` 
+to true or host it internally on your own http repo or s3 bucket.
 
 **IMPORTANT NOTE**
 
@@ -242,6 +246,19 @@ to a valid https/http URL; the URL is checked for validity in the recipe.
 
 At this time the `java::ibm` recipe does not support multiple SDK
 installations.
+
+### notify
+
+The `java::notify` recipe contains a log resource that's `:write` action
+is called when a JDK version changes. This gives cookbook authors a way
+to subscribe to JDK changes and take actions (say restart a java service):
+
+```ruby
+service 'somejavaservice'
+  action :restart
+  subscribes :write, 'log[jdk-version-changed]', :delayed
+end
+```
 
 Resources/Providers
 -----
@@ -334,6 +351,7 @@ Oracle has been known to change the behavior of its download site frequently. It
 default['java']['jdk_version'] = '7'
 default['java']['install_flavor'] = 'oracle'
 default['java']['jdk']['7']['x86_64']['url'] = 'http://artifactory.example.com/artifacts/jdk-7u65-linux-x64.tar.gz'
+default['java']['jdk']['7']['x86_64']['checksum'] = 'The SHA-256 checksum of the JDK archive'
 default['java']['oracle']['accept_oracle_download_terms'] = true
 ```
 
@@ -361,7 +379,7 @@ Development
 -----
 
 This cookbook uses
-[test-kitchen](https://github.com/opscode/test-kitchen) for
+[test-kitchen](https://github.com/test-kitchen/test-kitchen) for
 integration tests and
 [ChefSpec/RSpec](https://github.com/sethvargo/chefspec) for unit tests.
 See [TESTING.md](https://github.com/agileorbit-cookbooks/java/blob/master/TESTING.md) for testing instructions.
