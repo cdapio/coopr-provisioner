@@ -20,11 +20,9 @@ module Ark
 
     attr_reader :resource
 
-    # rubocop:disable Metrics/AbcSize
     def sevenzip_command
       if resource.strip_components <= 0
-        sevenzip_command_builder(resource.path, 'x')
-        return
+        return sevenzip_command_builder(resource.path, 'x')
       end
 
       tmpdir = make_temp_directory
@@ -38,7 +36,7 @@ module Ark
         currdir += "\\%#{count}"
       end
 
-      cmd += "xcopy \"#{currdir}\" \"#{resource.home_dir}\" /s /e"
+      cmd += "#{ENV.fetch('SystemRoot')}\\System32\\xcopy \"#{currdir}\" \"#{resource.home_dir}\" /s /e"
     end
     # rubocop:enable Metrics/AbcSize
 
