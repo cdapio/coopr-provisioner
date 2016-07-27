@@ -271,7 +271,9 @@
               "us-central1-f",
               "us-east1-b",
               "us-east1-c",
-              "us-east1-d"
+              "us-east1-d",
+              "us-west1-a",
+              "us-west1-b"
             ],
             "default": "us-central1-a",
             "override": true,
