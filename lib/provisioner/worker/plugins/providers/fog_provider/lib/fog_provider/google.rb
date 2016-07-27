@@ -214,7 +214,7 @@ class FogProviderGoogle < Coopr::Plugin::Provider
             cmd = "#{sudo} readlink /dev/disk/by-id/#{google_disk_id}"
             device_rel_path = ssh_exec!(ssh, cmd, "Querying disk #{google_disk_id}").first.chomp
             device = File.join('/dev', File.basename(device_rel_path))
-            cmd = "#{sudo} mkdir #{mount_point} && #{sudo} /sbin/mkfs.ext4 #{device} && #{sudo} mount -o #{device} #{mount_point}"
+            cmd = "#{sudo} mkdir #{mount_point} && #{sudo} /sbin/mkfs.ext4 -E lazy_itable_init=0 -F #{device} && #{sudo} mount -o discard,defaults #{device} #{mount_point}"
             ssh_exec!(ssh, cmd, "Mounting device #{device} on #{mount_point}")
             # update /etc/fstab
             cmd = "echo '#{device} #{mount_point} ext4 defaults,auto,noatime 0 2' | #{sudo} tee -a /etc/fstab"
