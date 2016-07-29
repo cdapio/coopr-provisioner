@@ -15,7 +15,6 @@ if node['hadoop'].key?('core_site') && node['hadoop']['core_site'].key?('hadoop.
   default['krb5_utils']['krb5_service_keytabs']['hdfs'] = { 'owner' => 'hdfs', 'group' => 'hadoop', 'mode' => '0640' }
   default['krb5_utils']['krb5_service_keytabs']['hbase'] = { 'owner' => 'hbase', 'group' => 'hadoop', 'mode' => '0640' }
   default['krb5_utils']['krb5_service_keytabs']['hive'] = { 'owner' => 'hive', 'group' => 'hadoop', 'mode' => '0640' }
-  default['krb5_utils']['krb5_service_keytabs']['jhs'] = { 'owner' => 'mapred', 'group' => 'hadoop', 'mode' => '0640' }
   default['krb5_utils']['krb5_service_keytabs']['mapred'] = { 'owner' => 'mapred', 'group' => 'hadoop', 'mode' => '0640' }
   default['krb5_utils']['krb5_service_keytabs']['spark'] = { 'owner' => 'spark', 'group' => 'hadoop', 'mode' => '0640' }
   default['krb5_utils']['krb5_service_keytabs']['yarn'] = { 'owner' => 'yarn', 'group' => 'hadoop', 'mode' => '0640' }
@@ -69,8 +68,8 @@ if node['hadoop'].key?('core_site') && node['hadoop']['core_site'].key?('hadoop.
   default['hadoop']['hdfs_site']['dfs.datanode.http.address'] = '0.0.0.0:1006'
 
   # mapred-site.xml
-  default['hadoop']['mapred_site']['mapreduce.jobhistory.keytab'] = "#{node['krb5_utils']['keytabs_dir']}/jhs.service.keytab"
-  default['hadoop']['mapred_site']['mapreduce.jobhistory.principal'] = "jhs/_HOST@#{node['krb5']['krb5_conf']['realms']['default_realm'].upcase}"
+  default['hadoop']['mapred_site']['mapreduce.jobhistory.keytab'] = "#{node['krb5_utils']['keytabs_dir']}/mapred.service.keytab"
+  default['hadoop']['mapred_site']['mapreduce.jobhistory.principal'] = "mapred/_HOST@#{node['krb5']['krb5_conf']['realms']['default_realm'].upcase}"
 
   # yarn-site.xml
   default['hadoop']['yarn_site']['yarn.resourcemanager.keytab'] = "#{node['krb5_utils']['keytabs_dir']}/yarn.service.keytab"
@@ -112,15 +111,21 @@ if node['hadoop'].key?('core_site') && node['hadoop']['core_site'].key?('hadoop.
 
   # ZooKeeper
 
-  # jaas.conf hbase-env.sh zookeeper-env.sh
-  %w(hbase zookeeper).each do |client|
-    default[client]['jaas']['client']['usekeytab'] = 'true'
+  # client_jaas.conf master_jaas.conf hbase-env.sh zookeeper-env.sh
+  %w(hbase zookeeper).each do |svc|
+    default[svc]['master_jaas']['client']['usekeytab'] = 'true'
     # We cannot use _HOST here... https://issues.apache.org/jira/browse/ZOOKEEPER-1422
-    default[client]['jaas']['client']['principal'] = "#{client}/#{node['fqdn']}@#{node['krb5']['krb5_conf']['realms']['default_realm'].upcase}"
-    default[client]['jaas']['client']['keytab'] = "#{node['krb5_utils']['keytabs_dir']}/#{client}.service.keytab"
-    default[client]["#{client}_env"]['jvmflags'] = "-Djava.security.auth.login.config=/etc/#{client}/conf/jaas.conf"
+    default[svc]['master_jaas']['client']['principal'] = "#{svc}/#{node['fqdn']}@#{node['krb5']['krb5_conf']['realms']['default_realm'].upcase}"
+    default[svc]['master_jaas']['client']['keytab'] = "#{node['krb5_utils']['keytabs_dir']}/#{svc}.service.keytab"
+    default[svc]['client_jaas']['client']['usekeytab'] = 'false'
   end
-  default['zookeeper']['jaas']['server'] = node['zookeeper']['jaas']['client']
+  jsalc = '-Djava.security.auth.login.config'
+  default['hbase']['hbase_env']['hbase_opts'] = "${HBASE_OPTS} #{jsalc}=/etc/hbase/conf/client_jaas.conf"
+  default['hbase']['hbase_env']['hbase_master_opts'] = "${HBASE_MASTER_OPTS} #{jsalc}=/etc/hbase/conf/master_jaas.conf"
+  default['hbase']['hbase_env']['hbase_regionserver_opts'] = "${HBASE_REGIONSERVER_OPTS} #{jsalc}=/etc/hbase/conf/master_jaas.conf"
+  default['zookeeper']['zookeeper_env']['client_jvmflags'] = "${CLIENT_JVMFLAGS} #{jsalc}=/etc/zookeeper/conf/client_jaas.conf"
+  default['zookeeper']['zookeeper_env']['server_jvmflags'] = "${SERVER_JVMFLAGS} #{jsalc}=/etc/zookeeper/conf/master_jaas.conf"
+  default['zookeeper']['master_jaas']['server'] = node['zookeeper']['master_jaas']['client']
 
   # zoo.cfg
   default['zookeeper']['zoocfg']['authProvider.1'] = 'org.apache.zookeeper.server.auth.SASLAuthenticationProvider'
