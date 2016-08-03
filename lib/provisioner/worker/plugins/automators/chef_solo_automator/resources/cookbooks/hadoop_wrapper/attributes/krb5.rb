@@ -120,11 +120,43 @@ if node['hadoop'].key?('core_site') && node['hadoop']['core_site'].key?('hadoop.
     default[svc]['client_jaas']['client']['usekeytab'] = 'false'
   end
   jsalc = '-Djava.security.auth.login.config'
-  default['hbase']['hbase_env']['hbase_opts'] = "${HBASE_OPTS} #{jsalc}=/etc/hbase/conf/client_jaas.conf"
-  default['hbase']['hbase_env']['hbase_master_opts'] = "${HBASE_MASTER_OPTS} #{jsalc}=/etc/hbase/conf/master_jaas.conf"
-  default['hbase']['hbase_env']['hbase_regionserver_opts'] = "${HBASE_REGIONSERVER_OPTS} #{jsalc}=/etc/hbase/conf/master_jaas.conf"
-  default['zookeeper']['zookeeper_env']['client_jvmflags'] = "${CLIENT_JVMFLAGS} #{jsalc}=/etc/zookeeper/conf/client_jaas.conf"
-  default['zookeeper']['zookeeper_env']['server_jvmflags'] = "${SERVER_JVMFLAGS} #{jsalc}=/etc/zookeeper/conf/master_jaas.conf"
+  # The following may be set, so we have to append, rather than just override
+  if node['hbase'].key?('hbase_env')
+    # Start with client
+    override['hbase']['hbase_env']['hbase_opts'] = if node['hbase']['hbase_env'].key?('hbase_opts')
+                                                     "#{node['hbase']['hbase_env']['hbase_opts']} #{jsalc}=/etc/hbase/conf/client_jaas.conf"
+                                                   else
+                                                     "#{jsalc}=/etc/hbase/conf/client_jaas.conf"
+                                                   end
+    # Services
+    %w(hbase_master_opts hbase_regionserver_opts).each do |var|
+      override['hbase']['hbase_env'][var] = if node['hbase']['hbase_env'].key?(var)
+                                              "#{node['hbase']['hbase_env'][var]} #{jsalc}=/etc/hbase/conf/master_jaas.conf"
+                                            else
+                                              "#{jsalc}=/etc/hbase/conf/master_jaas.conf"
+                                            end
+    end
+  else
+    default['hbase']['hbase_env']['hbase_opts'] = "#{jsalc}=/etc/hbase/conf/client_jaas.conf"
+    default['hbase']['hbase_env']['hbase_master_opts'] = "#{jsalc}=/etc/hbase/conf/master_jaas.conf"
+    default['hbase']['hbase_env']['hbase_regionserver_opts'] = "#{jsalc}=/etc/hbase/conf/master_jaas.conf"
+  end
+  if node['zookeeper'].key?('zookeeper_env')
+    override['zookeeper']['zookeeper_env']['client_jvmflags'] = if node['zookeeper']['zookeeper_env'].key?('client_jvmflags')
+                                                                  "#{node['zookeeper']['zookeeper_env']['client_jvmflags']} #{jsalc}=/etc/zookeeper/conf/client_jaas.conf"
+                                                                else
+                                                                  "#{jsalc}=/etc/zookeeper/conf/client_jaas.conf"
+                                                                end
+    override['zookeeper']['zookeeper_env']['server_jvmflags'] = if node['zookeeper']['zookeeper_env'].key?('server_jvmflags')
+                                                                  "#{node['zookeeper']['zookeeper_env']['server_jvmflags']} #{jsalc}=/etc/zookeeper/conf/master_jaas.conf"
+                                                                else
+                                                                  "#{jsalc}=/etc/zookeeper/conf/master_jaas.conf"
+                                                                end
+  else
+    default['zookeeper']['zookeeper_env']['client_jvmflags'] = "#{jsalc}=/etc/zookeeper/conf/client_jaas.conf"
+    default['zookeeper']['zookeeper_env']['server_jvmflags'] = "#{jsalc}=/etc/zookeeper/conf/master_jaas.conf"
+  end
+  # Copy master client config to master server config
   default['zookeeper']['master_jaas']['server'] = node['zookeeper']['master_jaas']['client']
 
   # zoo.cfg
