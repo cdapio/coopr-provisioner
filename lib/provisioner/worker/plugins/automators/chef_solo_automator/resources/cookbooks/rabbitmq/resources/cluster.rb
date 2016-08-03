@@ -1,10 +1,9 @@
-# -*- coding: utf-8 -*-
 #
 # Cookbook Name:: rabbitmq
-# Recipe:: plugin_management
+# Resource:: cluster
 #
-# Copyright 2013, Grégoire Seux
-# Copyright 2013, Chef Software, Inc.
+# Author: Sunggun Yu <sunggun.dev@gmail.com>
+# Copyright (C) 2015 Sunggun Yu
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -19,17 +18,9 @@
 # limitations under the License.
 #
 
-include_recipe 'rabbitmq::default'
+actions :join, :set_cluster_name, :change_cluster_node_type
 
-node['rabbitmq']['enabled_plugins'].each do |plugin|
-  rabbitmq_plugin plugin do
-    action :enable
-    notifies :restart, "service[#{node['rabbitmq']['service_name']}]"
-  end
-end
+default_action :join
 
-node['rabbitmq']['disabled_plugins'].each do |plugin|
-  rabbitmq_plugin plugin do
-    action :disable
-  end
-end
+attribute :cluster_nodes, :kind_of => String, :name_attribute => true # first node name to join
+attribute :cluster_name,  :kind_of => String                          # cluster name

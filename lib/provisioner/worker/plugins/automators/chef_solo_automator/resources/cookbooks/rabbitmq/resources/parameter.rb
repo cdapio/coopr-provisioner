@@ -1,10 +1,9 @@
-# -*- coding: utf-8 -*-
 #
 # Cookbook Name:: rabbitmq
-# Recipe:: plugin_management
+# Resource:: parameter
 #
-# Copyright 2013, Grégoire Seux
-# Copyright 2013, Chef Software, Inc.
+# Author: Sean Porter <portertech@gmail.com>
+# Copyright 2015 by Sean Porter
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -19,17 +18,10 @@
 # limitations under the License.
 #
 
-include_recipe 'rabbitmq::default'
+actions :set, :clear, :list
+default_action :set
 
-node['rabbitmq']['enabled_plugins'].each do |plugin|
-  rabbitmq_plugin plugin do
-    action :enable
-    notifies :restart, "service[#{node['rabbitmq']['service_name']}]"
-  end
-end
-
-node['rabbitmq']['disabled_plugins'].each do |plugin|
-  rabbitmq_plugin plugin do
-    action :disable
-  end
-end
+attribute :parameter, :kind_of => String, :name_attribute => true
+attribute :component, :kind_of => String
+attribute :vhost, :kind_of => String
+attribute :params, :kind_of => [Hash, Array], :default => {}

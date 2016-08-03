@@ -21,22 +21,34 @@ module Opscode
   module RabbitMQ
     # This method does some of the yuckiness of formatting parameters properly
     # for rendering into the rabbit.config template.
-    def format_kernel_parameters
-      rendered = []
+    def format_kernel_parameters  # rubocop:disable all
+      rendered = [] # rubocop:enable all
       kernel = node['rabbitmq']['kernel'].dup
 
       # This parameter is special and needs commas instead of periods.
-      rendered << "{inet_dist_use_interface, {#{kernel[:inet_dist_use_interface].gsub(/\./, ',')}}}" if kernel[:inet_dist_use_interface]
+      rendered << "{inet_dist_use_interface, {#{kernel[:inet_dist_use_interface].tr('.', ',')}}}" if kernel[:inet_dist_use_interface]
       kernel.delete(:inet_dist_use_interface)
 
       # Otherwise, we can just render it nicely as Erlang wants. This
       # theoretically opens the door for arbitrary kernel_app parameters to be
       # declared.
-      kernel.select { |k, v| !v.nil? }.each_pair do |param, val|
+      kernel.select { |_k, v| !v.nil? }.each_pair do |param, val|
         rendered << "{#{param}, #{val}}"
       end
 
       rendered.each { |r| r.prepend('    ') }.join(",\n")
+    end
+
+    def format_ssl_versions
+      Array(node['rabbitmq']['ssl_versions']).map { |n| "'#{n}'" }.join(',')
+    end
+
+    def format_ssl_ciphers
+      Array(node['rabbitmq']['ssl_ciphers']).join(',')
+    end
+
+    def shell_environment
+      { 'HOME' => ENV.fetch('HOME', '/var/lib/rabbitmq') }
     end
   end
 end

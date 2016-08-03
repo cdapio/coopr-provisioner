@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # Cookbook Name:: rabbitmq
-# Recipe:: user_management
+# Recipe:: community_plugins
 #
 # Copyright 2013, Grégoire Seux
 # Copyright 2013, Chef Software, Inc.
@@ -20,28 +20,19 @@
 #
 
 include_recipe 'rabbitmq::default'
-include_recipe 'rabbitmq::virtualhost_management'
 
-node['rabbitmq']['enabled_users'].each do |user|
-  rabbitmq_user user['name'] do
-    password user['password']
-    action :add
+node['rabbitmq']['community_plugins'].each do |plugin, download_url|
+  # This will only work for deb/rpm installations, such as Ubuntu, Fedora and CentOS
+  # List of installation directory per installation method: https://www.rabbitmq.com/installing-plugins.html
+  remote_file "/usr/lib/rabbitmq/lib/rabbitmq_server-#{node['rabbitmq']['version']}/plugins/#{plugin}.ez" do
+    mode '0644'
+    owner 'root'
+    group 'root'
+    source download_url
   end
-  rabbitmq_user user['name'] do
-    tag user['tag']
-    action :set_tags
-  end
-  user['rights'].each do |r|
-    rabbitmq_user user['name'] do
-      vhost r['vhost']
-      permissions "#{r['conf']} #{r['write']} #{r['read']}"
-      action :set_permissions
-    end
-  end
-end
 
-node['rabbitmq']['disabled_users'].each do |user|
-  rabbitmq_user user do
-    action :delete
+  rabbitmq_plugin plugin do
+    action :enable
+    notifies :restart, "service[#{node['rabbitmq']['service_name']}]"
   end
 end

@@ -1,54 +1,143 @@
-rabbitmq Cookbook
-=================
-This is a cookbook for managing RabbitMQ with Chef. It is intended for 2.6.1 or later releases.
+# rabbitmq Cookbook
 
-**Version 2.0 Changes**
+[![Build Status](https://travis-ci.org/rabbitmq/chef-cookbook.svg?branch=master)](https://travis-ci.org/rabbitmq/chef-cookbook)
 
-The 2.0 release of the cookbook defaults to using the latest version available from RabbitMQ.com via direct download of the package. This was done to simplify the installation options to either distro package or direct download. The attributes `use_apt` and `use_yum` have been removed as have the `apt` and `yum` cookbook dependencies. The user LWRP action `:set_user_tags` was changed to `:set_tags` for consistency with other actions.
+This is a cookbook for managing RabbitMQ with Chef. It is intended for RabbitMQ 2.6.1 or later releases. With Chef we have adopted support >= 11.14.0 for chef-client, and leaning heavily on chef-client 12 and above.
 
+**NOTE**: This cookbook is still maintained by @jjasghar, please ping him on PRs or Issues you may find.
 
-Requirements
-------------
-This cookbook depends on the `erlang` cookbook.
+## Requirements
 
-Please refer to the [TESTING file](TESTING.md) to see the currently (and passing) tested platforms. The release was tested with (rabbitmq.com/distro version):
-- CentOS 5.9: 3.1.5 (distro release unsupported)
-- CentOS 6.4: 3.1.5/2.6.1 (no lwrps support)
-- Fedora 18: 3.1.5 (distro release unsupported)
-- Ubuntu 10.04: 3.1.5 (distro release unsupported)
-- Ubuntu 12.04: 3.1.5/2.7.1 (no lwrps support)
-- Ubuntu 13.04: 3.1.5/3.0.2
+This cookbook depends on the [erlang cookbook](https://supermarket.chef.io/cookbooks/erlang).
 
+The release was tested with (rabbitmq.com/distro version), from the [kitchen.yml](.kitchen.cloud.yml).
 
-Recipes
--------
+- CentOS 7.0
+- Ubuntu 14.04
+- Ubuntu 16.04
+- Debian 8.0
+
+We are starting to test with Ubuntu 16.04, though we have not fully vetted support yet.
+Use at your own risk, if you do find something please report [here](https://github.com/jjasghar/rabbitmq/issues/379).
+
+## Recipes
+
 ### default
 Installs `rabbitmq-server` from RabbitMQ.com via direct download of the installation package or using the distribution version. Depending on your distribution, the provided version may be quite old so they are disabled by default. If you want to use the distro version, set the attribute `['rabbitmq']['use_distro_version']` to `true`. You may override the download URL attribute `['rabbitmq']['package']` if you wish to use a local mirror.
 
-The cluster recipe is now combined with the default and will now auto-cluster. Set the `['rabbitmq']['cluster']` attribute to `true`, `['rabbitmq']['cluster_disk_nodes']` array of `node@host` strings that describe which you want to be disk nodes and then set an alphanumeric string for the `erlang_cookie`.
+The cluster recipe is now combined with the default and will now auto-cluster. Set the `['rabbitmq']['clustering']['enable']` attribute to `true`, `['rabbitmq']['clustering']['cluster_disk_nodes']` array of `node@host` strings that describe which you want to be disk nodes and then set an alphanumeric string for the `erlang_cookie`.
 
 To enable SSL turn `ssl` to `true` and set the paths to your cacert, cert and key files.
+```ruby
+node['rabbitmq']['ssl'] = true
+node['rabbitmq']['ssl_cacert'] = '/path/to/cacert.pem'
+node['rabbitmq']['ssl_cert'] = '/path/to/cert.pem'
+node['rabbitmq']['ssl_key'] = '/path/to/key.pem'
+```
+
+A full list of SSL attributes can be found in [attributes/default.rb](attributes/default.rb).
+
+#### Attributes
+
+Default values and usage information of important attributes are shown below.  More attributes are documented in metadata.rb.
+
+##### Username and Password
+
+The default username and password are guest/guest:
+
+`['rabbitmq']['default_user'] = 'guest'`
+
+`['rabbitmq']['default_pass'] = 'guest'`
+
+##### Loopback Users
+By default, the guest user can only connect via localhost.  This is the behavior of RabbitMQ when the loopback_users configuration is not specified in it's configuration file.   Also, by default, this cookbook does not specify loopback_users in the configuration file:
+
+`['rabbitmq']['loopback_users'] = nil`
+
+If you wish to allow the default guest user to connect remotely, you can change this to `[]`. If instead you wanted to allow just the user 'foo' to connect over loopback, you would set this value to `["foo"]`.  More information can be found here: https://www.rabbitmq.com/access-control.html.
+
+
 
 ### mgmt_console
 Installs the `rabbitmq_management` and `rabbitmq_management_visualiser` plugins.
 To use https connection to management console, turn `['rabbitmq']['web_console_ssl']` to true. The SSL port for web management console can be configured by setting attribute `['rabbitmq']['web_console_ssl_port']`, whose default value is 15671.
 
 ### plugin_management
-Enables any plugins listed in the `node['rabbitmq']['enabled_plugins']` and disables any listed in `node['rabbitmq'][disabled_plugins']` attributes.
+Enables any plugins listed in the `node['rabbitmq']['enabled_plugins']` and disables any listed in `node['rabbitmq']['disabled_plugins']` attributes.
+
+### community_plugins
+Downloads, installs and enables pre-built community plugins binaries.
+
+To specify a plugin, set the attribute `node['rabbitmq']['community_plugins']['PLUGIN_NAME']` to `'DOWNLOAD_URL'`. For example, to use the [RabbitMQ priority queue plugin](https://github.com/rabbitmq/rabbitmq-priority-queue), set the attribute `node['rabbitmq']['community_plugins']['rabbitmq_priority_queue']` to `'https://www.rabbitmq.com/community-plugins/v3.4.x/rabbitmq_priority_queue-3.4.x-3431dc1e.ez'`.
 
 ### policy_management
-Enables any policies listed in the `node['rabbitmq'][policies]` and disables any listed in `node['rabbitmq'][disabled_policies]` attributes.
+Enables any policies listed in the `node['rabbitmq']['policies']` and disables any listed in `node['rabbitmq']['disabled_policies']` attributes.
+
+See examples in attributes file.
 
 ### user_management
-Enables any users listed in the `node['rabbitmq']['enabled_users]` and disables any listed in `node['rabbitmq'][disabled_users]` attributes.
+Enables any users listed in the `node['rabbitmq']['enabled_users']` and disables any listed in `node['rabbitmq']['disabled_users']` attributes.
+You can provide user credentials, the vhosts that they need to have access to and the permissions that should be allocated to each user.
+
+```ruby
+node['rabbitmq']['enabled_users'] = [
+    {
+        :name => 'kitten',
+        :password => 'kitten',
+        :tag => 'leader',
+        :rights => [
+            {
+                :vhost => ['/', 'nova'],
+                :conf => '.*',
+                :write => '.*',
+                :read => '.*'
+            }
+        ]
+    }
+]
+```
 
 ### virtualhost_management
-Enables any vhosts listed in the `node['rabbitmq'][virtualhosts]` and disables any listed in `node['rabbitmq'][disabled_virtualhosts]` attributes.
+Enables any vhosts listed in the `node['rabbitmq']['virtualhosts']` and disables any listed in `node['rabbitmq']['disabled_virtualhosts']` attributes.
 
+### cluster
+Configure the cluster between the nodes in the `node['rabbitmq']['clustering']['cluster_nodes']` attribute. It also, supports the auto or manual clustering.
+* Auto clustering : Use auto-configuration of RabbitMQ, http://www.rabbitmq.com/clustering.html#auto-config
+* Manual clustering : Configure the cluster by executing `rabbitmqctl join_cluster` command.
 
-Resources/Providers
--------------------
-There are 4 LWRPs for interacting with RabbitMQ.
+#### Attributes that related to clustering
+* `node['rabbitmq']['clustering']['enable']` : Default decision flag of clustering
+* `node['rabbitmq']['erlang_cookie']` : Same erlang cookie is required for the cluster
+* `node['rabbitmq']['clustering']['use_auto_clustering']` : Default is false. (manual clustering is default)
+* `node['rabbitmq']['clustering']['cluster_name']` : Name of cluster. default value is nil. In case of nil or '' is set for `cluster_name`, first node name in `node['rabbitmq']['clustering']['cluster_nodes']` attribute will be set for manual clustering. for the auto clustering, one of the node name will be set.
+* `node['rabbitmq']['clustering']['cluster_nodes']` : List of cluster nodes. it required node name and cluster node type. please refer to example in below.
+
+Attributes example
+```ruby
+node['rabbitmq']['clustering']['enable'] = true
+node['rabbitmq']['erlang_cookie'] = 'AnyAlphaNumericStringWillDo'
+node['rabbitmq']['clustering']['cluster_partition_handling'] = 'ignore'
+node['rabbitmq']['clustering']['use_auto_clustering'] = false
+node['rabbitmq']['clustering']['cluster_name'] = 'seoul_tokyo_newyork'
+node['rabbitmq']['clustering']['cluster_nodes'] = [
+    {
+        :name => 'rabbit@rabbit1',
+        :type => 'disc'
+    },
+    {
+        :name => 'rabbit@rabbit2',
+        :type => 'ram'
+    },
+    {
+        :name => 'rabbit@rabbit3',
+        :type => 'disc'
+    }
+]
+```
+
+## Resources/Providers
+
+There are 5 LWRPs for interacting with RabbitMQ.
 
 ### plugin
 Enables or disables a rabbitmq plugin. Plugins are not supported for releases prior to 2.7.0.
@@ -145,22 +234,71 @@ rabbitmq_vhost "/nova" do
 end
 ```
 
+### cluster
+Join cluster, set cluster name and change cluster node type.
 
-Limitations
------------
+- `:join` join in cluster as a manual clustering. node will join in first node of json string data.
+
+ - cluster nodes data json format : Data should have all the cluster nodes information.
+
+ ```
+ [
+     {
+         "name" : "rabbit@rabbit1",
+         "type" : "disc"
+     },
+     {
+         "name" : "rabbit@rabbit2",
+         "type" : "ram"
+     },
+     {
+         "name" "rabbit@rabbit3",
+         "type" : "disc"
+     }
+]
+ ```
+
+- `:set_cluster_name` set the cluster name.
+- `:change_cluster_node_type` change cluster type of node. `disc` or `ram` should be set.
+
+#### Examples
+```ruby
+rabbitmq_cluster '[{"name":"rabbit@rabbit1","type":"disc"},{"name":"rabbit@rabbit2","type":"ram"},{"name":"rabbit@rabbit3","type":"disc"}]' do
+  action :join
+end
+```
+
+```ruby
+rabbitmq_cluster '[{"name":"rabbit@rabbit1","type":"disc"},{"name":"rabbit@rabbit2","type":"ram"},{"name":"rabbit@rabbit3","type":"disc"}]' do
+  cluster_name 'seoul_tokyo_newyork'
+  action :set_cluster_name
+end
+```
+
+```ruby
+rabbitmq_cluster '[{"name":"rabbit@rabbit1","type":"disc"},{"name":"rabbit@rabbit2","type":"ram"},{"name":"rabbit@rabbit3","type":"disc"}]' do
+  action :change_cluster_node_type
+end
+```
+
+
+## Limitations
+
 For an already running cluster, these actions still require manual intervention:
 - changing the :erlang_cookie
 - turning :cluster from true to false
 
 
-License & Authors
------------------
-- Author:: Benjamin Black <b@b3k.us>
-- Author:: Daniel DeLeo <dan@kallistec.com>
-- Author:: Matt Ray (<matt@opscode.com>)
+## License & Authors
+
+- Author:: Benjamin Black (<b@b3k.us>)
+- Author:: Daniel DeLeo (<dan@kallistec.com>)
+- Author:: Matt Ray (<matt@chef.io>)
+- Author:: Seth Thomas (<cheeseplus@chef.io>)
+- Author:: JJ Asghar (<jj@chef.io>)
 
 ```text
-Copyright (c) 2009-2013, Opscode, Inc.
+Copyright (c) 2009-2015, Chef Software, Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
