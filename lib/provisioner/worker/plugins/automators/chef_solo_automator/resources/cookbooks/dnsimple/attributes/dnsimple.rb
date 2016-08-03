@@ -1,12 +1,14 @@
 #
-# Copyright:: Copyright (c) 2010-2011, Heavy Water Software
-# License:: Apache License, Version 2.0
+# Cookbook Name:: dnsimple
+# Attributes:: default
+#
+# Copyright 2014-2016 Aetrion, LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
-#    http://www.apache.org/licenses/LICENSE-2.0
+#     http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,7 +17,7 @@
 # limitations under the License.
 #
 
-default[:dnsimple][:username] = nil # DNSimple username
-default[:dnsimple][:password] = nil # DNSimple password
-default[:dnsimple][:domain] = nil   # Default domain to use
-default[:dnsimple][:fog_version] = "1.6.0" # Default version of fog to install
+default['dnsimple']['username'] = nil # DNSimple username
+default['dnsimple']['password'] = nil # DNSimple password
+default['dnsimple']['domain'] = nil   # Default domain to use
+default['dnsimple']['fog_version'] = nil # Default version of fog to install

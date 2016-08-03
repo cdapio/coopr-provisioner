@@ -18,6 +18,8 @@
 
 include DNSimple::Connection
 
+use_inline_resources
+
 def whyrun_supported?
   true
 end
@@ -33,14 +35,14 @@ end
 action :create do
   case @current_resource.exists
   when :same
-    Chef::Log.info "#{ @new_resource } already exists - nothing to do."
+    Chef::Log.info "#{@new_resource} already exists - nothing to do."
   when :different
-    converge_by("Updating #{ @new_resource }") do
+    converge_by("Updating #{@new_resource}") do
       delete_record
       create_record
     end
   when :none
-    converge_by("Creating #{ @new_resource }") do
+    converge_by("Creating #{@new_resource}") do
       create_record
     end
   end
@@ -51,25 +53,37 @@ action :destroy do
 end
 
 def check_for_record
+  found_content = []
   all_records_in_zone do |r|
-    if ((r.name == new_resource.name) && (r.type == new_resource.type))
-      if ((r.value == new_resource.content) && (r.ttl == new_resource.ttl))
-        return :same
-      else
-        return :different
-      end
+    if (r.name == new_resource.name) && (r.type == new_resource.type) && (r.ttl == new_resource.ttl)
+      found_content << r.value
     end
   end
-  return :none
+  new_content = Array(new_resource.content)
+  changes = found_content - new_content
+  existing_records(found_content, changes)
+end
+
+def existing_records(found_content, changes)
+  if found_content.empty?
+    :none
+  elsif changes.empty?
+    :same
+  else
+    :different
+  end
 end
 
 def create_record
   Chef::Log.debug "Attempting to create record type #{new_resource.type} for #{new_resource.name} as #{new_resource.content} with type #{new_resource.type}"
-  zone = dnsimple.zones.get( new_resource.domain )
-  record = zone.records.create( :name  => new_resource.name,
-                               :value => new_resource.content,
-                               :type  => new_resource.type,
-                               :ttl   => new_resource.ttl )
+  zone = dnsimple.zones.get(new_resource.domain)
+  values = Array(new_resource.content)
+  values.each do |value|
+    zone.records.create(name: new_resource.name,
+                        value: value,
+                        type: new_resource.type,
+                        ttl: new_resource.ttl)
+  end
   new_resource.updated_by_last_action(true)
   Chef::Log.info "DNSimple: created #{new_resource.type} record for #{new_resource.name}.#{new_resource.domain}"
 rescue Excon::Errors::UnprocessableEntity
@@ -79,23 +93,23 @@ end
 def delete_record
   if [:same, :different].include?(@current_resource.exists)
     all_records_in_zone do |r|
-      if (( r.name == new_resource.name ) && ( r.type == new_resource.type ))
+      if (r.name == new_resource.name) && (r.type == new_resource.type)
         r.destroy
         new_resource.updated_by_last_action(true)
-        Chef::Log.info "DNSimple: destroyed #{new_resource.type} record " +
-          "for #{new_resource.name}.#{new_resource.domain}"
+        Chef::Log.info "DNSimple: destroyed #{new_resource.type} record " \
+                       "for #{new_resource.name}.#{new_resource.domain}"
       end
     end
   else
-    Chef::Log.info "DNSimple: no record found #{new_resource.name}.#{new_resource.domain}" +
-      " with type #{new_resource.type}"
+    Chef::Log.info "DNSimple: no record found #{new_resource.name}.#{new_resource.domain}" \
+                   " with type #{new_resource.type}"
   end
 end
 
 def all_records_in_zone
-  zone = dnsimple.zones.get( new_resource.domain )
+  zone = dnsimple.zones.get(new_resource.domain)
 
   zone.records.all.each do |r|
-     yield r if block_given?
+    yield r if block_given?
   end
 end
