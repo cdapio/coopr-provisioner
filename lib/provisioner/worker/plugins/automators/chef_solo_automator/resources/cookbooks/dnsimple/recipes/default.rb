@@ -2,7 +2,7 @@
 # Cookbook Name:: dnsimple
 # Recipe:: default
 #
-# Copyright 2014, Aetrion LLC
+# Copyright 2014-2016 Aetrion, LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,18 +17,20 @@
 # limitations under the License.
 #
 
-include_recipe 'build-essential'
+case node['platform_family']
+when 'debian'
+  include_recipe 'apt::default'
 
-value_for_platform_family(
-  'debian' => ['libxml2-dev', 'libxslt1-dev'],
-  'rhel' => ['libxml2-devel', 'libxslt-devel'],
-).each do |pkg|
-  r = package( pkg ) { action :nothing }
-  r.run_action( :install )
+  package 'zlib1g-dev' do
+    action :install
+  end.run_action(:install)
 end
+
+include_recipe 'build-essential'
 
 chef_gem 'fog' do
   version node['dnsimple']['fog_version']
+  compile_time true if Chef::Resource::ChefGem.instance_methods(false).include?(:compile_time)
   action :install
 end
 
