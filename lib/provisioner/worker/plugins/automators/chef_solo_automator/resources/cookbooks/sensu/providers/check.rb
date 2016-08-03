@@ -1,16 +1,21 @@
 def load_current_resource
-  definition_directory = ::File.join(node.sensu.directory, "conf.d", "checks")
+  definition_directory = ::File.join(node["sensu"]["directory"], "conf.d", "checks")
   @definition_path = ::File.join(definition_directory, "#{new_resource.name}.json")
 end
 
 action :create do
+
+  if new_resource.type == 'status'
+    Chef::Log.warn("sensu_check[#{new_resource.name}]: type 'status' is deprecated and will be removed in a future version. Please use type 'standard' instead.")
+  end
+
   # Check attributes that have defaults require merging onto `select_attributes`
   # results. Currently this is only `interval`.
   check = Sensu::Helpers.select_attributes(
     new_resource,
     %w[
-      type command timeout subscribers standalone aggregate handle
-      handlers publish low_flap_threshold high_flap_threshold
+      type command timeout subscribers standalone aggregate handle handlers
+      publish subdue low_flap_threshold high_flap_threshold
     ]
   ).merge("interval" => new_resource.interval).merge(new_resource.additional)
 

@@ -2,7 +2,7 @@
 # Cookbook Name:: sensu
 # Recipe:: default
 #
-# Copyright 2012, Sonian Inc.
+# Copyright 2014, Sonian Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -19,7 +19,8 @@
 
 ruby_block "sensu_service_trigger" do
   block do
-    # Sensu service action trigger for LWRP's
+    # Sensu service action trigger for LWRPs.
+    # This resource must be defined before the Sensu LWRPs can be used.
   end
   action :nothing
 end
@@ -30,11 +31,11 @@ else
   include_recipe "sensu::_linux"
 end
 
-directory node.sensu.log_directory do
-  owner "sensu"
-  group "sensu"
+directory node["sensu"]["log_directory"] do
+  owner node["sensu"]["user"]
+  group node["sensu"]["group"]
   recursive true
-  mode 0750
+  mode node["sensu"]["log_directory_mode"]
 end
 
 %w[
@@ -43,44 +44,55 @@ end
   handlers
   extensions
 ].each do |dir|
-  directory File.join(node.sensu.directory, dir) do
-    owner node.sensu.admin_user
-    group "sensu"
+  directory File.join(node["sensu"]["directory"], dir) do
+    owner node["sensu"]["admin_user"]
+    group node["sensu"]["group"]
     recursive true
-    mode 0750
+    mode node["sensu"]["directory_mode"]
   end
 end
 
-if node.sensu.use_ssl
-  node.override.sensu.rabbitmq.ssl = Mash.new
-  node.override.sensu.rabbitmq.ssl.cert_chain_file = File.join(node.sensu.directory, "ssl", "cert.pem")
-  node.override.sensu.rabbitmq.ssl.private_key_file = File.join(node.sensu.directory, "ssl", "key.pem")
+if node["sensu"]["use_ssl"]
+  node.override["sensu"]["rabbitmq"]["ssl"] = Mash.new
+  node.override["sensu"]["rabbitmq"]["ssl"]["cert_chain_file"] = File.join(node["sensu"]["directory"], "ssl", "cert.pem")
+  node.override["sensu"]["rabbitmq"]["ssl"]["private_key_file"] = File.join(node["sensu"]["directory"], "ssl", "key.pem")
 
-  directory File.join(node.sensu.directory, "ssl") do
-    owner node.sensu.admin_user
-    group "sensu"
+  directory File.join(node["sensu"]["directory"], "ssl") do
+    owner node["sensu"]["admin_user"]
+    group node["sensu"]["group"]
     mode 0750
   end
 
-  ssl = Sensu::Helpers.data_bag_item("ssl")
+  data_bag_name = node["sensu"]["data_bag"]["name"]
+  ssl_item = node["sensu"]["data_bag"]["ssl_item"]
 
-  file node.sensu.rabbitmq.ssl.cert_chain_file do
-    content ssl["client"]["cert"]
-    owner node.sensu.admin_user
-    group "sensu"
+  begin
+    unless get_sensu_state(node, "ssl")
+      ssl_data = Sensu::Helpers.data_bag_item(ssl_item, false, data_bag_name).to_hash
+      set_sensu_state(node, "ssl", ssl_data)
+    end
+  rescue => e
+    Chef::Log.warn("Failed to populate Sensu state with ssl credentials from data bag: " + e.inspect)
+  end
+
+  file node["sensu"]["rabbitmq"]["ssl"]["cert_chain_file"] do
+    content lazy { get_sensu_state(node, "ssl", "client", "cert") }
+    owner node["sensu"]["admin_user"]
+    group node["sensu"]["group"]
     mode 0640
   end
 
-  file node.sensu.rabbitmq.ssl.private_key_file do
-    content ssl["client"]["key"]
-    owner node.sensu.admin_user
-    group "sensu"
+  file node["sensu"]["rabbitmq"]["ssl"]["private_key_file"] do
+    content lazy { get_sensu_state(node, "ssl", "client", "key") }
+    owner node["sensu"]["admin_user"]
+    group node["sensu"]["group"]
     mode 0640
+    sensitive true if Chef::Resource::ChefGem.instance_methods(false).include?(:sensitive)
   end
 else
-  if node.sensu.rabbitmq.port == 5671
+  if node["sensu"]["rabbitmq"].port == 5671
     Chef::Log.warn("Setting Sensu RabbitMQ port to 5672 as you have disabled SSL.")
-    node.override.sensu.rabbitmq.port = 5672
+    node.override["sensu"]["rabbitmq"]["port"] = 5672
   end
 end
 

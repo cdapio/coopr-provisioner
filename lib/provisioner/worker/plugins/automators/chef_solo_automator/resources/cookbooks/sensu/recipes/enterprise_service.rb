@@ -1,8 +1,8 @@
 #
 # Cookbook Name:: sensu
-# Recipe:: api_service
+# Recipe:: enterprise_service
 #
-# Copyright 2014, Sonian Inc.
+# Copyright 2014, Heavy Water Operations, LLC.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,7 +17,10 @@
 # limitations under the License.
 #
 
-sensu_service "sensu-api" do
-  init_style node["sensu"]["init_style"]
+service "sensu-enterprise" do
+  subscribes :restart, resources("package[sensu-enterprise]"), :immediately
+  subscribes :restart, resources("template[/etc/default/sensu-enterprise]"), :immediately
+  subscribes :reload, resources("ruby_block[sensu_service_trigger]"), :delayed
+  supports :status => true, :start => true, :stop => true, :restart => true, :reload => true
   action [:enable, :start]
 end

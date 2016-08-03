@@ -2,7 +2,7 @@
 # Cookbook Name:: sensu
 # Recipe:: client_service
 #
-# Copyright 2012, Sonian Inc.
+# Copyright 2014, Sonian Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -18,6 +18,6 @@
 #
 
 sensu_service "sensu-client" do
-  init_style node.sensu.init_style
+  init_style node["sensu"]["init_style"]
   action [:enable, :start]
 end
