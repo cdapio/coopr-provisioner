@@ -148,6 +148,13 @@ class FogProviderOpenstack < Coopr::Plugin::Provider
       Net::SSH.start(bootstrap_ip, @task['config']['ssh-auth']['user'], @credentials) do |ssh|
         ssh_exec!(ssh, 'ping -c1 www.google.com', 'Validating external connectivity and DNS resolution via ping')
       end
+
+      # disable SELinux
+      Net::SSH.start(bootstrap_ip, @task['config']['ssh-auth']['user'], @credentials) do |ssh|
+        cmd = "if test -x /usr/sbin/sestatus ; then #{sudo} /usr/sbin/sestatus | grep disabled || ( test -x /usr/sbin/setenforce && #{sudo} /usr/sbin/setenforce Permissive ) ; fi"
+        ssh_exec!(ssh, cmd, 'Disabling SELinux')
+      end
+
       # Return 0
       @result['status'] = 0
     rescue Fog::Errors::TimeoutError
