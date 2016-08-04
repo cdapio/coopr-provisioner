@@ -213,7 +213,7 @@ module Coopr
         log.info 'starting resource thread'
         loop do
           @tenantmanagers.each do |_id, tmgr|
-            next unless tmgr.resource_sync_needed? && tmgr.num_workers == 0
+            next unless tmgr.resource_sync_needed? && tmgr.num_workers.zero?
             while tmgr.resource_sync_needed?
               log.debug "resource thread invoking sync for tenant #{tmgr.id}"
               tmgr.sync
@@ -308,7 +308,7 @@ module Coopr
     # api method to delete tenant for given id
     def delete_tenant(id)
       # if no workers currently running, just delete
-      if @tenantmanagers[id].num_workers == 0
+      if @tenantmanagers[id].num_workers.zero?
         @tenantmanagers.delete(id)
       else
         # instruct tenant to send kill signal to its workers
@@ -324,7 +324,7 @@ module Coopr
         # update worker counts
         v.verify_workers
         # has this tenant been deleted?
-        if @terminating_tenants.include?(k) && v.num_workers == 0
+        if @terminating_tenants.include?(k) && v.num_workers.zero?
           @tenantmanagers.delete(k)
           @terminating_tenants.delete(k)
         end

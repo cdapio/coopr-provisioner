@@ -154,7 +154,7 @@ module Coopr
       FileUtils.mkdir_p(cwd)
       Dir.chdir(cwd) do
         result = object.runTask
-        log.info "#{clusterId} on #{hostname} could not be deleted: #{result['message']}" if taskName == 'delete' && result['status'] != 0
+        log.info "#{clusterId} on #{hostname} could not be deleted: #{result['message']}" if taskName == 'delete' && result['status'].nonzero?
         result
       end
     end

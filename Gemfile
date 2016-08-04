@@ -37,7 +37,11 @@ end
 group :test do
   gem 'rack-test', '~> 0.6'
   gem 'rspec', '~> 3.0'
-  gem 'rubocop', '~> 0.24'
+  if RUBY_VERSION.to_f < 2.0
+    gem 'rubocop', '< 0.42'
+  else
+    gem 'rubocop', '~> 0.24'
+  end
   gem 'simplecov', '~> 0.7.1', require: false
 end
 

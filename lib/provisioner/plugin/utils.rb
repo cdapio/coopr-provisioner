@@ -99,7 +99,7 @@ module Coopr
         log.debug "stderr: #{stderr_data}"
         log.debug "stdout: #{stdout_data}"
 
-        raise CommandExecutionError.new(command, stdout_data, stderr_data, exit_code, exit_signal), message unless exit_code == 0
+        raise CommandExecutionError.new(command, stdout_data, stderr_data, exit_code, exit_signal), message unless exit_code.zero?
 
         [stdout_data, stderr_data, exit_code, exit_signal]
       end
