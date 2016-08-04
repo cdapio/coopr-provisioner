@@ -14,8 +14,9 @@ PKG-INFO
 build/
 target/
 
-# Bundler
+# Bundler and Ruby
 .bundle/*
+Gemfile.lock
 
 # Coverage reports
 coverage
