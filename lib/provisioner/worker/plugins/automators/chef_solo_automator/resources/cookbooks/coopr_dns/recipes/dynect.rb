@@ -45,7 +45,7 @@ if subdomain_whitelist.nil? || subdomain_whitelist.include?(subdomain)
     begin
       bag = node['coopr_dns']['dynect']['databag_name']
       item = node['coopr_dns']['dynect']['databag_item']
-      dnsimple = data_bag_item(bag, item)
+      dynect = data_bag_item(bag, item)
     rescue
       Chef::Application.fatal!('You must specify either a data bag or customer/username/password!')
     end
