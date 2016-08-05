@@ -1,8 +1,8 @@
 #
 # Cookbook Name:: coopr_dns
-# Recipe:: dnsimple
+# Recipe:: dynect
 #
-# Copyright (C) 2013-2014 Cask Data, Inc.
+# Copyright © 2013-2016 Cask Data, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -36,40 +36,31 @@ end
 subdomain_whitelist = node['coopr_dns']['subdomain_whitelist']
 
 if subdomain_whitelist.nil? || subdomain_whitelist.include?(subdomain)
-  # Install some pre-requisites
-  case node['platform_family']
-  when 'debian'
-    zpkg = 'libz-dev'
-  when 'rhel'
-    zpkg = 'zlib-devel'
-  end
-
-  r = package( zpkg ) { action :nothing }
-  r.run_action( :install )
-
-  include_recipe 'dnsimple'
+  include_recipe 'dynect'
 
   # Get credentials
-  if node['dnsimple']['username'] && node['dnsimple']['password']
-    dnsimple = node['dnsimple']
+  if node['dynect']['username'] && node['dynect']['password'] && node['dynect']['customer']
+    dynect = node['dynect']
   else
     begin
-      bag = node['coopr_dns']['dnsimple']['databag_name']
-      item = node['coopr_dns']['dnsimple']['databag_item']
-      dnsimple = data_bag_item(bag, item)
+      bag = node['coopr_dns']['dynect']['databag_name']
+      item = node['coopr_dns']['dynect']['databag_item']
+      dynect = data_bag_item(bag, item)
     rescue
-      Chef::Application.fatal!('You must specify either a data bag or username/password!')
+      Chef::Application.fatal!('You must specify either a data bag or customer/username/password!')
     end
   end
 
   # Create DNS entries for access_v4
-  dnsimple_record hostname do
-    content access_v4
-    type 'A'
-    username dnsimple['username']
-    password dnsimple['password']
-    domain subdomain
-    ttl node['coopr_dns']['default_ttl']
+  dynect_rr hostname do
+    record_type 'A'
+    rdata('address' => access_v4)
+    fqdn hostname
+    customer dynect['customer']
+    username dynect['username']
+    password dynect['password']
+    zone subdomain
+    action :update
     not_if { subdomain == 'local' || subdomain == 'provider' }
   end
 end
