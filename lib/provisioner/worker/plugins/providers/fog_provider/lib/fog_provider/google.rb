@@ -59,7 +59,7 @@ class FogProviderGoogle < Coopr::Plugin::Provider
 
       # disks are managed separately, so CREATE must first create and confirm the disk to be used
       # handle boot disk
-      create_disk(@providerid, @google_root_disk_size_gb, @zone_name, @image)
+      create_disk(@providerid, @google_root_disk_size_gb, @google_root_disk_type, @zone_name, @image)
       disk = confirm_disk(@providerid)
 
       @disks = [disk]
@@ -70,7 +70,7 @@ class FogProviderGoogle < Coopr::Plugin::Provider
         disk_sizes.each_with_index do |disk_size, disknum|
           next unless disk_size.to_i > 0
           disk_name = "#{@providerid}-data#{disknum == 0 ? '' : disknum + 1}"
-          create_disk(disk_name, disk_size.to_i, @zone_name, nil)
+          create_disk(disk_name, disk_size.to_i, @google_data_disk_type, @zone_name, nil)
           data_disk = confirm_disk(disk_name)
           @disks.push(data_disk)
         end
@@ -344,12 +344,18 @@ class FogProviderGoogle < Coopr::Plugin::Provider
     server_def
   end
 
-  def create_disk(name, size_gb, zone_name, source_image)
+  def create_disk(name, size_gb, type, zone_name, source_image)
     args = {}
     args[:name] = name
     args[:size_gb] = size_gb
     args[:zone_name] = zone_name
     args[:source_image] = source_image unless source_image.nil?
+    args[:type] =
+      if type == 'ssd'
+        'pd-ssd'
+      else
+        'pd-standard'
+      end
 
     # check if a disks already exists (retry scenario)
     disk = connection.disks.get(name)
@@ -358,7 +364,11 @@ class FogProviderGoogle < Coopr::Plugin::Provider
       existing_size_gb = disk.size_gb.nil? ? nil : disk.size_gb.to_i
       existing_zone_name = disk.zone_name.nil? ? nil : disk.zone_name.split('/').last
       existing_source_image = disk.source_image.nil? ? nil : disk.source_image.split('/').last
-      if size_gb == existing_size_gb && zone_name == existing_zone_name && source_image == existing_source_image
+      existing_type = disk.type.nil? ? nil : disk.type.split('/').last
+      if size_gb == existing_size_gb &&
+         zone_name == existing_zone_name &&
+         source_image == existing_source_image &&
+         type == existing_type
         log.debug "Using pre-exising disk for #{name}, it must not be attached already"
         return disk.name
       else
