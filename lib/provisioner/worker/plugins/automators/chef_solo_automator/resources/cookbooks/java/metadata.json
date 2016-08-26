@@ -64,7 +64,7 @@
     "java::homebrew": "Installs the JDK on Mac OS X via Homebrew",
     "java::oracle_jce": "Installs the Java Crypto Extension for strong encryption"
   },
-  "version": "1.41.0",
+  "version": "1.42.0",
   "source_url": "https://github.com/agileorbit-cookbooks/java",
   "issues_url": "https://github.com/agileorbit-cookbooks/java/issues",
   "privacy": false,
