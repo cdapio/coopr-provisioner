@@ -1,9 +1,8 @@
 #
 # Author:: Shawn Neal (<sneal@sneal.net>)
-# Cookbook Name:: seven_zip
-# Resource:: archive
+# Cookbook Name:: visualstudio
 #
-# Copyright:: 2013, Daptiv Solutions LLC
+# Copyright 2015, Shawn Neal
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -18,12 +17,17 @@
 # limitations under the License.
 #
 
-default_action :extract
+if defined?(ChefSpec)
+  chefspec_version = Gem.loaded_specs['chefspec'].version
+  define_method = if chefspec_version < Gem::Version.new('4.1.0')
+                    ChefSpec::Runner.method(:define_runner_method)
+                  else
+                    ChefSpec.method(:define_matcher)
+                  end
 
-actions :extract
+  define_method.call :seven_zip_archive
 
-attribute :path, kind_of: String, name_attribute: true
-attribute :source, kind_of: String
-attribute :overwrite, kind_of: [TrueClass, FalseClass], default: false
-attribute :checksum, kind_of: String
-attribute :timeout, kind_of: Integer
+  def extract_seven_zip_archive(resource_name)
+    ChefSpec::Matchers::ResourceMatcher.new(:seven_zip_archive, :extract, resource_name)
+  end
+end
