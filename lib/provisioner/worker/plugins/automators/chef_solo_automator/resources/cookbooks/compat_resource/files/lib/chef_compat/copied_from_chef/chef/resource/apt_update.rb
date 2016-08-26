@@ -7,7 +7,7 @@
 #
 
 begin
-  require 'chef/constants'
+  require 'chef/resource/apt_update'
 rescue LoadError; end
 
 require 'chef_compat/copied_from_chef'
@@ -15,8 +15,8 @@ class Chef
 module ::ChefCompat
 module CopiedFromChef
 #
-# Author:: John Keiser <jkeiser@chef.io>
-# Copyright:: Copyright 2015-2016, Chef Software Inc.
+# Author:: Thom May (<thom@chef.io>)
+# Copyright:: Copyright (c) 2016 Chef Software, Inc.
 # License:: Apache License, Version 2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -30,17 +30,22 @@ module CopiedFromChef
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+#
+
+require "chef_compat/copied_from_chef/chef/resource"
 
 class Chef < (defined?(::Chef) ? ::Chef : Object)
-  NOT_PASSED = Object.new
-  def NOT_PASSED.to_s
-    "NOT_PASSED"
-  end
+  class Resource < (defined?(::Chef::Resource) ? ::Chef::Resource : Object)
+    class AptUpdate < (defined?(::Chef::Resource::AptUpdate) ? ::Chef::Resource::AptUpdate : Chef::Resource)
+      resource_name :apt_update
+      provides :apt_update, os: "linux"
 
-  def NOT_PASSED.inspect
-    to_s
+      property :frequency, Integer, default: 86_400
+
+      default_action :periodic
+      allowed_actions :update, :periodic
+    end
   end
-  NOT_PASSED.freeze
 end
 end
 end
