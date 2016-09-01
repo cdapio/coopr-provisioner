@@ -16,6 +16,7 @@
   "dependencies": {
     "yum": ">= 3.0",
     "apt": ">= 2.1.2",
+    "dpkg_autostart": ">= 0.0.0",
     "selinux": ">= 0.0.0",
     "sysctl": ">= 0.0.0",
     "ulimit": ">= 0.0.0"
@@ -66,5 +67,7 @@
   "recipes": {
 
   },
-  "version": "2.4.1"
+  "version": "2.5.0",
+  "source_url": "https://github.com/caskdata/hadoop_cookbook",
+  "issues_url": "https://issues.cask.co/browse/COOK/component/10600"
 }
