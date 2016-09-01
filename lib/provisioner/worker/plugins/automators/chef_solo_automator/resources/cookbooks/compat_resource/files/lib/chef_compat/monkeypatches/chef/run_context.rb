@@ -6,7 +6,7 @@
 # NOTICE NOTICE NOTICE NOTICE NOTICE NOTICE NOTICE NOTICE NOTICE
 #
 
-if Gem::Requirement.new('< 12.13.37').satisfied_by?(Gem::Version.new(Chef::VERSION))
+if Gem::Requirement.new('< 12.14.37').satisfied_by?(Gem::Version.new(Chef::VERSION))
 #
 # Author:: Adam Jacob (<adam@chef.io>)
 # Author:: Christopher Walters (<cw@chef.io>)
@@ -643,9 +643,6 @@ ERROR_MESSAGE
       CHILD_STATE = %w{
         audits
         audits=
-        cheffish
-        chef_metal
-        chef_provisioning
         create_child
         add_delayed_action
         delayed_actions
@@ -670,9 +667,11 @@ ERROR_MESSAGE
       }.map { |x| x.to_sym }
 
       # Verify that we didn't miss any methods
-      missing_methods = superclass.instance_methods(false) - instance_methods(false) - CHILD_STATE
-      if !missing_methods.empty?
-        raise "ERROR: not all methods of RunContext accounted for in ChildRunContext! All methods must be marked as child methods with CHILD_STATE or delegated to the parent_run_context. Missing #{missing_methods.join(", ")}."
+      unless @__skip_method_checking # hook specifically for compat_resource
+        missing_methods = superclass.instance_methods(false) - instance_methods(false) - CHILD_STATE
+        if !missing_methods.empty?
+          raise "ERROR: not all methods of RunContext accounted for in ChildRunContext! All methods must be marked as child methods with CHILD_STATE or delegated to the parent_run_context. Missing #{missing_methods.join(", ")}."
+        end
       end
     end
   end
