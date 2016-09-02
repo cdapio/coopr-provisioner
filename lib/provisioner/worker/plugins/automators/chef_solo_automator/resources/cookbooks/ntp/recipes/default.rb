@@ -59,7 +59,7 @@ end
 
 if node['ntp']['listen'].nil? && !node['ntp']['listen_network'].nil?
   if node['ntp']['listen_network'] == 'primary'
-    node.set['ntp']['listen'] = node['ipaddress']
+    node.normal['ntp']['listen'] = node['ipaddress']
   else
     require 'ipaddr'
     net = IPAddr.new(node['ntp']['listen_network'])
@@ -67,7 +67,7 @@ if node['ntp']['listen'].nil? && !node['ntp']['listen_network'].nil?
     node['network']['interfaces'].each do |_iface, addrs|
       addrs['addresses'].each do |ip, params|
         addr = IPAddr.new(ip) if params['family'].eql?('inet') || params['family'].eql?('inet6')
-        node.set['ntp']['listen'] = addr if net.include?(addr)
+        node.normal['ntp']['listen'] = addr if net.include?(addr)
       end
     end
   end
@@ -97,7 +97,7 @@ if node['ntp']['sync_clock'] && !platform_family?('windows')
   end
 
   execute 'Force sync system clock with ntp server' do
-    command node['platform_family'] == 'freebsd' ? "ntpd -q" : "ntpd -q -u #{node['ntp']['var_owner']}"
+    command node['platform_family'] == 'freebsd' ? 'ntpd -q' : "ntpd -q -u #{node['ntp']['var_owner']}"
     action :run
     notifies :start, "service[#{node['ntp']['service']}]"
   end
