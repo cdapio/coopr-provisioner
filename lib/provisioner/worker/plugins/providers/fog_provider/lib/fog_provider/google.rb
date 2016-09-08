@@ -352,9 +352,9 @@ class FogProviderGoogle < Coopr::Plugin::Provider
     args[:source_image] = source_image unless source_image.nil?
     args[:type] =
       if type == 'ssd'
-        'pd-ssd'
+        "projects/#{@google_project}/zones/#{zone_name}/diskTypes/pd-ssd"
       else
-        'pd-standard'
+        "projects/#{@google_project}/zones/#{zone_name}/diskTypes/pd-standard"
       end
 
     # check if a disks already exists (retry scenario)
