@@ -46,3 +46,10 @@ ruby_block 'initaction-copy-hdp22-mapreduce-tarball' do
   end
   only_if { node['hadoop']['distribution'] == 'hdp' && node['hadoop']['distribution_version'].to_f >= 2.2 }
 end
+
+ruby_block 'initaction-copy-iop-mapreduce-tarball' do
+  block do
+    resources('execute[iop-mapreduce-tarball]').run_action(:run)
+  end
+  only_if { node['hadoop']['distribution'] == 'iop' }
+end

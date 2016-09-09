@@ -39,4 +39,4 @@ There are no attributes specific to this cookbook, however we set many default a
 Include the relevant recipes in your run-list.
 
 
-
+NOTE: Starting with version `1.0.0`, the `kerberos_init` recipe is no longer run unconditionally.
