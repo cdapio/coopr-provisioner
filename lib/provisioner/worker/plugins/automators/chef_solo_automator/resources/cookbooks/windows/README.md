@@ -8,24 +8,14 @@ Provides a set of Windows-specific primitives (Chef resources) meant to aid in t
 
 ### Platforms
 
-- Windows Vista
 - Windows 7
-- Windows Server 2008 (R1, R2)
+- Windows Server 2008 R2
 - Windows 8, 8.1
 - Windows Server 2012 (R1, R2)
 
 ### Chef
 
-- Chef 11+
-
-### Cookbooks
-
-- chef_handler (`windows::reboot_handler` leverages the chef_handler LWRP)
-
-## Attributes
-
-- `node['windows']['allow_pending_reboots']` - used to configure the `WindowsRebootHandler` (via the `windows::reboot_handler` recipe) to act on pending reboots. default is true (ie act on pending reboots). The value of this attribute only has an effect if the `windows::reboot_handler` is in a node's run list.
-- `node['windows']['allow_reboot_on_failure']` - used to register the `WindowsRebootHandler` (via the `windows::reboot_handler` recipe) as an exception handler too to act on reboots not only at the end of successful Chef runs, but even at the end of failed runs. default is false (ie reboot only after successful runs). The value of this attribute only has an effect if the `windows::reboot_handler` is in a node's run list.
+- Chef 12.1+
 
 ## Resource/Provider
 
@@ -50,50 +40,7 @@ Run BGInfo at login
 windows_auto_run 'BGINFO' do
   program 'C:/Sysinternals/bginfo.exe'
   args    '\'C:/Sysinternals/Config.bgi\' /NOLICPROMPT /TIMER:0'
-  not_if  { Registry.value_exists?(AUTO_RUN_KEY, 'BGINFO') }
   action  :create
-end
-```
-
-### windows_batch
-
-This resource is now deprecated and will be removed in a future version of this cookbook. Chef >= 11.6.0 includes a built-in [batch](https://docs.chef.io/resource_batch.html) resource.
-
-Execute a batch script using the cmd.exe interpreter (much like the script resources for bash, csh, powershell, perl, python and ruby). A temporary file is created and executed like other script resources, rather than run inline. By their nature, Script resources are not idempotent, as they are completely up to the user's imagination. Use the `not_if` or `only_if` meta parameters to guard the resource for idempotence.
-
-#### Actions
-
-- `:run` - run the batch file
-
-#### Attribute Parameters
-
-- `command` - name attribute. Name of the command to execute.
-- `code` - quoted string of code to execute.
-- `creates` - a file this command creates - if the file exists, the command will not be run.
-- `cwd` - current working directory to run the command from.
-- `flags` - command line flags to pass to the interpreter when invoking.
-- `user` - A user name or user ID that we should change to before running this command.
-- `group` - A group name or group ID that we should change to before running this command.
-
-#### Examples
-
-```ruby
-windows_batch 'unzip_and_move_ruby' do
-  code <<-EOH
-  7z.exe x #{Chef::Config[:file_cache_path]}/ruby-1.8.7-p352-i386-mingw32.7z  -oC:\\source -r -y
-  xcopy C:\\source\\ruby-1.8.7-p352-i386-mingw32 C:\\ruby /e /y
-  EOH
-end
-```
-
-```ruby
-windows_batch 'echo some env vars' do
-  code <<-EOH
-  echo %TEMP%
-  echo %SYSTEMDRIVE%
-  echo %PATH%
-  echo %WINDIR%
-  EOH
 end
 ```
 
@@ -109,10 +56,10 @@ Installs a certificate into the Windows certificate store from a file, and grant
 
 #### Attribute Parameters
 
-- `source` - name attribute. The source file (for create and acl_add), thumprint (for delete and acl_add) or subject (for delete).
+- `source` - name attribute. The source file (for create and acl_add), thumbprint (for delete and acl_add) or subject (for delete).
 - `pfx_password` - the password to access the source if it is a pfx file.
 - `private_key_acl` - array of 'domain\account' entries to be granted read-only access to the certificate's private key. This is not idempotent.
-- `store_name` - the certificate store to maniplate. One of MY (default : personal store), CA (trusted intermediate store) or ROOT (trusted root store).
+- `store_name` - the certificate store to manipulate. One of MY (default : personal store), CA (trusted intermediate store) or ROOT (trusted root store).
 - `user_store` - if false (default) then use the local machine store; if true then use the current user's store.
 
 #### Examples
@@ -150,7 +97,7 @@ Binds a certificate to an HTTP port in order to enable TLS communication.
 
 #### Attribute Parameters
 
-- `cert_name` - name attribute. The thumprint(hash) or subject that identifies the certicate to be bound.
+- `cert_name` - name attribute. The thumbprint(hash) or subject that identifies the certificate to be bound.
 - `name_kind` - indicates the type of cert_name. One of :subject (default) or :hash.
 - `address` - the address to bind against. Default is 0.0.0.0 (all IP addresses).
 - `port` - the port to bind against. Default is 443.
@@ -494,7 +441,7 @@ The Windows Printer LWRP will automatically create a TCP/IP printer port for you
 - `location` - Printer location, e.g. 'Fifth floor copy room', or 'US/NYC/Floor42/Room4207'
 - `shared` - Boolean. Defaults to false.
 - `share_name` - Printer share name.
-- `ipv4_address` - Printer IPv4 address, e.g. '10.4.64.23'. You don't have to be able to ping the IP addresss to set it. Required.
+- `ipv4_address` - Printer IPv4 address, e.g. '10.4.64.23'. You don't have to be able to ping the IP address to set it. Required.
 
 An error of "Set-WmiInstance : Generic failure" is most likely due to the printer driver name not matching or not being installed.
 
@@ -514,115 +461,6 @@ Delete a printer. Note: this doesn't delete the associated printer port. See `wi
 ```ruby
 windows_printer 'HP LaserJet 5th Floor' do
   action :delete
-end
-```
-
-### windows_reboot
-
-This resource is now deprecated and will be removed in a future version of this cookbook. Chef >= 12.0.0 includes a built-in [reboot](https://docs.chef.io/resource_reboot.html) resource.
-
-Sets required data in the node's run_state to notify `WindowsRebootHandler` a reboot is requested. If Chef run completes successfully a reboot will occur if the `WindowsRebootHandler` is properly registered as a report handler. As an action of `:request` will cause a node to reboot every Chef run, this resource is usually notified by other resources...ie restart node after a package is installed (see example below).
-
-#### Actions
-
-- `:request` - requests a reboot at completion of successful Cher run. requires `WindowsRebootHandler` to be registered as a report handler.
-- `:cancel` - remove reboot request from node.run_state. this will cancel _ALL_ previously requested reboots as this is a binary state.
-
-#### Attribute Parameters
-
-- `timeout` - Name attribute. timeout delay in seconds to wait before proceeding with the requested reboot. default is 60 seconds
-- `reason` - comment on the reason for the reboot. default is 'Chef Software Chef initiated reboot'
-
-#### Examples
-
-If the package installs, schedule a reboot at end of chef run
-
-```ruby
-windows_reboot 60 do
-  reason 'cause chef said so'
-  action :nothing
-end
-
-windows_package 'some_package' do
-  action :install
-  notifies :request, 'windows_reboot[60]'
-end
-```
-
-Cancel the previously requested reboot
-
-```ruby
-windows_reboot 60 do
-  action :cancel
-end
-```
-
-### windows_registry
-
-This resource is now deprecated and will be removed in a future version of this cookbook. Chef >= 11.6.0 includes a built-in [registry_key](https://docs.chef.io/resource_registry_key.html) resource.
-
-Creates and modifies Windows registry keys.
-
-_Change in v1.3.0: The Win32 classes use `::Win32` to avoid namespace conflict with `Chef::Win32` (introduced in Chef 0.10.10)._
-
-#### Actions
-
-- `:create` - create a new registry key with the provided values.
-- `:modify` - modify an existing registry key with the provided values.
-- `:force_modify` - modify an existing registry key with the provided values. ensures the value is actually set by checking multiple times. useful for fighting race conditions where two processes are trying to set the same registry key. This will be updated in the near future to use 'RegNotifyChangeKeyValue' which is exposed by the WinAPI and allows a process to register for notification on a registry key change.
-- `:remove` - removes a value from an existing registry key
-
-#### Attribute Parameters
-
-- `key_name` - name attribute. The registry key to create/modify.
-- `values` - hash of the values to set under the registry key. The individual hash items will become respective 'Value name' => 'Value data' items in the registry key.
-- `type` - Type of key to create, defaults to REG_SZ. Must be a symbol, see the overview below for valid values.
-
-#### Registry key types
-
-- `:binary` - REG_BINARY
-- `:string` - REG_SZ
-- `:multi_string` - REG_MULTI_SZ
-- `:expand_string` - REG_EXPAND_SZ
-- `:dword` - REG_DWORD
-- `:dword_big_endian` - REG_DWORD_BIG_ENDIAN
-- `:qword` - REG_QWORD
-
-#### Examples
-
-Make the local windows proxy match the one set for Chef
-
-```ruby
-proxy = URI.parse(Chef::Config[:http_proxy])
-windows_registry 'HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings' do
-  values 'ProxyEnable' => 1, 'ProxyServer' => "#{proxy.host}:#{proxy.port}", 'ProxyOverride' => '<local>'
-end
-```
-
-Enable Remote Desktop and poke the firewall hole
-
-```ruby
-windows_registry 'HKLM\SYSTEM\CurrentControlSet\Control\Terminal Server' do
-  values 'FdenyTSConnections' => 0
-end
-```
-
-Delete an item from the registry
-
-```ruby
-windows_registry 'HKCU\Software\Test' do
-  #Key is the name of the value that you want to delete the value is always empty
-  values 'ValueToDelete' => ''
-  action :remove
-end
-```
-
-Add a REG_MULTI_SZ value to the registry
-
-```ruby
-windows_registry 'HKCU\Software\Test' do
-  values 'MultiString' => ['line 1', 'line 2', 'line 3']
-  type :multi_string
 end
 ```
 
@@ -755,7 +593,7 @@ windows_task 'chef-client' do
 end
 ```
 
-Delete a taks named `old task`
+Delete a task named `old task`
 
 ```ruby
 windows_task 'old task' do
@@ -870,18 +708,6 @@ if is_package_installed?('Windows Software Development Kit')
 end
 ```
 
-## Exception/Report Handlers
-
-### WindowsRebootHandler
-
-Required reboots are a necessary evil of configuring and managing Windows nodes. This report handler (ie fires at the end of Chef runs) acts on requested (Chef initiated) or pending (as determined by the OS per configuration action we performed) reboots. The `allow_pending_reboots` initialization argument should be set to false if you do not want the handler to automatically reboot a node if it has been determined a reboot is pending. Reboots can still be requested explicitly via the `windows_reboot` LWRP.
-
-### Initialization Arguments
-
-- `allow_pending_reboots` - indicator on whether the handler should act on a the Window's 'pending reboot' state. default is true
-- `timeout` - timeout delay in seconds to wait before proceeding with the reboot. default is 60 seconds
-- `reason` - comment on the reason for the reboot. default is 'Chef Software Chef initiated reboot'
-
 ## Windows ChefSpec Matchers
 
 The Windows cookbook includes custom [ChefSpec](https://github.com/sethvargo/chefspec) matchers you can use to test your own cookbooks that consume Windows cookbook LWRPs.
@@ -897,7 +723,6 @@ expect(chef_run).to install_windows_package('Node.js').with(
 
 - create_windows_auto_run
 - remove_windows_auto_run
-- run_windows_batch
 - create_windows_certificate
 - delete_windows_certificate
 - add_acl_to_windows_certificate
@@ -918,12 +743,6 @@ expect(chef_run).to install_windows_package('Node.js').with(
 - delete_windows_printer
 - create_windows_printer_port
 - delete_windows_printer_port
-- request_windows_reboot
-- cancel_windows_reboot
-- create_windows_registry
-- modify_windows_registry
-- force_modify_windows_registry
-- remove_windows_registry
 - create_windows_shortcut
 - create_windows_shortcut
 - create_windows_task
@@ -946,24 +765,6 @@ depends 'windows'
 ### default
 
 Convenience recipe that installs supporting gems for many of the resources/providers that ship with this cookbook.
-
-### reboot_handler
-
-Leverages the `chef_handler` LWRP to register the `WindowsRebootHandler` report handler that ships as part of this cookbook. By default this handler is set to automatically act on pending reboots. If you would like to change this behavior override `node['windows']['allow_pending_reboots']` and set the value to false. For example:
-
-```ruby
-name 'base'
-description 'base role'
-override_attributes(
-  'windows' => {
-    'allow_pending_reboots' => false
-  }
-)
-```
-
-This will still allow a reboot to be explicitly requested via the `windows_reboot` LWRP.
-
-By default, the handler will only be registered as a report handler, meaning that it will only fire at the end of successful Chef runs. If the run fails, pending or requested reboots will be ignored. This can lead to a situation where some package was installed and notified a reboot request via the `windows_reboot` LWRP, and then the run fails for some unrelated reason, and the reboot request gets dropped because the resource that notified the reboot request will already be up-to-date at the next run and will not request a reboot again, and thus the requested reboot will never be performed. To change this behavior and register the handler as an exception handler that fires at the end of failed runs too, override `node['windows']['allow_reboot_on_failure']` and set the value to true.
 
 ## License & Authors
 
