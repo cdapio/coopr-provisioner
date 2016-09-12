@@ -33,22 +33,26 @@ action :install do
 
     volumes_dir = new_resource.volumes_dir ? new_resource.volumes_dir : new_resource.app
     dmg_name = new_resource.dmg_name ? new_resource.dmg_name : new_resource.app
-    dmg_file = "#{Chef::Config[:file_cache_path]}/#{dmg_name}.dmg"
 
-    if new_resource.source
-      remote_file "#{dmg_file} - #{@dmgpkg.name}" do
-        path dmg_file
-        source new_resource.source
-        checksum new_resource.checksum if new_resource.checksum
-      end
-    end
+    dmg_file = if new_resource.file.nil?
+                 "#{Chef::Config[:file_cache_path]}/#{dmg_name}.dmg"
+               else
+                 new_resource.file
+               end
+
+    remote_file "#{dmg_file} - #{@dmgpkg.name}" do
+      path dmg_file
+      source new_resource.source
+      headers new_resource.headers if new_resource.headers
+      checksum new_resource.checksum if new_resource.checksum
+    end if new_resource.source
 
     passphrase_cmd = new_resource.dmg_passphrase ? "-passphrase #{new_resource.dmg_passphrase}" : ''
     ruby_block "attach #{dmg_file}" do
       block do
         cmd = shell_out("hdiutil imageinfo #{passphrase_cmd} '#{dmg_file}' | grep -q 'Software License Agreement: true'")
         software_license_agreement = (cmd.exitstatus == 0)
-        fail "Requires EULA Acceptance; add 'accept_eula true' to package resource" if software_license_agreement && !new_resource.accept_eula
+        raise "Requires EULA Acceptance; add 'accept_eula true' to package resource" if software_license_agreement && !new_resource.accept_eula
         accept_eula_cmd = new_resource.accept_eula ? 'echo Y | PAGER=true' : ''
         shell_out!("#{accept_eula_cmd} hdiutil attach #{passphrase_cmd} '#{dmg_file}' -quiet")
       end
