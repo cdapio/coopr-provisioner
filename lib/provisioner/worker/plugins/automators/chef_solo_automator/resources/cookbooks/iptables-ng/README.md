@@ -8,7 +8,23 @@ Contrary to other iptables cookbooks, this cookbook installs iptables and mainta
 
 It provides LWRPs as well as recipes which can handle iptables rules set in the nodes attributes.
 
-It uses the directory ```/etc/iptables.d``` to store and maintain its rules. I'm trying to be as compatible as much as possible to all distributions out there.
+It uses the directory `/etc/iptables.d` to store and maintain its rules. I'm trying to be as compatible as much as possible to all distributions out there.
+
+
+This cookbook is supposed to be able to:
+
+- Configure iptables rules in a consistent and nice way for all distributions
+- Be configured by using LWRPs only
+- Be configured by using node attributes only
+- Respect the way the currently used distribution stores their rules
+- Provide a good-to-read and good-to-maintain way of deploying complex iptables rulesets
+- Provide a way of specifying the order of the iptables rules, in case needed
+- Only run iptables-restore once during a chef run, and only if something was actually changed
+- Support both, ipv6 as well as ipv4
+- Be able to assemble iptables rules from different recipes (and even cookbooks), so you can set your iptables rule where you actually configure the service
+
+I also wrote a [blog post](https://chr4.org/blog/2013/09/13/iptables-ng-cookbook-for-chef) providing further insights.
+
 
 ## Requirements
 
@@ -20,7 +36,7 @@ The following distribution are best supported, but as this recipe falls back to 
 * Gentoo
 * Archlinux
 
-No external dependencies. Just add this line to your ```metadata.rb``` and you're good to go!
+No external dependencies. Just add this line to your `metadata.rb` and you're good to go!
 
 ```ruby
 depends 'iptables-ng'
@@ -31,7 +47,7 @@ depends 'iptables-ng'
 
 ### General configuration (services, paths)
 
-While iptables-ng tries to automatically determine the correct settings and defaults for your distribution, it might be necessary to adapt them in certian cases. You can configure the behaviour of iptables-ng using the following attributes:
+While iptables-ng tries to automatically determine the correct settings and defaults for your distribution, it might be necessary to adapt them in certain cases. You can configure the behaviour of iptables-ng using the following attributes:
 
 ```ruby
 # The ip versions to manage iptables for
@@ -83,13 +99,20 @@ node['iptables-ng']['rules']['filter']['INPUT']['10-ssh']['rule'] = 'this rule i
 node['iptables-ng']['rules']['filter']['INPUT']['90-http']['rule'] = 'this rule is applied later'
 ```
 
-Also, it's possible to only apply a rule for a certian ip version.
+Also, it's possible to only apply a rule for a certain ip version.
 
 ```ruby
 node['iptables-ng']['rules']['filter']['INPUT']['10-ssh']['rule'] = '--protocol tcp --source 1.2.3.4 --dport 22 --match state --state NEW --jump ACCEPT'
 node['iptables-ng']['rules']['filter']['INPUT']['10-ssh']['ip_version'] = 4
 ```
 
+### Auto-pruning
+
+In Chef, it is generally accepted that removing node attributes does not result in their corresponding resources being proactively scrubbed from the system. However, this could be seen as irritating or even a security risk when dealing with firewall attribute rules in this cookbook. To automatically prune rules for attributes that have been removed, set the following attribute to true. This will not affect rules defined with the LWRP.
+
+```ruby
+node['iptables-ng']['auto_prune_attribute_rules'] = true
+```
 
 # Recipes
 
@@ -134,9 +157,18 @@ In case you need a rule for one specific ip version, you can set the "ip_version
 }
 ```
 
+You can also delete old rules by specifying a custom action.
+
+```json
+"ssh": {
+  "action": "delete"
+}
+```
+
+
 ## install
 
-The installs recipe installs iptables packages, makes sure that ```/etc/iptables.d``` is created and sets all default policies to "ACCEPT", unless they are already configured.
+The installs recipe installs iptables packages, makes sure that `/etc/iptables.d` is created and sets all default policies to "ACCEPT", unless they are already configured.
 
 On Debian and Ubuntu systems, it also removes the "ufw" package, as it might interferre with this cookbook.
 
@@ -260,4 +292,25 @@ Contributions of any sort are very welcome!
 
 Authors: Chris Aumann
 
-Contributors: Dan Fruehauf, Nathan Williams, Christian Graf
+Contributors: Dan Fruehauf, Nathan Williams, Christian Graf, James Le Cuirot, Sten Spans
+
+
+## Other licenses than GPLv3
+
+In case you can't use the provided license for some reason, feel free to contact me.
+
+
+Copyright (C) 2015  Chris Aumann
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
