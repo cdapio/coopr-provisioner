@@ -27,8 +27,8 @@ if node['hadoop'].key?('core_site') && node['hadoop']['core_site'].key?('hadoop.
   Chef::Log.info("Secure Hadoop Enabled: Kerberos Realm '#{node['krb5']['krb5_conf']['realms']['default_realm']}'")
   secure_hadoop_enabled = true
 
-  # Create users for services not in base Hadoop
-  %w(hbase hive spark zookeeper).each do |u|
+  # Create users for services
+  %w(hadoop hbase hdfs hive mapred spark yarn zookeeper).each do |u|
     user u do
       action :create
     end
