@@ -35,12 +35,6 @@ def configure
     #Merge the configuration defaults with the provided array of configurations provided
     current = current_defaults_hash.merge(current_instance_hash)
 
-    #Manage Sentinel Configs?
-    if node['redisio']['sentinel']['manage_config'] == true
-      config_action = :create
-    else
-      config_action = :create_if_missing
-    end
 
     recipe_eval do
       sentinel_name = current['name'] || current['port']
@@ -54,6 +48,8 @@ def configure
         home current['homedir']
         shell current['shell']
         system current['systemuser']
+        uid current['uid'] unless current['uid'].nil?
+        not_if { node['etc']['passwd']["#{current['user']}"] }
       end
       #Create the redis configuration directory
       directory current['configdir'] do
@@ -71,28 +67,70 @@ def configure
         recursive true
         action :create
       end
-     
-    unless current['logfile'].nil?
-      #Create the log directory if syslog is not being used
-      directory ::File.dirname(current['logfile']) do
-        owner current['user']
-        group current['group']
-        mode '0755'
-        recursive true
-        action :create
-        only_if { current['syslogenabled'] != 'yes' && current['logfile'] && current['logfile'] != 'stdout' }
+
+      unless current['logfile'].nil?
+        #Create the log directory if syslog is not being used
+        directory ::File.dirname(current['logfile']) do
+          owner current['user']
+          group current['group']
+          mode '0755'
+          recursive true
+          action :create
+          only_if { current['syslogenabled'] != 'yes' && current['logfile'] && current['logfile'] != 'stdout' }
+        end
+
+       #Create the log file is syslog is not being used
+        file current['logfile'] do
+          owner current['user']
+          group current['group']
+          mode '0644'
+          backup false
+          action :touch
+          only_if { current['logfile'] && current['logfile'] != 'stdout' }
+        end
       end
-    
-     #Create the log file is syslog is not being used
-      file current['logfile'] do
-        owner current['user']
-        group current['group']
-        mode '0644'
-        backup false
-        action :touch
-        only_if { current['logfile'] && current['logfile'] != 'stdout' }
+
+      # <%=@name%> <%=@masterip%> <%=@masterport%> <%= @quorum_count %>
+      # <%= "sentinel auth-pass #{@name} #{@authpass}" unless @authpass.nil? %>
+      # sentinel down-after-milliseconds <%=@name%> <%=@downaftermil%>
+      # sentinel parallel-syncs <%=@name%> <%=@parallelsyncs%>
+      # sentinel failover-timeout <%=@name%> <%=@failovertimeout%>
+
+
+      # convert from old format (preserve compat)
+      if !current['masters'] && current['master_ip']
+        Chef::Log.warn('You are using a deprecated sentinel format. This will be removed in future versions.')
+
+        # use old key names if newer key names aren't present (e.g. 'foo' || :foo)
+        masters = [{
+            'master_name'             => current['master_name'] || current[:mastername],
+            'master_ip'               => current['master_ip'] || current[:masterip],
+            'master_port'             => current['master_port'] || current[:masterport],
+            'quorum_count'            => current['quorum_count'] || current[:quorum_count],
+            'auth-pass'               => current['auth-pass'] || current[:authpass],
+            'down-after-milliseconds' => current['down-after-milliseconds'] || current[:downaftermil],
+            'parallel-syncs'          => current['parallel-syncs'] || current[:parallelsyncs],
+            'failover-timeout'        => current['failover-timeout'] || current[:failovertimeout]
+          }]
+      else
+        masters = [current['masters']].flatten
       end
-    end
+
+      # merge in default values to each sentinel hash
+      masters_with_defaults = []
+      masters.each do |current_sentinel_master|
+        default_sentinel_master = new_resource.sentinel_defaults.to_hash
+        sentinel_master = default_sentinel_master.merge(current_sentinel_master)
+        masters_with_defaults << sentinel_master
+      end
+
+      # Don't render a template if we're missing these from any sentinel,
+      # as these are the minimal settings required to be passed in
+      masters_with_defaults.each do |sentinel_instance|
+        %w(master_ip master_port quorum_count).each do |param|
+          fail "Missing required sentinel parameter #{param} for #{sentinel_instance}" unless sentinel_instance[param]
+        end
+      end
 
       #Lay down the configuration files for the current instance
       template "#{current['configdir']}/#{sentinel_name}.conf" do
@@ -101,28 +139,28 @@ def configure
         owner current['user']
         group current['group']
         mode '0644'
-        action config_action
+        action :create
         variables({
+          :name                   => current['name'],
           :piddir                 => piddir,
-          :name                   => sentinel_name,
           :job_control            => node['redisio']['job_control'],
           :sentinel_port          => current['sentinel_port'],
-          :masterip               => current['master_ip'],
-          :masterport             => current['master_port'],
-          :authpass               => current['auth-pass'],
-          :downaftermil           => current['down-after-milliseconds'],
-          :canfailover            => current['can-failover'],
-          :parallelsyncs          => current['parallel-syncs'],
-          :failovertimeout        => current['failover-timeout'],
           :loglevel               => current['loglevel'],
           :logfile                => current['logfile'],
           :syslogenabled          => current['syslogenabled'],
           :syslogfacility         => current['syslogfacility'],
-          :quorum_count           => current['quorum_count']
+          :masters                => masters_with_defaults
         })
+        not_if do ::File.exists?("#{current['configdir']}/#{sentinel_name}.conf.breadcrumb") end
       end
+
+      file "#{current['configdir']}/#{sentinel_name}.conf.breadcrumb" do
+        content "This file prevents the chef cookbook from overwritting the sentinel config more than once"
+        action :create_if_missing
+      end
+
       #Setup init.d file
-      bin_path = "/usr/local/bin"
+      bin_path = node['redisio']['bin_path']
       bin_path = ::File.join(node['redisio']['install_dir'], 'bin') if node['redisio']['install_dir']
       template "/etc/init.d/redis_#{sentinel_name}" do
         source 'sentinel.init.erb'
@@ -141,6 +179,7 @@ def configure
           })
         only_if { node['redisio']['job_control'] == 'initd' }
       end
+
       template "/etc/init/redis_#{sentinel_name}.conf" do
         source 'sentinel.upstart.conf.erb'
         cookbook 'redisio'

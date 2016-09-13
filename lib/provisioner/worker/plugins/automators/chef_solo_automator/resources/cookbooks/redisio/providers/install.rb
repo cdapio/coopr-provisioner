@@ -18,16 +18,30 @@
 #
 
 action :run do
-  @tarball = "#{new_resource.base_name}#{new_resource.version}.#{new_resource.artifact_type}"
+  # Package install
+  if node['redisio']['package_install']
+    package_resource = package 'redisio_package_name' do
+      package_name node['redisio']['package_name']
+      version node['redisio']['version']
+      action :nothing
+    end
 
-  unless ( current_resource.version == new_resource.version || (redis_exists? && new_resource.safe_install) )
-    Chef::Log.info("Installing Redis #{new_resource.version} from source")
-    download
-    unpack
-    build
-    install
+    package_resource.run_action(:install)
+    new_resource.updated_by_last_action(true) if package_resource.updated_by_last_action?
+
+    # Tarball install
+  else
+    @tarball = "#{new_resource.base_name}#{new_resource.version}.#{new_resource.artifact_type}"
+
+    unless ( current_resource.version == new_resource.version || (redis_exists? && new_resource.safe_install) )
+      Chef::Log.info("Installing Redis #{new_resource.version} from source")
+      download
+      unpack
+      build
+      install
+      new_resource.updated_by_last_action(true)
+    end
   end
-  new_resource.updated_by_last_action(true)
 end
 
 def download
@@ -41,7 +55,7 @@ def unpack
   install_dir = "#{new_resource.base_name}#{new_resource.version}"
   case new_resource.artifact_type
     when "tar.gz",".tgz"
-      execute %(cd #{new_resource.download_dir} ; mkdir -p '#{install_dir}' ; tar zxf '#{@tarball}' --strip-components=1 -C '#{install_dir}')
+      execute %(cd #{new_resource.download_dir} ; mkdir -p '#{install_dir}' ; tar zxf '#{@tarball}' --strip-components=1 -C '#{install_dir}' --no-same-owner)
     else
       raise Chef::Exceptions::UnsupportedAction, "Current package type #{new_resource.artifact_type} is unsupported"
   end
@@ -59,7 +73,7 @@ def install
 end
 
 def redis_exists?
-  bin_path = "/usr/local/bin"
+  bin_path = node['redisio']['bin_path']
   bin_path = ::File.join(node['redisio']['install_dir'], 'bin') if node['redisio']['install_dir']
   redis_server = ::File.join(bin_path, 'redis-server')
   ::File.exists?(redis_server)
@@ -67,7 +81,7 @@ end
 
 def version
   if redis_exists?
-    bin_path = "/usr/local/bin"
+    bin_path = node['redisio']['bin_path']
     bin_path = ::File.join(node['redisio']['install_dir'], 'bin') if node['redisio']['install_dir']
     redis_server = ::File.join(bin_path, 'redis-server')
     redis_version = Mixlib::ShellOut.new("#{redis_server} -v")

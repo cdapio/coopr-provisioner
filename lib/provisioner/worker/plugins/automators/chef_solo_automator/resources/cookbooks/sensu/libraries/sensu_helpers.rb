@@ -2,6 +2,7 @@ require "openssl"
 
 module Sensu
   class Helpers
+    extend ChefVaultCookbook if Kernel.const_defined?("ChefVaultCookbook")
     class << self
       def select_attributes(attributes, keys)
         attributes.to_hash.reject do |key, value|
@@ -12,6 +13,9 @@ module Sensu
       def sanitize(raw_hash)
         sanitized = Hash.new
         raw_hash.each do |key, value|
+          # Expand Chef::DelayedEvaluator (lazy)
+          value = value.call if value.respond_to?(:call)
+
           case value
           when Hash
             sanitized[key] = sanitize(value) unless value.empty?
@@ -32,16 +36,20 @@ module Sensu
         end
       end
 
-      def data_bag_item(item, missing_ok=false)
-        raw_hash = Chef::DataBagItem.load("sensu", item)
+      def data_bag_item(item, missing_ok=false, data_bag_name="sensu")
+        raw_hash = Chef::DataBagItem.load(data_bag_name, item).delete_if { |k,v| k == "id" }
         encrypted = raw_hash.detect do |key, value|
           if value.is_a?(Hash)
             value.has_key?("encrypted_data")
           end
         end
         if encrypted
-          secret = Chef::EncryptedDataBagItem.load_secret
-          Chef::EncryptedDataBagItem.new(raw_hash, secret)
+          if Chef::DataBag.load(data_bag_name).key? "#{item}_keys"
+            chef_vault_item(data_bag_name, item)
+          else
+            secret = Chef::EncryptedDataBagItem.load_secret
+            Chef::EncryptedDataBagItem.new(raw_hash, secret)
+          end
         else
           raw_hash
         end
@@ -51,10 +59,38 @@ module Sensu
         missing_ok ? nil : raise(error)
       end
 
-      def random_password(length=20)
+      def random_password(length=20, number=false, upper=false, lower=false, special=false)
         password = ""
-        while password.length < length
-          password << ::OpenSSL::Random.random_bytes(1).gsub(/\W/, '')
+        requiredOffset = 0
+        requiredOffset += 1 if number
+        requiredOffset += 1 if upper
+        requiredOffset += 1 if lower
+        requiredOffset += 1 if special
+        length = requiredOffset if length < requiredOffset
+        limit = password.length < (length - requiredOffset)
+
+        while limit || requiredOffset > 0
+          push = false
+          c = ::OpenSSL::Random.random_bytes(1).gsub(/\W/, '')
+          if c != ""
+            if c =~ /[[:digit:]]/
+              requiredOffset -= 1 if number
+              number = false
+            elsif c >= 'a' && c <= 'z'
+              requiredOffset -= 1 if lower
+              lower = false
+            elsif c >= 'A' && c <= 'Z'
+              requiredOffset -= 1 if upper
+              upper = false
+            else
+              requiredOffset -= 1 if special
+              special = false
+            end
+          end
+          limit = password.length < (length - requiredOffset)
+          if limit
+            password << c
+          end
         end
         password
       end

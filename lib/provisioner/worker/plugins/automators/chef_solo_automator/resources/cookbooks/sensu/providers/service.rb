@@ -27,6 +27,7 @@ def enable_sensu_runsvdir
   # Keep on trying till the job is found :(
   execute "wait_for_sensu_runsvdir_#{new_resource.service}" do
     command "#{sensu_ctl} configured?"
+    not_if "#{sensu_ctl} configured?"
     retries 30
   end
 end
@@ -35,7 +36,7 @@ def load_current_resource
   @sensu_svc = run_context.resource_collection.lookup("service[#{new_resource.service}]") rescue nil
   @sensu_svc ||= case new_resource.init_style
   when "sysv"
-    service_provider = case node.platform_family
+    service_provider = case node["platform_family"]
     when /debian/
       Chef::Provider::Service::Init::Debian
     when /windows/

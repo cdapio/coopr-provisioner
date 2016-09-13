@@ -4,7 +4,7 @@
 # Recipe:: user_management
 #
 # Copyright 2013, Grégoire Seux
-# Copyright 2013, Opscode, Inc.
+# Copyright 2013, Chef Software, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -31,7 +31,7 @@ node['rabbitmq']['enabled_users'].each do |user|
     tag user['tag']
     action :set_tags
   end
-  user['rights'].each  do |r|
+  user['rights'].each do |r|
     rabbitmq_user user['name'] do
       vhost r['vhost']
       permissions "#{r['conf']} #{r['write']} #{r['read']}"

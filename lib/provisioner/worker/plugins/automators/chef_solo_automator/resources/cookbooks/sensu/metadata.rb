@@ -4,22 +4,25 @@ maintainer_email "chefs@sonian.net"
 license          "Apache 2.0"
 description      "Installs/Configures Sensu"
 long_description IO.read(File.join(File.dirname(__FILE__), 'README.md'))
-version          "2.2.0"
+version          "2.12.0"
 
-# available @ http://community.opscode.com/cookbooks/apt
+# available @ http://supermarket.chef.io/cookbooks/apt
 depends "apt"
 
-# available @ http://community.opscode.com/cookbooks/yum
+# available @ http://supermarket.chef.io/cookbooks/yum
 depends "yum"
 
-# available @ http://community.opscode.com/cookbooks/windows
+# available @ http://supermarket.chef.io/cookbooks/windows
 depends "windows", ">= 1.8.8"
 
-# available @ http://community.opscode.com/cookbooks/rabbitmq
+# available @ http://supermarket.chef.io/cookbooks/rabbitmq
 depends "rabbitmq", ">= 2.0.0"
 
-# available @ http://community.opscode.com/cookbooks/redisio
+# available @ http://supermarket.chef.io/cookbooks/redisio
 depends "redisio", ">= 1.7.0"
+
+# available @ https://supermarket.chef.io/cookbooks/chef-vault
+suggests "chef-vault", ">= 1.3.1"
 
 %w[
   ubuntu

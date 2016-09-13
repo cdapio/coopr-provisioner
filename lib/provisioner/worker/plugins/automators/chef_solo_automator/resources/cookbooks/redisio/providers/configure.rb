@@ -25,7 +25,14 @@ end
 
 def configure
   base_piddir = new_resource.base_piddir
-  version_hash = RedisioHelper.version_to_hash(new_resource.version)
+
+  if not new_resource.version
+    redis_output = %x[#{node['redisio']['bin_path']}/redis-server -v]
+    current_version = redis_output.gsub(/.*v=((\d+\.){2}\d+).*/, '\1')
+  else
+    current_version = new_resource.version
+  end
+  version_hash = RedisioHelper.version_to_hash(current_version)
 
   #Setup a configuration file and init script for each configuration provided
   new_resource.servers.each do |current_instance|
@@ -79,18 +86,11 @@ def configure
 
     descriptors = current['ulimit'] == 0 ? current['maxclients'] + 32 : current['maxclients']
 
-    #Manage Redisio Config?
-    if node['redisio']['sentinel']['manage_config'] == true
-      config_action = :create
-    else
-      config_action = :create_if_missing
-    end
-
     recipe_eval do
       server_name = current['name'] || current['port']
       piddir = "#{base_piddir}/#{server_name}"
-      aof_file = "#{current['datadir']}/appendonly-#{server_name}.aof"
-      rdb_file = "#{current['datadir']}/dump-#{server_name}.rdb"
+      aof_file = "#{current['appendfilename']}" || "#{current['datadir']}/appendonly-#{server_name}.aof"
+      rdb_file = "#{current['dbfilename']}" || "#{current['datadir']}/dump-#{server_name}.rdb"
 
       #Create the owner of the redis data directory
       user current['user'] do
@@ -99,6 +99,8 @@ def configure
         home current['homedir']
         shell current['shell']
         system current['systemuser']
+        uid current['uid'] unless current['uid'].nil?
+        not_if { node['etc']['passwd']["#{current['user']}"] }
       end
       #Create the redis configuration directory
       directory current['configdir'] do
@@ -163,11 +165,19 @@ def configure
         only_if { ::File.exists?(rdb_file) }
       end
       #Setup the redis users descriptor limits
-      user_ulimit current['user'] do
-        filehandle_limit descriptors
-        only_if { current['ulimit'] }
+      if current['ulimit']
+        user_ulimit current['user'] do
+          filehandle_limit descriptors
+        end
       end
-      
+
+      computed_save = current['save']
+      if current['save'] && current['save'].respond_to?(:each_line)
+        computed_save = current['save'].each_line
+        Chef::Log.warn("#{server_name}: given a save argument as a string, instead of an array.")
+        Chef::Log.warn("#{server_name}: This will be deprecated in future versions of the redisio cookbook.")
+      end
+
       #Lay down the configuration files for the current instance
       template "#{current['configdir']}/#{server_name}.conf" do
         source 'redis.conf.erb'
@@ -175,13 +185,14 @@ def configure
         owner current['user']
         group current['group']
         mode '0644'
-        action config_action
+        action :create
         variables({
           :version                    => version_hash,
           :piddir                     => piddir,
           :name                       => server_name,
           :job_control                => node['redisio']['job_control'],
           :port                       => current['port'],
+          :tcpbacklog                 => current['tcpbacklog'],
           :address                    => current['address'],
           :databases                  => current['databases'],
           :backuptype                 => current['backuptype'],
@@ -194,18 +205,26 @@ def configure
           :logfile                    => current['logfile'],
           :syslogenabled              => current['syslogenabled'],
           :syslogfacility             => current['syslogfacility'],
-          :save                       => current['save'],
+          :save                       => computed_save,
           :stopwritesonbgsaveerror    => current['stopwritesonbgsaveerror'],
+          :rdbcompression             => current['rdbcompression'],
+          :rdbchecksum                => current['rdbchecksum'],
+          :dbfilename                 => current['dbfilename'],
           :slaveof                    => current['slaveof'],
           :masterauth                 => current['masterauth'],
           :slaveservestaledata        => current['slaveservestaledata'],
+          :slavereadonly              => current['slavereadonly'],
           :replpingslaveperiod        => current['replpingslaveperiod'],
           :repltimeout                => current['repltimeout'],
+          :repldisabletcpnodelay      => current['repldisabletcpnodelay'],
+          :slavepriority              => current['slavepriority'],
           :requirepass                => current['requirepass'],
+          :rename_commands            => current['rename_commands'],
           :maxclients                 => current['maxclients'],
           :maxmemory                  => maxmemory,
           :maxmemorypolicy            => current['maxmemorypolicy'],
           :maxmemorysamples           => current['maxmemorysamples'],
+          :appendfilename             => current['appendfilename'],
           :appendfsync                => current['appendfsync'],
           :noappendfsynconrewrite     => current['noappendfsynconrewrite'],
           :aofrewritepercentage       => current['aofrewritepercentage'] ,
@@ -216,9 +235,12 @@ def configure
           :notifykeyspaceevents       => current['notifykeyspaceevents'],
           :hashmaxziplistentries      => current['hashmaxziplistentries'],
           :hashmaxziplistvalue        => current['hashmaxziplistvalue'],
+          :listmaxziplistentries      => current['listmaxziplistentries'],
+          :listmaxziplistvalue        => current['listmaxziplistvalue'],
           :setmaxintsetentries        => current['setmaxintsetentries'],
           :zsetmaxziplistentries      => current['zsetmaxziplistentries'],
           :zsetmaxziplistvalue        => current['zsetmaxziplistvalue'],
+          :hllsparsemaxbytes          => current['hllsparsemaxbytes'],
           :activerehasing             => current['activerehasing'],
           :clientoutputbufferlimit    => current['clientoutputbufferlimit'],
           :hz                         => current['hz'],
@@ -228,9 +250,17 @@ def configure
           :clusternodetimeout         => current['clusternodetimeout'],
           :includes                   => current['includes']
         })
+        not_if do ::File.exists?("#{current['configdir']}/#{server_name}.conf.breadcrumb") end
       end
+
+      file "#{current['configdir']}/#{server_name}.conf.breadcrumb" do
+        content "This file prevents the chef cookbook from overwritting the redis config more than once"
+        action :create_if_missing
+      end
+
       #Setup init.d file
-      bin_path = "/usr/local/bin"
+
+      bin_path = node['redisio']['bin_path']
       bin_path = ::File.join(node['redisio']['install_dir'], 'bin') if node['redisio']['install_dir']
       template "/etc/init.d/redis#{server_name}" do
         source 'redis.init.erb'

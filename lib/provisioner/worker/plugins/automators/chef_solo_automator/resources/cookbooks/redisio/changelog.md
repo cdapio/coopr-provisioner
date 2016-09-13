@@ -1,5 +1,72 @@
 redisio CHANGE LOG
 ===
+
+2.4.2 -
+---
+  - Created a 2.4.1 tag but somehow the metadata file wasn't updated.  Instead
+    of deleting a pushed tag, creating a new tag and updating metdatafile. Aside
+    from the version number, this is an identical release to 2.4.1
+
+2.4.1 -
+---
+  - Increases default clusternodetimeout value from 5 to 5000
+  - Allows you to set version for package based install
+  - Sets UID of redis data directory if it is present
+  - Install resource should now only notify when an installation actually occurs
+  - Adds config options
+    - tcpbacklog
+    - rdbcompression
+    - rdbchecksum
+    - dbfilename
+    - slavereadyonly
+    - repldisabletcpnodelay
+    - slavepriority
+    - listmaxziplistentries
+    - listmaxziplistvalue
+    - hllsparsemaxbytes
+
+
+
+2.4.0 (unreleased on supermarket)  -
+---
+  - Add CentOS 7 support with systemd configs
+  - Fixes bug in ulimit resource guard
+  - Fixes bug in sentinel required parameters sanity check
+  - Adds --no-same-owner to untar command during install to fix NFS related issues
+  - Adds support for rename_commands config option
+  - Adds option to stop chef from managing sentinel configs after writing once
+  - Adds config option rename_commands
+
+2.3.1 (unreleased on supermarket) -
+---
+  - Allow instance 'save' to be string or array
+  - Adds sources_url and issues_url with guards to be Chef 12 compatible
+  - Bumps Redis source version to 2.8.20
+  - Fixes cluster settings with wrong attribute names
+  - Monitor multiple masters with sentinel
+    - Add support in sentinel resource for an array of masters to monitor, with backwards compatibility for the older attributes, fixes #73. Replaces #87.
+    - Introduce a test-kitchen test for sentinel watching multiple masters.
+    - Incidentally, fixes #193 as well, since it adds a master name attribute for each master.
+  - Fixes path for pidfile in sentinel init script
+  - Additional error checking and backwards compatibility for sentinel attribute keys 
+  
+
+2.3.0 -
+---
+  - Add support for installing by distribution package for CentOS (#180)
+  - Add conditionals to check for redis 3 that was released recently (#183)
+  - Prevent `usermod: user redis is currently logged in` (#176)
+  - Use correct sentinel port in default sentinel instance (#157)
+  - Sentinel instances attribute (`node['redisio']['sentinels']`) should behave like Redis instances attribute (#160)
+  - Add Rakefile and unit tests for verifying issues fixed are actually resolved (#158)
+  - Fix serverspec tests to properly use sysv-init scripts on systemd distributions (#185)
+  - Update documentation to reflect correct current redis version used for source installs (#151)
+  - Update documentation to indicate that ulimit and build-essential are both dependencies (#165)
+  - Update documentation to reflect that uninstall recipe is no longer available
+  - Update documentation to reflect correct mirror in README.md, change was from 2.1.0 (#175)
+  - Update documentation to reflect that cookbook uses `node['redisio']`, not `node['redis']` (#174)
+  - Markdown formatting improvements in the README.md (#168, #172)
+
 2.2.4 -
 ---
   - Updates installed version of redis to the latest stable (2.8.17)
