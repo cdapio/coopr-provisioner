@@ -1,9 +1,10 @@
-actions :commit, :cp, :export, :kill, :redeploy, :remove, :remove_link, :remove_volume, :restart, :run, :start, :stop, :wait
+actions :commit, :cp, :create, :export, :kill, :redeploy, :remove, :remove_link, :remove_volume, :restart, :run, :start, :stop, :wait
 
 default_action :run
 
 attribute :image, :name_attribute => true
 
+attribute :additional_host, :kind_of => [String, Array]
 attribute :attach, :kind_of => [TrueClass, FalseClass]
 attribute :author, :kind_of => [String]
 attribute :cidfile, :kind_of => [String]
@@ -13,8 +14,10 @@ attribute :container_name, :kind_of => [String]
 attribute :cookbook, :kind_of => [String], :default => 'docker'
 attribute :created, :kind_of => [String]
 attribute :cpu_shares, :kind_of => [Fixnum]
+attribute :cap_add, :kind_of => [String, Array]
 attribute :destination, :kind_of => [String]
 attribute :detach, :kind_of => [TrueClass, FalseClass]
+attribute :device, :kind_of => [String, Array]
 attribute :dns, :kind_of => [String, Array]
 attribute :dns_search, :kind_of => [String, Array]
 attribute :entrypoint, :kind_of => [String]
@@ -29,7 +32,7 @@ attribute :init_template, :kind_of => [String]
 attribute :link, :kind_of => [String, Array]
 attribute :label, :kind_of => [String]
 attribute :lxc_conf, :kind_of => [String, Array]
-attribute :memory, :kind_of => [Fixnum]
+attribute :memory, :kind_of => [Fixnum, String]
 attribute :message, :kind_of => [String]
 attribute :net, :kind_of => [String], :regex => [
   /(host|bridge|none)/, /container:.*/
@@ -45,6 +48,7 @@ attribute :public_port, :kind_of => [Fixnum]
 attribute :publish_exposed_ports, :kind_of => [TrueClass, FalseClass]
 attribute :remove_automatically, :kind_of => [TrueClass, FalseClass]
 attribute :repository, :kind_of => [String]
+attribute :restart, :kind_of => [String]
 attribute :run, :kind_of => [String]
 attribute :signal, :kind_of => [String]
 attribute :socket_template, :kind_of => [String]

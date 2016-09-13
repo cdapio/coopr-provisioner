@@ -2,7 +2,7 @@
 # Cookbook Name:: iptables
 # Recipe:: default
 #
-# Copyright 2008-2016, Chef Software, Inc.
+# Copyright 2008-2009, Chef Software, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,7 +17,11 @@
 # limitations under the License.
 #
 
-include_recipe 'iptables::_package'
+if platform_family?('rhel') && node['platform_version'].to_i == 7
+  package 'iptables-services'
+else
+  package 'iptables'
+end
 
 execute 'rebuild-iptables' do
   command '/usr/sbin/rebuild-iptables'
@@ -36,36 +40,12 @@ template '/usr/sbin/rebuild-iptables' do
   )
 end
 
-# debian based systems load iptables during the interface activation
-template '/etc/network/if-pre-up.d/iptables_load' do
-  source 'iptables_load.erb'
-  mode '0755'
-  variables iptables_save_file: '/etc/iptables/general'
-  only_if { platform_family?('debian') }
-end
+if platform_family?('debian')
+  iptables_save_file = '/etc/iptables/general'
 
-# iptables service exists only on RHEL based systems
-if platform_family?('rhel') || platform_family?('fedora')
-  file '/etc/sysconfig/iptables' do
-    content '# Chef managed placeholder to allow iptables service to start'
-    action :create_if_missing
-  end
-
-  template '/etc/sysconfig/iptables-config' do
-    source 'iptables-config.erb'
-    mode '600'
-    variables config: node['iptables']['iptables_sysconfig']
-  end
-
-  template '/etc/sysconfig/ip6tables-config' do
-    source 'iptables-config.erb'
-    mode '600'
-    variables config: node['iptables']['ip6tables_sysconfig']
-  end
-
-  service 'iptables' do
-    action [:enable, :start]
-    supports status: true, start: true, stop: true, restart: true
-    not_if { platform_family?('fedora') }
+  template '/etc/network/if-pre-up.d/iptables_load' do
+    source 'iptables_load.erb'
+    mode '0755'
+    variables iptables_save_file: iptables_save_file
   end
 end

@@ -8,7 +8,7 @@ Chef cookbook for [Go programming language](http://golang.org/).
 
 ### <a name="requirements-platform"></a> Platform
 
-* Ubuntu (10.04/11.04/12.04/13.04)
+* Ubuntu (12.04/13.04/14.10)
 * Debian (6.0)
 
 **Notes**: This cookbook has been tested on the listed platforms. It
@@ -64,7 +64,7 @@ To install Go packages using node attributes, include `golang::packages` in your
     <td><tt>['go']['version']</tt></td>
     <td>String</td>
     <td>Go version</td>
-    <td><tt>1.3</tt></td>
+    <td><tt>1.4</tt></td>
   </tr>
   <tr>
     <td><tt>['go']['platform']</tt></td>
@@ -96,6 +96,42 @@ To install Go packages using node attributes, include `golang::packages` in your
     <td>String</td>
     <td>The group that owns $GOPATH</td>
     <td><tt>root</tt></td>
+  </tr>
+  <tr>
+    <td><tt>['go']['mode']</tt></td>
+    <td>String</td>
+    <td>The mode of $GOPATH</td>
+    <td><tt>0755</tt></td>
+  </tr>
+  <tr>
+    <td><tt>['go']['from_source']</tt></td>
+    <td>Boolean</td>
+    <td>Install go from source</td>
+    <td><tt>false</tt></td>
+  </tr>
+  <tr>
+    <td><tt>['go']['os']</tt></td>
+    <td>String</td>
+    <td>Build go for which operating system</td>
+    <td><tt>linux</tt></td>
+  </tr>
+  <tr>
+    <td><tt>['go']['arch']</tt></td>
+    <td>String</td>
+    <td>Build go for which architecture</td>
+    <td><tt>arm</tt></td>
+  </tr>
+  <tr>
+    <td><tt>['go']['arm']</tt></td>
+    <td>String</td>
+    <td>Build go for which arm version</td>
+    <td><tt>6</tt></td>
+  </tr>
+  <tr>
+    <td><tt>['go']['source_method']</tt></td>
+    <td>String</td>
+    <td>Choose which install script should be used</td>
+    <td><tt>all.bash</tt></td>
   </tr>
 </table>
 

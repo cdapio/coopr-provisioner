@@ -1,83 +1,100 @@
-# iptables Cookbook
-[![Build Status](https://travis-ci.org/chef-cookbooks/iptables.svg?branch=master)](https://travis-ci.org/chef-cookbooks/iptables) [![Cookbook Version](https://img.shields.io/cookbook/v/iptables.svg)](https://supermarket.chef.io/cookbooks/iptables)
+iptables Cookbook
+=================
 
-Installs iptables and provides a custom resource for adding and removing iptables rules
+[![Build Status](https://travis-ci.org/chef-cookbooks/iptables.svg?branch=master)](https://travis-ci.org/chef-cookbooks/iptables)
+[![Cookbook Version](https://img.shields.io/cookbook/v/iptables.svg)](https://supermarket.chef.io/cookbooks/iptables)
 
-## Requirements
-### Platforms
-- Ubuntu/Debian
-- RHEL/CentOS and derivatives
+Sets up iptables to use a script to maintain firewall rules.
 
-### Chef
-- Chef 12.5+
+Requirements
+------------
+#### Platforms
+* Ubuntu/Debian
+* RHEL/CentOS and derivatives
 
-### Cookbooks
-- none
+#### Chef
+* Chef 11+
 
-## Recipes
-### default
-The default recipe will install iptables and provides a ruby script (installed in `/usr/sbin/rebuild-iptables`) to manage rebuilding firewall rules from files dropped off in `/etc/iptables.d`.
+#### Cookbooks
+* none
 
-### disabled
-The disabled recipe will install iptables, disable the `iptables` service (on RHEL platforms), and delete the rules directory `/etc/iptables.d`.
 
-## Attributes
- `default['iptables']['iptables_sysconfig']` and `default['iptables']['iptables_sysconfig']` are hashes that are used to template /etc/sysconfig/iptables-config and /etc/sysconfig/ip6tables-config. The keys must be upper case and any key / value pair included will be added to the config file.
+Recipes
+-------
 
-## Custom Resource
-### rule
-The custom resource drops off a template in `/etc/iptables.d` after the `name` parameter. The rule will get added to the local system firewall through notifying the `rebuild-iptables` script. See **Examples** below.
+####default
 
-NOTE: In the 1.0 release of this cookbook the iptables_rule definition was converted to a custom resource.  This changes the behavior of disabling iptables rules. Previously a rule could be disabled by specifying `enable false`. You must now specify `action :disable`
+The default recipe will install iptables and provides a ruby script
+(installed in `/usr/sbin/rebuild-iptables`) to manage rebuilding
+firewall rules from files dropped off in `/etc/iptables.d`.
 
-## Usage
-Add `recipe[iptables]` to your runlist to ensure iptables is installed / running and to ensure that the `rebuild-iptables` script is on the system. Then create use iptables_rule to add individual rules. See **Examples**.
+LWRP
+----
 
-Since certain chains can be used with multiple tables (e.g., _PREROUTING_), you might have to include the name of the table explicitly (i.e., _*nat_, _*mangle_, etc.), so that the `/usr/sbin/rebuild-iptables` script can infer how to assemble final ruleset file that is going to be loaded. Please note, that unless specified otherwise, rules will be added under the **filter** table by default.
+####rule
 
-### Examples
-To enable port 80, e.g. in an `my_httpd` cookbook, create the following template:
+The lwrp drops off a template in `/etc/iptables.d` after the
+`name` parameter. The rule will get added to the local system firewall
+through notifying the `rebuild-iptables` script. See __Examples__ below.
 
-```text
-# Port 80 for http
--A FWR -p tcp -m tcp --dport 80 -j ACCEPT
-```
+NOTE: In the 1.0 release of this cookbook the iptables_rule definition was converted
+to a LWRP.  This changes the behavior of disabling iptables rules.  Previously a rule
+could be disabled by specifying `enable false`.  You must now specify `action :disable`
 
-This template would be located at: `my_httpd/templates/default/http.erb`. Then within your recipe call:
+Usage
+-----
 
-```ruby
-iptables_rule 'http' do
-  action :enable
-end
-```
+Add `recipe[iptables]` to your runlist to ensure iptables is installed / running
+and to ensure that the `rebuild-iptables` script is on the system.
+Then create use iptables_rule to add individual rules. See __Examples__.
 
-To redirect port 80 to local port 8080, e.g., in the aforementioned `my_httpd` cookbook, create the following template:
+Since certain chains can be used with multiple tables (e.g., _PREROUTING_),
+you might have to include the name of the table explicitly (i.e., _*nat_,
+_*mangle_, etc.), so that the `/usr/sbin/rebuild-iptables` script can infer
+how to assemble final ruleset file that is going to be loaded. Please note,
+that unless specified otherwise, rules will be added under the __filter__
+table by default.
 
-```text
-*nat
-# Redirect anything on eth0 coming to port 80 to local port 8080
--A PREROUTING -i eth0 -p tcp --dport 80 -j REDIRECT --to-port 8080
-```
+####Examples
 
-Please note, that we explicitly add name of the table (being _*nat_ in this example above) where the rules should be added.
+To enable port 80, e.g. in an `my_httpd` cookbook, create the following
+template:
 
-This would most likely go in the cookbook, `my_httpd/templates/default/http_8080.erb`. Then to use it in `recipe[httpd]`:
+    # Port 80 for http
+    -A FWR -p tcp -m tcp --dport 80 -j ACCEPT
 
-```ruby
-iptables_rule 'http_8080' do
-  action :enable
-end
-```
+This template would be located at:
+`my_httpd/templates/default/http.erb`. Then within your recipe call:
 
-## Chefspec Matchers
-- enable_iptables_rule(resource_name)
-- disable_iptables_rule(resource_name)
+    iptables_rule 'http' do
+      action :enable
+    end
 
-## License & Authors
-**Author:** Cookbook Engineering Team ([cookbooks@chef.io](mailto:cookbooks@chef.io))
+To redirect port 80 to local port 8080, e.g., in the aforementioned `my_httpd`
+cookbook, create the following template:
+
+    *nat
+    # Redirect anything on eth0 coming to port 80 to local port 8080
+    -A PREROUTING -i eth0 -p tcp --dport 80 -j REDIRECT --to-port 8080
+
+Please note, that we explicitly add name of the table (being _*nat_ in this
+example above) where the rules should be added.
+
+This would most likely go in the cookbook,
+`my_httpd/templates/default/http_8080.erb`. Then to use it in
+`recipe[httpd]`:
+
+    iptables_rule 'http_8080' do
+      action :enable
+    end
+
+
+License & Authors
+-----------------
+
+**Author:** Cookbook Engineering Team (<cookbooks@chef.io>)
 
 **Copyright:** 2008-2015, Chef Software, Inc.
-
 ```
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.

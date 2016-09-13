@@ -11,6 +11,47 @@ Attribute deprecations:
 * container LWRP public_port attribute: use port attribute instead
 * container LWRP networking attribute: use net attribute instead
 
+## 0.37.0
+
+Please note some important changes with this release:
+
+* The sysconfig DOCKER_OPTS improvement in [#250][] can potentially change the behavior of that environment variable as it now allows shell interpolation of any embedded variables. This should not affect most environments. If your DOCKER_OPTS does contains any expected `$`, please escape via `\$` for previous behavior or be sure it will behave as expected before upgrading.
+* The daemon restart option (which is deprecated) has been defaulted to `nil` instead of `false` when `node['docker']['container_init_type']` is set to prevent issues with container restart policies. If you're dependent on the daemon option, please be sure to update your `node['docker']['restart']`  appropriately.
+* This release also defaults systemd docker host to `fd://` to match upstream, enabling socket activation properly. Adjust `node['docker']['host']` if necessary.
+
+* Bugfix: [#239][]: Upstart: install inotify tools only once (avoid CHEF-3694 warning) (thanks jperville)
+* Bugfix: [#240][]: Fixed dead service containers not being restarted on docker_container :run (thanks jperville)
+* Bugfix: [#244][]: Made docker_container action :remove remove the actual upstart service file (thanks jperville)
+* Bugfix: [#246][]: Lengthen shell_out timeout as workaround for slow docker_container action stop (thanks jperville)
+* Bugfix: [#258][]: Fix checking docker container status on debian (thanks fxposter)
+* Bugfix: [#260][]: Fix accidental port changing when using systemd templates (thanks fxposter)
+* Bugfix: [#266][]: Get tests working on master (thanks tduffield)
+* Bugfix: [#267][]: Replace outdated testcontainerd (thanks tduffield)
+* Bugfix: [#269][]: Fix tests on Travis by following Rubocop style guidelines (container LWRP) (thanks fxposter)
+* Bugfix: [#280][] / [#281][]: Fix port handling when omitted in container LWRP (thanks databus23)
+* Bugfix: [#284][] / [#285][]: runit finish script to stop a container (thanks xmik)
+* Bugfix: [#288][]: Fix docker.socket unit for RHEL7 (thanks databus23)
+* Bugfix: [#292][]: readme formatting fix (thanks wormzer)
+* Improvement: [#208][]: Add CentOS/RHEL 7 support (thanks dermusikman and intoximeters)
+* Improvement: [#232][]: Added support for insecure-registry docker daemon option (thanks jperville)
+* Improvement: [#233][] / [#234][]: Added support for registry-mirror docker daemon option (thanks jperville and tarnfeld)
+* Improvement: [#237][]: Deprecate the restart daemon option (thanks jperville)
+* Improvement: [#238][]: Added docker_container restart attribute (thanks jperville)
+* Improvement: [#242][]: Added docker_container action :create (thanks jperville)
+* Improvement: [#245][]: Add a Gitter chat badge to README.md (thanks tduffield)
+* Improvement: [#250][]: Use double-quotes for DOCKER_OPTS (thanks rchekaluk)
+* Improvement: [#259][]: Use registry on image inspection (thanks fxposter)
+* Improvement: [#263][]: Add additional_host attribute to container resource (thanks fxposter)
+* Improvement: [#264][] / [#265][]: Access keyserver.ubuntu.com on port 80 (thanks sauraus)
+* Improvement: [#268][]: Updated the /etc/init/docker.conf template (thanks jperville)
+* Improvement: [#276][]: Added support for docker options device and cap-add (thanks hvolkmer)
+* Improvement: [#279][]: Allow docker_container memory to have String value (eg. memory='1G') (thanks jperville)
+* Improvement: [#287][]: redhat 7 does not need the epel repository (thanks databus23)
+* Improvement: [#289][]: Update systemd service/socket files (from upstream) (thanks databus23)
+* Improvement: [#296][]: Default systemd to fd:// as well as use upstream MountFlags=slave and LimitCORE=infinity
+* Improvement: [#297][]: Update docker daemon SysV init scripts with upstream improvements
+* Improvement: [#298][]: Further deprecate daemon restart flag by default, which interferes with restart policies
+
 ## 0.36.0
 * Bugfix: [#181][]: Fixed remove_link action (thanks jperville).
 * Bugfix: [#185][]: Fix for non idempotent run action on docker_container (thanks bplunkert).
@@ -576,5 +617,56 @@ Lots of community contributions this release -- thanks!
 [#173]: https://github.com/bflad/chef-docker/issues/173
 [#175]: https://github.com/bflad/chef-docker/issues/175
 [#176]: https://github.com/bflad/chef-docker/issues/176
+[#181]: https://github.com/bflad/chef-docker/issues/181
+[#185]: https://github.com/bflad/chef-docker/issues/185
+[#188]: https://github.com/bflad/chef-docker/issues/188
+[#192]: https://github.com/bflad/chef-docker/issues/192
+[#196]: https://github.com/bflad/chef-docker/issues/196
+[#200]: https://github.com/bflad/chef-docker/issues/200
+[#202]: https://github.com/bflad/chef-docker/issues/202
+[#203]: https://github.com/bflad/chef-docker/issues/203
+[#205]: https://github.com/bflad/chef-docker/issues/205
+[#206]: https://github.com/bflad/chef-docker/issues/206
+[#208]: https://github.com/bflad/chef-docker/issues/208
+[#217]: https://github.com/bflad/chef-docker/issues/217
+[#219]: https://github.com/bflad/chef-docker/issues/219
+[#220]: https://github.com/bflad/chef-docker/issues/220
+[#221]: https://github.com/bflad/chef-docker/issues/221
+[#223]: https://github.com/bflad/chef-docker/issues/223
+[#224]: https://github.com/bflad/chef-docker/issues/224
+[#232]: https://github.com/bflad/chef-docker/issues/232
+[#233]: https://github.com/bflad/chef-docker/issues/233
+[#234]: https://github.com/bflad/chef-docker/issues/234
+[#237]: https://github.com/bflad/chef-docker/issues/237
+[#238]: https://github.com/bflad/chef-docker/issues/238
+[#239]: https://github.com/bflad/chef-docker/issues/239
+[#240]: https://github.com/bflad/chef-docker/issues/240
+[#242]: https://github.com/bflad/chef-docker/issues/242
+[#244]: https://github.com/bflad/chef-docker/issues/244
+[#245]: https://github.com/bflad/chef-docker/issues/245
+[#246]: https://github.com/bflad/chef-docker/issues/246
+[#250]: https://github.com/bflad/chef-docker/issues/250
+[#258]: https://github.com/bflad/chef-docker/issues/258
+[#259]: https://github.com/bflad/chef-docker/issues/259
+[#260]: https://github.com/bflad/chef-docker/issues/260
+[#263]: https://github.com/bflad/chef-docker/issues/263
+[#264]: https://github.com/bflad/chef-docker/issues/264
+[#265]: https://github.com/bflad/chef-docker/issues/265
+[#266]: https://github.com/bflad/chef-docker/issues/266
+[#267]: https://github.com/bflad/chef-docker/issues/267
+[#268]: https://github.com/bflad/chef-docker/issues/268
+[#269]: https://github.com/bflad/chef-docker/issues/269
+[#276]: https://github.com/bflad/chef-docker/issues/276
+[#279]: https://github.com/bflad/chef-docker/issues/279
+[#280]: https://github.com/bflad/chef-docker/issues/280
+[#281]: https://github.com/bflad/chef-docker/issues/281
+[#284]: https://github.com/bflad/chef-docker/issues/284
+[#285]: https://github.com/bflad/chef-docker/issues/285
+[#287]: https://github.com/bflad/chef-docker/issues/287
+[#289]: https://github.com/bflad/chef-docker/issues/289
+[#292]: https://github.com/bflad/chef-docker/issues/292
+[#296]: https://github.com/bflad/chef-docker/issues/296
+[#297]: https://github.com/bflad/chef-docker/issues/297
+[#298]: https://github.com/bflad/chef-docker/issues/298
 [@jcrobak]: https://github.com/jcrobak
 [@wingrunr21]: https://github.com/wingrunr21

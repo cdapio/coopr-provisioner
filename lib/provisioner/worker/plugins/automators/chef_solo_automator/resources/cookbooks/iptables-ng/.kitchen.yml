@@ -10,14 +10,16 @@ provisioner:
   name: chef_zero
 
 platforms:
-- name: ubuntu-14.10
-- name: ubuntu-14.04
 - name: ubuntu-12.04
-- name: debian-7.2.0
-- name: debian-6.0.8
-- name: centos-7.0
-- name: centos-6.5
-- name: centos-5.10
+- name: ubuntu-14.04
+- name: ubuntu-15.10
+- name: ubuntu-16.04
+- name: debian-6.0.10
+- name: debian-7.9
+- name: debian-8.4
+- name: centos-5.11
+- name: centos-6.7
+- name: centos-7.2
 
 suites:
   - name: lwrp_chain_create_default

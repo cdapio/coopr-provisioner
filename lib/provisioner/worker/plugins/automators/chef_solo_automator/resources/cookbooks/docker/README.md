@@ -1,4 +1,5 @@
 # chef-docker [![Build Status](https://secure.travis-ci.org/bflad/chef-docker.png?branch=master)](http://travis-ci.org/bflad/chef-docker)
+[![Gitter](https://badges.gitter.im/Join Chat.svg)](https://gitter.im/bflad/chef-docker?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 ## Description
 
@@ -14,7 +15,7 @@ In version 1.0 of this cookbook, we will be making a significant breaking change
   - Berksfile
   - Chef Policyfile
 
-More details about specific changes will be documented in the [1.0_CHANGES.md](1.0_CHANGES.md) file. 
+More details about specific changes will be documented in the [1.0_CHANGES.md](1.0_CHANGES.md) file.
 
 ## Requirements
 
@@ -157,6 +158,7 @@ group | Group for docker socket and group_members | String | nil (implicitly doc
 host | Socket(s) that docker should bind | String, Array | unix:///var/run/docker.sock
 http_proxy | HTTP_PROXY environment variable | String | nil
 icc | Enable inter-container communication | TrueClass, FalseClass | nil (implicitly true)
+insecure-registry | List of well-known insecure registries | String, Array | nil
 ip | Default IP address to use when binding container ports | String | nil (implicitly 0.0.0.0)
 iptables | Enable Docker's addition of iptables rules | TrueClass, FalseClass | nil (implicitly true)
 logfile | Set custom DOCKER_LOGFILE | String | nil
@@ -165,7 +167,8 @@ no_proxy | NO_PROXY environment variable | String | nil
 options | Additional options to pass to docker. These could be flags like "-api-enable-cors". | String | nil
 pidfile | Path to use for daemon PID file | String | nil (implicitly /var/run/docker.pid)
 ramdisk | Set DOCKER_RAMDISK when using RAM disk | TrueClass or FalseClass | false
-restart | Restart containers on boot | TrueClass or FalseClass | auto-detected (see attributes/default.rb)
+registry-mirror | List of docker registry mirrors | String, Array | nil
+restart (*DEPRECATED*) | Restart containers on boot | TrueClass or FalseClass | nil
 selinux_enabled | Enable SELinux | TrueClass or FalseClass | nil
 storage_driver | Storage driver for docker | String | nil
 storage_opt | Storage driver options | String, Array | nil
@@ -339,6 +342,12 @@ docker_container 'myApp' do
 end
 ```
 
+#### docker_container action :create
+
+By default, this will handle creating a service for the container when action is create, run or start. `set['docker']['container_init_type'] = false` or add `init_type false` for LWRP to disable this behavior.
+
+Attributes for this action can be found in the `run` action (except for the `detach` attribute).
+
 #### docker_container action :export
 
 These attributes are associated with this LWRP action.
@@ -480,18 +489,21 @@ end
 
 #### docker_container action :run
 
-By default, this will handle creating a service for the container when action is run or start. `set['docker']['container_init_type'] = false` or add `init_type false` for LWRP to disable this behavior.
+By default, this will handle creating a service for the container when action is create, run or start. `set['docker']['container_init_type'] = false` or add `init_type false` for LWRP to disable this behavior.
 
 These attributes are associated with this LWRP action.
 
 Attribute | Description | Type | Default
 ----------|-------------|------|--------
+additional_host | Add a custom host-to-IP mapping (host:ip) | String, Array | nil
 attach | Attach container's stdout/stderr and forward all signals to the process | TrueClass, FalseClass | nil
+cap_add | Capabilities to add to container | String, Array | nil
 cidfile | File to store container ID | String | nil
 container_name | Name for container/service | String | nil
 cookbook | Cookbook to grab any templates | String | docker
 cpu_shares | CPU shares for container | Fixnum | nil
 detach | Detach from container when starting | TrueClass, FalseClass | nil
+device | Device(s) to pass through to container | String, Array | nil
 dns | DNS servers for container | String, Array | nil
 dns_search | DNS search domains for container | String, Array | nil
 entrypoint | Overwrite the default entrypoint set by the image | String | nil
@@ -505,7 +517,7 @@ init_template | Template to use for init configuration | String | nil
 link | Add link to another container | String, Array | nil
 label | Options to pass to underlying labeling system | String | nil
 lxc_conf | Custom LXC options | String, Array | nil
-memory | Set memory limit for container | Fixnum | nil
+memory | Set memory limit for container | Fixnum, String | nil
 net | [Configure networking](http://docs.docker.io/reference/run/#network-settings) for container | String | nil
 networking (*DEPRECATED*) | Configure networking for container | TrueClass, FalseClass | true
 opt | Custom driver options | String, Array | nil
@@ -514,11 +526,12 @@ privileged | Give extended privileges | TrueClass, FalseClass | nil
 public_port (*DEPRECATED*) | Map host port to container | Fixnum | nil
 publish_exposed_ports | Publish all exposed ports to the host interfaces | TrueClass, FalseClass | false
 remove_automatically | Automatically remove the container when it exits (incompatible with detach) | TrueClass, FalseClass | false
+restart | Restart policy for the container (no, on-failure, always) | String | nil
 socket_template | Template to use for configuring socket (relevent for init_type systemd only) | String | nil
 stdin | Attach container's stdin | TrueClass, FalseClass | nil
 tty | Allocate a pseudo-tty | TrueClass, FalseClass | nil
 user | User to run container | String | nil
-volume | Create bind mount(s) with: [host-dir]:[container-dir]:[rw|ro]. If "container-dir" is missing, then docker creates a new volume. | String, Array | nil
+volume | Create bind mount(s) with: [host-dir]:[container-dir]:[rw\|ro]. If "container-dir" is missing, then docker creates a new volume. | String, Array | nil
 volumes_from | Mount all volumes from the given container(s) | String | nil
 working_directory | Working directory inside the container | String | nil
 
@@ -651,10 +664,10 @@ Conditionally rebuild image if changes upstream:
 ```ruby
 git "#{Chef::Config[:file_cache_path]}/docker-testcontainerd" do
   repository 'git@github.com:bflad/docker-testcontainerd.git'
-  notifies :build, 'docker_image[bflad/testcontainerd]', :immediately
+  notifies :build, 'docker_image[tduffield/testcontainerd]', :immediately
 end
 
-docker_image 'bflad/testcontainerd' do
+docker_image 'tduffield/testcontainerd' do
   action :pull_if_missing
 end
 ```

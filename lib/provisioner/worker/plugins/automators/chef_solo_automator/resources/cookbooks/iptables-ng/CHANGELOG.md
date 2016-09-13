@@ -3,6 +3,62 @@ iptables-ng CHANGELOG
 
 This file is used to list changes made in each version of the iptables-ng cookbook.
 
+2.3.0
+-----
+
+- Add workarounds for duplicate resource warnings
+
+2.2.11
+------
+
+- Add compatibility setting for `source_url` attribute in `metadata.rb`
+
+2.2.10
+------
+
+- Revert `use_inline_resources`, was causing trouble
+
+2.2.9 (broken, do not use!)
+-----
+
+- Fix code linting complaints (rubocop, foodcritc)
+- Add `use_inline_resources` to providers
+
+2.2.8
+-----
+
+- Add `node['iptables-ng']['auto_prune_attribute_rules']` attribute to remove unused/ old rules created by attributes automatically
+
+2.2.7
+-----
+
+- Add support for Debian Jessie
+
+2.2.6
+-----
+
+- Add possibility to disable the reload or restore of iptables at the end of a chef run
+
+2.2.5
+-----
+
+- Only install `iptables` package on Amazon Linux
+
+2.2.4
+-----
+
+- Check whether name attribute in rule provider is valid
+- Fix an issue with resource notification in rule provider
+- Fix an issue with nat table on ipv6 not properly skipped on systems without ip6tables nat support
+- Add `node['iptables-ng']['ip6tables_nat_support']` attribute, default to true on recent Ubuntu
+  versions
+
+2.2.3
+-----
+
+- Add posibility to add an "action" when configuring iptables rules via attributes. See README for
+  details
+
 2.2.2
 -----
 

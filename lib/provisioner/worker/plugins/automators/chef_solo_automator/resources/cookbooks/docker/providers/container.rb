@@ -34,6 +34,13 @@ action :cp do
   end
 end
 
+action :create do
+  unless running? || exists?
+    create
+    new_resource.updated_by_last_action(true)
+  end
+end
+
 action :export do
   if exists?
     export
@@ -49,9 +56,13 @@ action :kill do
 end
 
 action :redeploy do
-  stop if running?
+  stop if (previously_running = running?)
   remove_container if exists?
-  run
+  if previously_running
+    run
+  else
+    create
+  end
   new_resource.updated_by_last_action(true)
 end
 
@@ -170,7 +181,7 @@ end
 
 def container_name
   if service?
-    new_resource.container_name || new_resource.image.gsub(/^.*\//, '')
+    new_resource.container_name || new_resource.image.gsub(%r{^.*/}, '')
   else
     new_resource.container_name
   end
@@ -178,6 +189,16 @@ end
 
 def cp
   docker_cmd!("cp #{current_resource.id}:#{new_resource.source} #{new_resource.destination}")
+end
+
+def create
+  create_args = cli_args(
+    run_cli_args.reject { |arg, _| arg == 'detach' }
+  )
+  dc = docker_cmd!("create #{create_args} #{new_resource.image} #{new_resource.command}")
+  dc.error!
+  new_resource.id(dc.stdout.chomp)
+  service_create if service?
 end
 
 # Helper method for `docker_containers` that looks at the position of the headers in the output of
@@ -237,7 +258,7 @@ def docker_containers
     # Filter out technical names (eg. 'my-app/db'), which appear in ps['names']
     # when a container has at least another container linking to it. If these
     # names are not filtered they will pollute current_resource.container_name.
-    ps['names'] = ps['names'].split(',').grep(/\A[^\/]+\Z/).join(',') # technical names always contain a '/'
+    ps['names'] = ps['names'].split(',').grep(%r{\A[^\/]+\Z}).join(',') # technical names always contain a '/'
     ps
   end
 end
@@ -278,7 +299,7 @@ def port
   elsif new_resource.port && new_resource.port.is_a?(Fixnum)
     ":#{new_resource.port}"
   else
-    new_resource.port
+    new_resource.port || []
   end
 end
 
@@ -329,12 +350,23 @@ def restart
   end
 end
 
-# rubocop:disable MethodLength
 def run
-  run_args = cli_args(
+  run_args = cli_args(run_cli_args)
+  dr = docker_cmd!("run #{run_args} #{new_resource.image} #{new_resource.command}")
+  dr.error!
+  new_resource.id(dr.stdout.chomp)
+  service_run if service?
+end
+
+# rubocop:disable MethodLength
+def run_cli_args
+  {
+    'add-host' => Array(new_resource.additional_host),
+    'cap-add' => Array(new_resource.cap_add),
     'cpu-shares' => new_resource.cpu_shares,
     'cidfile' => new_resource.cidfile,
     'detach' => new_resource.detach,
+    'device' => Array(new_resource.device),
     'dns' => Array(new_resource.dns),
     'dns-search' => Array(new_resource.dns_search),
     'env' => Array(new_resource.env),
@@ -355,16 +387,13 @@ def run
     'publish-all' => new_resource.publish_exposed_ports,
     'privileged' => new_resource.privileged,
     'rm' => new_resource.remove_automatically,
+    'restart' => new_resource.restart,
     'tty' => new_resource.tty,
     'user' => new_resource.user,
     'volume' => Array(new_resource.volume),
     'volumes-from' => new_resource.volumes_from,
     'workdir' => new_resource.working_directory
-  )
-  dr = docker_cmd!("run #{run_args} #{new_resource.image} #{new_resource.command}")
-  dr.error!
-  new_resource.id(dr.stdout.chomp)
-  service_run if service?
+  }
 end
 # rubocop:enable MethodLength
 
@@ -382,8 +411,11 @@ def service_init
   if new_resource.init_type == 'runit'
     runit_service service_name do
       run_template_name 'docker-container'
-      supports :restart => true, :reload => true, :status => true
+      finish_script_template_name 'docker-container'
+      supports :restart => true, :reload => true, :status => true, :stop => true
       action :nothing
+      finish true
+      restart_on_update false
     end
   else
     service service_name do
@@ -446,7 +478,7 @@ def service_create_systemd
       :service_name => service_name,
       :sockets => sockets
     )
-    not_if port.empty?
+    not_if { port.empty? }
     action :nothing
   end.run_action(:create)
 
@@ -487,9 +519,15 @@ end
 
 def service_create_upstart
   # The upstart init script requires inotifywait, which is in inotify-tools
-  package 'inotify-tools' do
-    action :nothing
-  end.run_action(:install)
+  # For clarity, install the package here but do it only once (no CHEF-3694).
+  begin
+    run_context.resource_collection.find(:package => 'inotify-tools')
+    # If we get here then we already installed the resource the first time.
+  rescue Chef::Exceptions::ResourceNotFound
+    package('inotify-tools') do
+      action :nothing
+    end.run_action(:install)
+  end
 
   template "/etc/init/#{service_name}.conf" do
     source service_template
@@ -549,7 +587,7 @@ end
 def service_remove_upstart
   service_stop_and_disable
 
-  file "/etc/init/#{service_name}" do
+  file "/etc/init/#{service_name}.conf" do
     action :delete
   end
 end
@@ -592,7 +630,7 @@ end
 
 def sockets
   return [] if port.empty?
-  [*port].map { |p| p.gsub!(/.*:/, '') }
+  [*port].map { |p| p.gsub(/.*:/, '') }
 end
 
 def start
@@ -602,6 +640,7 @@ def start
   )
   if service?
     service_create
+    service_run
   else
     docker_cmd!("start #{start_args} #{current_resource.id}")
   end
@@ -614,7 +653,7 @@ def stop
   if service?
     service_stop
   else
-    docker_cmd!("stop #{stop_args} #{current_resource.id}", (new_resource.cmd_timeout + 15))
+    docker_cmd!("stop #{stop_args} #{current_resource.id}", (new_resource.cmd_timeout + 30))
   end
 end
 
