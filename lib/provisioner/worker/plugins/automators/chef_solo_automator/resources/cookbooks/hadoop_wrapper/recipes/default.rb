@@ -34,4 +34,5 @@ if node.key?('java') && node['java'].key?('java_home')
   node.default['hive']['hive_env']['java_home'] = node['java']['java_home']
 end
 
+include_recipe 'hadoop::default'
 include_recipe 'hadoop_wrapper::kerberos_init'
