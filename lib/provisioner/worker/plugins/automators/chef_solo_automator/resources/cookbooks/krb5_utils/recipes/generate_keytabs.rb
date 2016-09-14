@@ -51,11 +51,11 @@ end
     execute "krb5-addprinc-#{principal}" do
       command "kadmin -w #{node['krb5_utils']['admin_password']} -q 'addprinc #{randkey} #{principal}'"
       action :run
-      not_if "kadmin -w #{node['krb5_utils']['admin_password']} -q 'list_principals' | grep -v Auth | grep '^#{principal}'"
+      not_if "kadmin -w #{node['krb5_utils']['admin_password']} -q 'get_principal #{principal}'"
     end
 
     execute "krb5-check-#{principal}" do
-      command "kadmin -w #{node['krb5_utils']['admin_password']} -q 'list_principals' | grep -v Auth | grep '^#{principal}'"
+      command "kadmin -w #{node['krb5_utils']['admin_password']} -q 'get_principal #{principal}'"
       action :run
       not_if "test -e #{keytab_dir}/#{keytab_file}"
     end
@@ -64,6 +64,7 @@ end
       command "kadmin -w #{node['krb5_utils']['admin_password']} -q 'xst -kt #{keytab_dir}/#{keytab_file} #{principal} #{http_principal}'"
       action :run
       not_if "test -e #{keytab_dir}/#{keytab_file}"
+      creates "#{keytab_dir}/#{keytab_file}"
     end
 
     file "#{keytab_dir}/#{keytab_file}" do
