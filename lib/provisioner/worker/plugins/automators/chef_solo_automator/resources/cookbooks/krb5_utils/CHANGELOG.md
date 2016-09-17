@@ -1,6 +1,11 @@
 krb_utils CHANGELOG
 ===================
 
+v0.2.2 (Sep 16, 2016)
+---------------------
+- Set ntp.sync_clock to true for users of ntp cookbook ( Issue: #14 )
+- Use grep to parse kadmin get_principal output ( Issue: #15 )
+
 v0.2.1 (Sep 13, 2016)
 ---------------------
 - Create LICENSE.txt via GitHub ( Issue: #8 )
