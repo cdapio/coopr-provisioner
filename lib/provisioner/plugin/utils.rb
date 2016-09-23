@@ -18,6 +18,8 @@
 
 require 'net/scp'
 require 'deep_merge/rails_compat'
+require 'base64'
+require 'fileutils'
 
 require_relative '../logging'
 
@@ -47,6 +49,20 @@ module Coopr
           }
           result.to_json(*a)
         end
+      end
+
+      # Decodes a base64 string into a file
+      def decode_string_to_file(string, outfile, mode = 0o600)
+        ::FileUtils.mkdir_p(::File.dirname(outfile))
+        ::File.open(outfile, 'wb', mode) { |f| f.write(::Base64.decode64(string)) }
+      end
+
+      # Writes out an SSH file, given a path and task JSON, returns fully-qualified path to file
+      def write_ssh_file(path, task)
+        ssh_keyfile = task['config']['provider']['provisioner']['ssh_keyfile'] || nil
+        identityfile = ::File.join(path, task['taskId'])
+        log.debug "Writing out SSH private key to #{identityfile}" unless ssh_keyfile.nil?
+        decode_string_to_file(ssh_keyfile, identityfile) unless ssh_keyfile.nil?
       end
 
       # Gets a host's SSH host key

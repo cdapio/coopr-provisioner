@@ -60,15 +60,6 @@ class ChefSoloAutomator < Coopr::Plugin::Automator
     # rubocop:enable GuardClause
   end
 
-  def write_ssh_file
-    @ssh_keyfile = @task['config']['provider']['provisioner']['ssh_keyfile']
-    unless @ssh_keyfile.nil?
-      @task['config']['ssh-auth']['identityfile'] = File.join(Dir.pwd, self.class.ssh_key_dir, @task['taskId'])
-      log.debug "Writing out @ssh_keyfile to #{@task['config']['ssh-auth']['identityfile']}"
-      decode_string_to_file(@ssh_keyfile, @task['config']['ssh-auth']['identityfile'])
-    end
-  end
-
   def set_credentials(sshauth)
     @credentials = {}
     @credentials[:paranoid] = false
@@ -79,11 +70,6 @@ class ChefSoloAutomator < Coopr::Plugin::Automator
         @credentials[:password] = v
       end
     end
-  end
-
-  def decode_string_to_file(string, outfile, mode = 0600)
-    FileUtils.mkdir_p(File.dirname(outfile))
-    File.open(outfile, 'wb', mode) { |f| f.write(Base64.decode64(string)) }
   end
 
   # generate the chef run json_attributes from the task metadata
@@ -145,8 +131,8 @@ class ChefSoloAutomator < Coopr::Plugin::Automator
     # do we need sudo bash?
     sudo = 'sudo -E' unless sshauth['user'] == 'root'
 
-    write_ssh_file
-    @ssh_file = @task['config']['ssh-auth']['identityfile'] unless @ssh_keyfile.nil?
+    @ssh_keyfile = @task['config']['provider']['provisioner']['ssh_keyfile']
+    @ssh_file = write_ssh_file(::File.join(Dir.pwd, self.class.ssh_key_dir), @task) unless @ssh_keyfile.nil?
     set_credentials(sshauth)
 
     @@chef_primitives.each do |chef_primitive|
@@ -246,8 +232,8 @@ class ChefSoloAutomator < Coopr::Plugin::Automator
     # do we need sudo bash?
     sudo = 'sudo -E' unless sshauth['user'] == 'root'
 
-    write_ssh_file
-    @ssh_file = @task['config']['ssh-auth']['identityfile'] unless @ssh_keyfile.nil?
+    @ssh_keyfile = @task['config']['provider']['provisioner']['ssh_keyfile']
+    @ssh_file = write_ssh_file(::File.join(Dir.pwd, self.class.ssh_key_dir), @task) unless @ssh_keyfile.nil?
     set_credentials(sshauth)
 
     begin
@@ -294,8 +280,8 @@ class ChefSoloAutomator < Coopr::Plugin::Automator
     # do we need sudo bash?
     sudo = 'sudo -E' unless sshauth['user'] == 'root'
 
-    write_ssh_file
-    @ssh_file = @task['config']['ssh-auth']['identityfile'] unless @ssh_keyfile.nil?
+    @ssh_keyfile = @task['config']['provider']['provisioner']['ssh_keyfile']
+    @ssh_file = write_ssh_file(::File.join(Dir.pwd, self.class.ssh_key_dir), @task) unless @ssh_keyfile.nil?
     set_credentials(sshauth)
 
     begin

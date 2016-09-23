@@ -16,26 +16,12 @@
 # limitations under the License.
 #
 
-require 'base64'
-require 'fileutils'
-
 # Docker Automator class
 class DockerAutomator < Coopr::Plugin::Automator
   # plugin defined resources
   @ssh_key_dir = 'ssh_keys'
   class << self
     attr_accessor :ssh_key_dir
-  end
-
-  def write_ssh_file
-    @ssh_keyfile = @task['config']['provider']['provisioner']['ssh_keyfile']
-    unless @ssh_keyfile.nil?
-      @task['config']['ssh-auth']['identityfile'] = File.join(Dir.pwd, self.class.ssh_key_dir, @task['taskId'])
-      @ssh_file = @task['config']['ssh-auth']['identityfile']
-      log.debug "Writing out @ssh_keyfile to #{@task['config']['ssh-auth']['identityfile']}"
-      decode_string_to_file(@ssh_keyfile, @task['config']['ssh-auth']['identityfile'])
-    end
-    credentials(@sshauth)
   end
 
   def credentials(sshauth)
@@ -48,11 +34,6 @@ class DockerAutomator < Coopr::Plugin::Automator
         @credentials[:password] = v
       end
     end
-  end
-
-  def decode_string_to_file(string, outfile, mode = 0600)
-    FileUtils.mkdir_p(File.dirname(outfile))
-    File.open(outfile, 'wb', mode) { |f| f.write(Base64.decode64(string)) }
   end
 
   def remote_command(cmd, root=false)
@@ -180,7 +161,8 @@ class DockerAutomator < Coopr::Plugin::Automator
   def bootstrap(inputmap)
     log.debug "DockerAutomator performing bootstrap task #{@task['taskId']}"
     parse_inputmap(inputmap)
-    write_ssh_file
+    @ssh_keyfile = @task['config']['provider']['provisioner']['ssh_keyfile']
+    @ssh_file = write_ssh_file(::File.join(Dir.pwd, self.class.ssh_key_dir), @task) unless @ssh_keyfile.nil?
     log.debug "Attempting ssh into ip: #{@ipaddress}, user: #{@sshuser}"
     begin
       Net::SSH.start(@ipaddress, @sshuser, @credentials) do |ssh|
@@ -199,7 +181,8 @@ class DockerAutomator < Coopr::Plugin::Automator
   def install(inputmap)
     log.debug "DockerAutomator performing install task #{@task['taskId']}"
     parse_inputmap(inputmap)
-    write_ssh_file
+    @ssh_keyfile = @task['config']['provider']['provisioner']['ssh_keyfile']
+    @ssh_file = write_ssh_file(::File.join(Dir.pwd, self.class.ssh_key_dir), @task) unless @ssh_keyfile.nil?
     log.debug "Attempting ssh into ip: #{@ipaddress}, user: #{@sshuser}"
     setup_host_volumes(@vols)
     pull_image(@image_name) if search_image(@image_name)
@@ -223,7 +206,8 @@ class DockerAutomator < Coopr::Plugin::Automator
   def start(inputmap)
     log.debug "DockerAutomator performing start task #{@task['taskId']}"
     parse_inputmap(inputmap)
-    write_ssh_file
+    @ssh_keyfile = @task['config']['provider']['provisioner']['ssh_keyfile']
+    @ssh_file = write_ssh_file(::File.join(Dir.pwd, self.class.ssh_key_dir), @task) unless @ssh_keyfile.nil?
     log.debug "Attempting ssh into ip: #{@ipaddress}, user: #{@sshuser}"
     @result['result'][@image_name]['id'] = run_container(@image_name, @command)[0].chomp
     @result['result']['ports'] = @ports
@@ -237,7 +221,8 @@ class DockerAutomator < Coopr::Plugin::Automator
   def stop(inputmap)
     log.debug "DockerAutomator performing stop task #{@task['taskId']}"
     parse_inputmap(inputmap)
-    write_ssh_file
+    @ssh_keyfile = @task['config']['provider']['provisioner']['ssh_keyfile']
+    @ssh_file = write_ssh_file(::File.join(Dir.pwd, self.class.ssh_key_dir), @task) unless @ssh_keyfile.nil?
     log.debug "Attempting ssh into ip: #{@ipaddress}, user: #{@sshuser}"
     stop_container(@task['config'][@image_name]['id'])
     @result['result']['ports'] = nil
@@ -251,7 +236,8 @@ class DockerAutomator < Coopr::Plugin::Automator
   def remove(inputmap)
     log.debug "DockerAutomator performing remove task #{@task['taskId']}"
     parse_inputmap(inputmap)
-    write_ssh_file
+    @ssh_keyfile = @task['config']['provider']['provisioner']['ssh_keyfile']
+    @ssh_file = write_ssh_file(::File.join(Dir.pwd, self.class.ssh_key_dir), @task) unless @ssh_keyfile.nil?
     log.debug "Attempting ssh into ip: #{@ipaddress}, user: #{@sshuser}"
     remove_container(@task['config'][@image_name]['id'])
     @task['config'][@image_name] = {}
