@@ -315,7 +315,7 @@ class ChefSoloAutomator < Coopr::Plugin::Automator
           return
         rescue CommandExecutionError
           begin
-            ssh_exec!(ssh, "which apt-get && #{sudo} apt-get -q -y install chef", 'Attempting Chef install via apt-get')
+            ssh_exec!(ssh, "which apt-get && DEBIAN_FRONTEND=noninteractive #{sudo} apt-get -q -y install chef", 'Attempting Chef install via apt-get')
             return
           rescue
             log.debug 'No Chef packages found for installation'
