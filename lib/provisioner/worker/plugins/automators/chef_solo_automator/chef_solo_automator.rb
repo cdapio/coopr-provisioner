@@ -317,8 +317,8 @@ class ChefSoloAutomator < Coopr::Plugin::Automator
           begin
             candidate_version = ssh_exec!(ssh, "#{sudo} apt-cache policy chef | grep Candidate | awk '{ print $2}'", 'Retrieving candidate Chef version').first.chomp
             log.debug "Found chef version #{candidate_version} available for install via package repositories"
-            # Bundled cookbooks require Chef 12 or later
-            if candidate_version.to_i >= 12
+            # Bundled cookbooks require Chef 12.1 or later
+            if candidate_version.to_f >= 12.1
               ssh_exec!(ssh, "which apt-get && DEBIAN_FRONTEND=noninteractive #{sudo} apt-get -q -y install chef", 'Attempting Chef install via apt-get')
               return
             end
