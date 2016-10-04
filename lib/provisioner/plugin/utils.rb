@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
 # encoding: UTF-8
 #
-# Copyright © 2012-2015 Cask Data, Inc.
+# Copyright © 2012-2016 Cask Data, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -63,6 +63,7 @@ module Coopr
         identityfile = ::File.join(path, task['taskId'])
         log.debug "Writing out SSH private key to #{identityfile}" unless ssh_keyfile.nil?
         decode_string_to_file(ssh_keyfile, identityfile) unless ssh_keyfile.nil?
+        identityfile
       end
 
       # Gets a host's SSH host key
