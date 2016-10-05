@@ -20,11 +20,7 @@ gem 'rake'
 
 group :dependencies do
   # These gems are used by the provisioner
-  if RUBY_VERSION.to_f < 2.0
-    gem 'json', '< 2.0'
-  else
-    gem 'json'
-  end
+  gem 'json', '~> 1.7.7'
   gem 'logger'
   gem 'mime-types', '< 3.0'
   gem 'net-scp'

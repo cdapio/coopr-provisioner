@@ -24,6 +24,7 @@ require_relative 'fog_provider/openstack'
 require_relative 'fog_provider/rackspace'
 
 gem 'fog', '~> 1.36.0'
+gem 'google-api-client', '~> 0.8.0'
 
 require 'fog'
 require 'ipaddr'

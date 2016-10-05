@@ -16,6 +16,8 @@
 # limitations under the License.
 #
 
+gem 'json', '~> 1.7.7' # activesupport
+
 require 'json'
 require_relative '../lib/provisioner/rest-helper'
 
