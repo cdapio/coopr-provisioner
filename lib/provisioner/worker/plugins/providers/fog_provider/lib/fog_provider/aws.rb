@@ -46,7 +46,6 @@ class FogProviderAWS < Coopr::Plugin::Provider
       validate!
       # Create the server
       log.debug "Creating #{hostname} on AWS using flavor: #{flavor}, image: #{image}"
-      log.debug 'Invoking server create'
       server = connection.servers.create(create_server_def)
       # Process results
       @result['result']['providerid'] = server.id.to_s
@@ -62,7 +61,7 @@ class FogProviderAWS < Coopr::Plugin::Provider
       log.error('Unexpected Error Occurred in FogProviderAWS.create: ' + e.inspect)
       @result['stderr'] = "Unexpected Error Occurred in FogProviderAWS.create: #{e.inspect}"
     else
-      log.debug "Create finished successfully: #{@result}"
+      log.debug "Creating #{hostname} finished successfully: #{@result}"
     ensure
       @result['status'] = 1 if @result['status'].nil? || (@result['status'].is_a?(Hash) && @result['status'].empty?)
     end
@@ -117,7 +116,7 @@ class FogProviderAWS < Coopr::Plugin::Provider
         log.error 'No IP address available for bootstrapping.'
         fail 'No IP address available for bootstrapping.'
       else
-        log.debug "Bootstrap IP address #{bootstrap_ip}"
+        log.debug "Bootstrap IP address for #{providerid}: #{bootstrap_ip}"
       end
       bind_ip = server.private_ip_address
 
@@ -142,9 +141,9 @@ class FogProviderAWS < Coopr::Plugin::Provider
       Net::SSH.start(bootstrap_ip, @task['config']['ssh-auth']['user'], @credentials) do |ssh|
         sudoers = true
         begin
-          ssh_exec!(ssh, 'test -e /etc/sudoers', 'Checking for /etc/sudoers')
+          ssh_exec!(ssh, 'test -e /etc/sudoers', "Checking #{providerid} for /etc/sudoers")
         rescue CommandExecutionError
-          log.debug 'No /etc/sudoers file present'
+          log.debug "No /etc/sudoers file present on #{providerid}"
           sudoers = false
         end
         cmd = "#{sudo} sed -i -e '/^Defaults[[:space:]]*requiretty/ s/^/#/' /etc/sudoers"
