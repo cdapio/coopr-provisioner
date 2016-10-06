@@ -1,7 +1,7 @@
 {
   "name": "fog",
   "description": "Multi-cloud fog-based provider (AWS, Google, Openstack, Rackspace, Joyent)",
-  "providertypes": [ "aws", "digitalocean", "google", "joyent", "openstack", "rackspace" ],
+  "providertypes": [ "aws", "azure", "digitalocean", "google", "joyent", "openstack", "rackspace" ],
   "aws" : {
     "name": "aws",
     "classname": "FogProviderAWS",
@@ -142,6 +142,103 @@
             "aws_region",
             "security_group_ids",
             "subnet_id"
+          ]
+        ]
+      }
+    }
+  },
+  "azure": {
+    "name": "azure",
+    "classname": "FogProviderAzure",
+    "resourceTypes": {
+      "ssh_keys": {
+        "format": "file",
+        "permissions": "0400"
+      },
+      "certificates": {
+        "format": "file",
+        "permissions": "0400"
+      },
+      "management": {
+        "format": "file",
+        "permissions": "0400"
+      }
+    },
+    "parameters": {
+      "admin": {
+        "fields": {
+          "azure_subscription_id": {
+            "label": "Subscription ID",
+            "type": "text",
+            "tip": "Your Azure Account's Subscription ID"
+          },
+          "azure_api_url": {
+            "label": "API URL",
+            "default": "management.core.windows.net",
+            "type": "text",
+            "tip": "Your Azure URL, e.g. management.core.windows.net"
+          },
+          "vm_user": {
+            "label": "VM Username",
+            "type": "text",
+            "tip": "Username for user that can connect to this VM"
+          },
+          "cloud_service_name": {
+            "label": "Cloud Service Name",
+            "type": "text",
+            "tip": "Cloud Service Name"
+          },
+          "storage_account_name": {
+            "label": "Storage Account Name",
+            "type": "text",
+            "tip": "Storage Account Name"
+          },
+          "availability_set_name": {
+            "label": "Available Set Name",
+            "type": "text",
+            "tip": "Set this to nil, typically"
+          },
+          "azure_region": {
+            "label": "Region",
+            "type": "select",
+            "options": [ "East US", "West US", "North Europe" ],
+            "default": "East US",
+            "override": true,
+            "tip": "Azure Region"
+          },
+          "vm_password": {
+            "label": "Password for VM User",
+            "type": "password",
+            "tip": "VM user's Initial Password"
+          },
+          "ssh_key_resource": {
+            "label": "Private Key File Path",
+            "type": "text",
+            "tip": "Full path to VM User's Private Key resource uploaded to server"
+          },
+          "certificate_resource": {
+            "label": "Certificate File",
+            "type": "text",
+            "tip": "Full path of VM User certificate to server"
+          },
+          "mgmt_cert_resource": {
+            "label": "Management Certificate Name",
+            "type": "text",
+            "tip": "Name of Rest API Mgmt Certificate resource uploaded to the server"
+          }
+        },
+        "required": [
+          [
+            "azure_subscription_id",
+            "azure_api_url",
+            "vm_user",
+            "cloud_service_name",
+            "storage_account_name",
+            "azure_region",
+            "vm_password",
+            "ssh_key_resource",
+            "certificate_resource",
+            "mgmt_cert_resource"
           ]
         ]
       }
