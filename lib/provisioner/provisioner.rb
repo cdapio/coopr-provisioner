@@ -16,6 +16,8 @@
 # limitations under the License.
 #
 
+gem 'json', '~> 1.7.7' # activesupport
+
 require 'thin'
 require 'sinatra/base'
 require 'json'

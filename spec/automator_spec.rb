@@ -15,6 +15,8 @@
 # limitations under the License.
 #
 
+gem 'json', '~> 1.7.7' # activesupport
+
 require_relative 'spec_helper'
 require 'json'
 
