@@ -41,6 +41,7 @@ case pf
 when 'debian'
   execute 'update-apt-packages' do
     command 'apt-get update && apt-get upgrade -y && apt-get install -y unattended-upgrades'
+    environment 'DEBIAN_FRONTEND' => 'noninteractive'
     not_if { node['coopr_packages']['skip_updates'].to_s == 'true' }
   end
 when 'rhel'
