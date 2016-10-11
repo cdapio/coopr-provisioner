@@ -131,8 +131,7 @@ class ChefSoloAutomator < Coopr::Plugin::Automator
     # do we need sudo bash?
     sudo = 'sudo -E' unless sshauth['user'] == 'root'
 
-    @ssh_keyfile = @task['config']['provider']['provisioner']['ssh_keyfile']
-    @ssh_file = write_ssh_file(::File.join(Dir.pwd, self.class.ssh_key_dir), @task) unless @ssh_keyfile.nil?
+    ssh_file = write_ssh_file(File.join(Dir.pwd, self.class.ssh_key_dir), @task)
     set_credentials(sshauth)
 
     @@chef_primitives.each do |chef_primitive|
@@ -209,7 +208,7 @@ class ChefSoloAutomator < Coopr::Plugin::Automator
     log.debug "ChefSoloAutomator bootstrap completed successfully: #{@result}"
     @result
   ensure
-    File.delete(@ssh_file) if @ssh_file && File.exist?(@ssh_file)
+    File.delete(ssh_file) if ssh_file && File.exist?(ssh_file)
   end
 
   def runchef(inputmap)
@@ -232,8 +231,7 @@ class ChefSoloAutomator < Coopr::Plugin::Automator
     # do we need sudo bash?
     sudo = 'sudo -E' unless sshauth['user'] == 'root'
 
-    @ssh_keyfile = @task['config']['provider']['provisioner']['ssh_keyfile']
-    @ssh_file = write_ssh_file(::File.join(Dir.pwd, self.class.ssh_key_dir), @task) unless @ssh_keyfile.nil?
+    ssh_file = write_ssh_file(File.join(Dir.pwd, self.class.ssh_key_dir), @task)
     set_credentials(sshauth)
 
     begin
@@ -270,7 +268,7 @@ class ChefSoloAutomator < Coopr::Plugin::Automator
     log.debug "Chef-solo run completed successfully for task #{@task['taskId']}: #{@result}"
     @result
   ensure
-    File.delete(@ssh_file) if @ssh_file && File.exist?(@ssh_file)
+    File.delete(ssh_file) if ssh_file && File.exist?(ssh_file)
   end
 
   def install_chef(inputmap)
@@ -280,8 +278,7 @@ class ChefSoloAutomator < Coopr::Plugin::Automator
     # do we need sudo bash?
     sudo = 'sudo -E' unless sshauth['user'] == 'root'
 
-    @ssh_keyfile = @task['config']['provider']['provisioner']['ssh_keyfile']
-    @ssh_file = write_ssh_file(::File.join(Dir.pwd, self.class.ssh_key_dir), @task) unless @ssh_keyfile.nil?
+    ssh_file = write_ssh_file(File.join(Dir.pwd, self.class.ssh_key_dir), @task)
     set_credentials(sshauth)
 
     begin
@@ -322,6 +319,8 @@ class ChefSoloAutomator < Coopr::Plugin::Automator
     rescue
       raise 'Failed to install Chef'
     end
+  ensure
+    File.delete(ssh_file) if ssh_file && File.exist?(ssh_file)
   end
 
   def install(inputmap)

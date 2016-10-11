@@ -92,8 +92,7 @@ class ShellAutomator < Coopr::Plugin::Automator
     # do we need sudo bash?
     sudo = 'sudo -E' unless sshauth['user'] == 'root'
 
-    @ssh_keyfile = @task['config']['provider']['provisioner']['ssh_keyfile']
-    @ssh_file = write_ssh_file(::File.join(Dir.pwd, self.class.ssh_key_dir), @task) unless @ssh_keyfile.nil?
+    ssh_file = write_ssh_file(File.join(Dir.pwd, self.class.ssh_key_dir), @task)
     set_credentials(sshauth)
 
     jsondata = JSON.generate(task)
@@ -135,7 +134,7 @@ class ShellAutomator < Coopr::Plugin::Automator
     log.debug "Result of shell command: #{@result}"
     @result
   ensure
-    File.delete(@ssh_file) if @ssh_file && File.exist?(@ssh_file)
+    File.delete(ssh_file) if ssh_file && File.exist?(ssh_file)
   end
 
   def bootstrap(inputmap)
@@ -145,8 +144,7 @@ class ShellAutomator < Coopr::Plugin::Automator
     # do we need sudo bash?
     sudo = 'sudo -E' unless sshauth['user'] == 'root'
 
-    @ssh_keyfile = @task['config']['provider']['provisioner']['ssh_keyfile']
-    @ssh_file = write_ssh_file(::File.join(Dir.pwd, self.class.ssh_key_dir), @task) unless @ssh_keyfile.nil?
+    ssh_file = write_ssh_file(File.join(Dir.pwd, self.class.ssh_key_dir), @task)
     set_credentials(sshauth)
 
     # generate the local tarballs for resources and for our own wrapper libs

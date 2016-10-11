@@ -57,13 +57,14 @@ module Coopr
         ::File.open(outfile, 'wb', mode) { |f| f.write(::Base64.decode64(string)) }
       end
 
-      # Writes out an SSH file, given a path and task JSON, returns fully-qualified path to file
+      # Writes out an SSH file, given a path and task JSON, returns fully-qualified path to file, or nil
       def write_ssh_file(path, task)
-        ssh_keyfile = task['config']['provider']['provisioner']['ssh_keyfile'] || nil
-        identityfile = ::File.join(path, task['taskId'])
-        log.debug "Writing out SSH private key to #{identityfile}" unless ssh_keyfile.nil?
-        decode_string_to_file(ssh_keyfile, identityfile) unless ssh_keyfile.nil?
-        identityfile
+        if task['config']['provider']['provisioner'].key?('ssh_keyfile')
+          identityfile = ::File.join(path, task['taskId'])
+          log.debug "Writing out SSH private key to #{identityfile}"
+          decode_string_to_file(ssh_keyfile, identityfile)
+          identityfile
+        end
       end
 
       # Gets a host's SSH host key
