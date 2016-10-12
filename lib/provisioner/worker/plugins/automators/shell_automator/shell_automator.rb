@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
 # encoding: UTF-8
 #
-# Copyright © 2012-2014 Cask Data, Inc.
+# Copyright © 2012-2016 Cask Data, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,8 +17,6 @@
 #
 
 require 'net/scp'
-require 'base64'
-require 'fileutils'
 require 'rubygems/package'
 require 'zlib'
 
@@ -70,15 +68,6 @@ class ShellAutomator < Coopr::Plugin::Automator
     log.debug "Generation complete: #{file}"
   end
 
-  def write_ssh_file
-    @ssh_keyfile = @task['config']['provider']['provisioner']['ssh_keyfile']
-    unless @ssh_keyfile.nil?
-      @task['config']['ssh-auth']['identityfile'] = File.join(Dir.pwd, self.class.ssh_key_dir, @task['taskId'])
-      log.debug "Writing out @ssh_keyfile to #{@task['config']['ssh-auth']['identityfile']}"
-      decode_string_to_file(@ssh_keyfile, @task['config']['ssh-auth']['identityfile'])
-    end
-  end
-
   def set_credentials(sshauth)
     @credentials = Hash.new
     @credentials[:paranoid] = false
@@ -89,11 +78,6 @@ class ShellAutomator < Coopr::Plugin::Automator
         @credentials[:password] = v
       end
     end
-  end
-
-  def decode_string_to_file(string, outfile, mode = 0600)
-    FileUtils.mkdir_p(File.dirname(outfile))
-    File.open(outfile, 'wb', mode) { |f| f.write(Base64.decode64(string)) }
   end
 
   def runshell(inputmap)
@@ -108,8 +92,7 @@ class ShellAutomator < Coopr::Plugin::Automator
     # do we need sudo bash?
     sudo = 'sudo -E' unless sshauth['user'] == 'root'
 
-    write_ssh_file
-    @ssh_file = @task['config']['ssh-auth']['identityfile'] unless @ssh_keyfile.nil?
+    ssh_file = write_ssh_file(File.join(Dir.pwd, self.class.ssh_key_dir), @task)
     set_credentials(sshauth)
 
     jsondata = JSON.generate(task)
@@ -151,7 +134,7 @@ class ShellAutomator < Coopr::Plugin::Automator
     log.debug "Result of shell command: #{@result}"
     @result
   ensure
-    File.delete(@ssh_file) if @ssh_file && File.exist?(@ssh_file)
+    File.delete(ssh_file) if ssh_file && File.exist?(ssh_file)
   end
 
   def bootstrap(inputmap)
@@ -161,8 +144,7 @@ class ShellAutomator < Coopr::Plugin::Automator
     # do we need sudo bash?
     sudo = 'sudo -E' unless sshauth['user'] == 'root'
 
-    write_ssh_file
-    @ssh_file = @task['config']['ssh-auth']['identityfile'] unless @ssh_keyfile.nil?
+    ssh_file = write_ssh_file(File.join(Dir.pwd, self.class.ssh_key_dir), @task)
     set_credentials(sshauth)
 
     # generate the local tarballs for resources and for our own wrapper libs

@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
 # encoding: UTF-8
 #
-# Copyright © 2012-2015 Cask Data, Inc.
+# Copyright © 2012-2016 Cask Data, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -18,6 +18,8 @@
 
 require 'net/scp'
 require 'deep_merge/rails_compat'
+require 'base64'
+require 'fileutils'
 
 require_relative '../logging'
 
@@ -47,6 +49,22 @@ module Coopr
           }
           result.to_json(*a)
         end
+      end
+
+      # Decodes a base64 string into a file
+      def decode_string_to_file(string, outfile, mode = 0o600)
+        ::FileUtils.mkdir_p(::File.dirname(outfile))
+        ::File.open(outfile, 'wb', mode) { |f| f.write(::Base64.decode64(string)) }
+      end
+
+      # Writes out an SSH file, given a path and task JSON, returns fully-qualified path to file, or nil
+      def write_ssh_file(path, task)
+        return nil unless task['config']['provider']['provisioner'].key?('ssh_keyfile')
+        ssh_keyfile = task['config']['provider']['provisioner']['ssh_keyfile']
+        identityfile = ::File.join(path, task['taskId'])
+        log.debug "Writing out SSH private key to #{identityfile}"
+        decode_string_to_file(ssh_keyfile, identityfile)
+        identityfile
       end
 
       # Gets a host's SSH host key
