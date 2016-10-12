@@ -61,6 +61,7 @@ module Coopr
       def write_ssh_file(path, task)
         if task['config']['provider']['provisioner'].key?('ssh_keyfile')
           identityfile = ::File.join(path, task['taskId'])
+          ssh_keyfile = task['config']['provider']['provisioner']['ssh_keyfile']
           log.debug "Writing out SSH private key to #{identityfile}"
           decode_string_to_file(ssh_keyfile, identityfile)
           identityfile
