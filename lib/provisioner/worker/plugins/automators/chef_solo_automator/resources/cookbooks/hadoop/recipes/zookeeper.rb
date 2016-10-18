@@ -20,6 +20,12 @@
 include_recipe 'hadoop::repo'
 include_recipe 'hadoop::_zookeeper_checkconfig'
 
+# HDP 2.2+ zookeeper debian packages have a missing package dependency on hdp-select
+package 'hdp-select' do
+  action :install
+  only_if { node['platform_family'] == 'debian' && hdp22? }
+end
+
 package hadoop_package('zookeeper') do
   action :install
 end
@@ -34,42 +40,5 @@ directory zookeeper_conf_dir do
   recursive true
 end
 
-# Setup jaas.conf
-my_vars = {}
-if node['zookeeper'].key?('jaas')
-  my_vars[:client] = node['zookeeper']['jaas']['client']
-  my_vars[:server] = node['zookeeper']['jaas']['server']
-end
-template "#{zookeeper_conf_dir}/jaas.conf" do
-  source 'jaas.conf.erb'
-  mode '0644'
-  owner 'root'
-  group 'root'
-  action :create
-  variables my_vars
-  only_if do
-    node['zookeeper'].key?('jaas') && (!node['zookeeper']['jaas']['client'].empty? || !node['zookeeper']['jaas']['server'].empty)
-  end
-end # End jaas.conf
-
-# Setup client_jaas.conf master_jaas.conf
-%w(client master).each do |type|
-  next unless node['zookeeper'].key?("#{type}_jaas")
-  my_vars = {
-    :client => node['zookeeper']["#{type}_jaas"]['client'],
-    :server => node['zookeeper']["#{type}_jaas"]['server']
-  }
-
-  template "#{zookeeper_conf_dir}/#{type}_jaas.conf" do
-    source 'jaas.conf.erb'
-    mode '0644'
-    owner 'root'
-    group 'root'
-    action :create
-    variables my_vars
-    only_if do
-      node['zookeeper'].key?("#{type}_jaas") && \
-        (!node['zookeeper']["#{type}_jaas"]['client'].empty? || !node['zookeeper']["#{type}_jaas"]['server'].empty)
-    end
-  end
-end # End client_jaas.conf master_jaas.conf
+write_deprecated_jaas_config('zookeeper')
+write_jaas_config('zookeeper')

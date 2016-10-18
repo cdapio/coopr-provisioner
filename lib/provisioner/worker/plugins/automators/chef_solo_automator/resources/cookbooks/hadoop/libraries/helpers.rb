@@ -26,12 +26,16 @@ module Hadoop
       case node['hadoop']['distribution_version']
       when '2.2.0.0'
         '2.2.0.0-2041'
+      when '2.2.1.0'
+        '2.2.1.0-2340'
       when '2.2.4.2'
         '2.2.4.2-2'
       when '2.2.4.4'
         '2.2.4.4-16'
       when '2.2.6.0'
         '2.2.6.0-2800'
+      when '2.2.6.3'
+        '2.2.6.3-1'
       when '2.2.8.0'
         '2.2.8.0-3150'
       when '2.2.9.0'
@@ -50,6 +54,8 @@ module Hadoop
         '2.4.0.0-169'
       when '2.4.2.0'
         '2.4.2.0-258'
+      when '2.4.3.0'
+        '2.4.3.0-227'
       when '2.5.0.0'
         '2.5.0.0-1245'
       else
@@ -110,6 +116,94 @@ module Hadoop
         "/usr/iop/#{node['hadoop']['distribution_version']}"
       else
         '/usr/lib'
+      end
+    end
+
+    #
+    # Return Hadoop configuration item value using deprecated properties or a specified default
+    #
+    def hadoop_config(service, key, property, deprecated_property = nil, default_value = nil)
+      if node.key?(service) && node[service].key?(key) && node[service][key].key?(property)
+        node[service][key][property]
+      elsif node.key?(service) && node[service].key?(key) && node[service][key].key?(deprecated_property)
+        node[service][key][deprecated_property]
+      else
+        default_value
+      end
+    end
+
+    #
+    # Check for deprecated JAAS configuration
+    #
+    def check_deprecated_jaas_config(service)
+      %w(client server).each do |key|
+        next unless node[service]['jaas'].key?(key) &&
+                    node[service]['jaas'][key].key?('usekeytab') &&
+                    node[service]['jaas'][key]['usekeytab'].to_s == 'true'
+        next unless node[service]['jaas'][key]['keytab'].nil? ||
+                    node['hbase']['jaas'][key]['principal'].nil?
+        Chef::Application.fatal!("You must set node['#{service}']['jaas']['#{key}']['keytab'] and node['#{service}']['jaas']['#{key}']['principal'] with node['#{service}']['jaas'][key]['usekeytab']")
+      end if node[service].key?('jaas')
+      Chef::Log.warn("Using node['#{service}']['jaas'] is deprecated. Use node['#{service}']['client_jaas'] and node['#{service}']['master_jaas'], instead") if node[service].key?('jaas')
+    end
+
+    #
+    # Check for JAAS configuration
+    #
+    def check_jaas_config(service)
+      %w(client master).each do |type|
+        next unless node[service].key?("#{type}_jaas")
+        %w(client server).each do |key| # These are JAAS keys, not files
+          next unless node[service]["#{type}_jaas"].key?(key) &&
+                      node[service]["#{type}_jaas"][key].key?('usekeytab') &&
+                      node[service]["#{type}_jaas"][key]['usekeytab'].to_s == 'true'
+          next unless node[service]["#{type}_jaas"][key]['keytab'].nil? ||
+                      node[service]["#{type}_jaas"][key]['principal'].nil?
+          Chef::Application.fatal!("You must set node['#{service}']['#{type}_jaas']['#{key}']['keytab'] and node['#{service}']['#{type}_jaas']['#{key}']['principal'] with node['#{service}']['#{type}_jaas'][key]['usekeytab']")
+        end
+      end
+    end
+
+    #
+    # Write deprecated JAAS configuration
+    #
+    def write_deprecated_jaas_config(service)
+      return unless node[service].key?('jaas') &&
+                    node[service]['jaas'].key?('client')
+      conf_dir = "/etc/#{service}/#{node[service]['conf_dir']}"
+      template "#{conf_dir}/jaas.conf" do
+        source 'jaas.conf.erb'
+        mode '0644'
+        owner 'root'
+        group 'root'
+        action :create
+        variables(
+          client: node[service]['jaas']['client'],
+          server: node[service]['jaas']['server'] || nil
+        )
+      end
+    end
+
+    #
+    # Write JAAS configuration
+    #
+    def write_jaas_config(service)
+      # Setup client_jaas.conf master_jaas.conf
+      %w(client master).each do |type|
+        next unless node[service].key?("#{type}_jaas") &&
+                    node[service]["#{type}_jaas"].key?('client')
+        conf_dir = "/etc/#{service}/#{node[service]['conf_dir']}"
+        template "#{conf_dir}/#{type}_jaas.conf" do
+          source 'jaas.conf.erb'
+          mode '0644'
+          owner service
+          group service
+          action :create
+          variables(
+            client: node[service]["#{type}_jaas"]['client'],
+            server: node[service]["#{type}_jaas"]['server'] || nil
+          )
+        end
       end
     end
   end

@@ -23,20 +23,6 @@ key = 'RPM-GPG-KEY'
 # Ensure apt caches are updated and apt resources available
 include_recipe 'apt' if node['platform_family'] == 'debian'
 
-# Set defaults for version, based on distribution
-node.default['hadoop']['distribution_version'] =
-  if node['hadoop'].key?('distribution_version')
-    node['hadoop']['distribution_version']
-  elsif node['hadoop']['distribution'] == 'hdp'
-    '2.3.4.7'
-  elsif node['hadoop']['distribution'] == 'cdh'
-    '5.6.0'
-  elsif node['hadoop']['distribution'] == 'bigtop'
-    '1.0.0'
-  elsif node['hadoop']['distribution'] == 'iop'
-    '4.1.0.0'
-  end
-
 case node['hadoop']['distribution']
 when 'hdp'
   case node['hadoop']['distribution_version']
@@ -60,7 +46,7 @@ when 'hdp'
     Chef::Log.warn("Short versions for node['hadoop']['distribution_version'] are deprecated! Please use full version!")
     node.override['hadoop']['distribution_version'] = hdp_update_version
   # 2.3, 2.4, and 2.5 do not have their own base version
-  when '2.2.1.0', '2.2.4.2', '2.2.4.4', '2.2.6.0', '2.2.6.3', '2.2.8.0', '2.2.9.0', '2.3.0.0', '2.3.2.0', '2.3.4.0', '2.3.4.7', '2.4.0.0', '2.4.2.0', '2.5.0.0'
+  when '2.2.1.0', '2.2.4.2', '2.2.4.4', '2.2.6.0', '2.2.6.3', '2.2.8.0', '2.2.9.0', '2.3.0.0', '2.3.2.0', '2.3.4.0', '2.3.4.7', '2.3.6.0', '2.4.0.0', '2.4.2.0', '2.4.3.0', '2.5.0.0'
     hdp_version = '2.2.0.0'
     hdp_update_version = node['hadoop']['distribution_version']
   when '2.2'
@@ -151,7 +137,7 @@ when 'hdp'
       case hdp_update_version
       when '2.2.0.0'
         "2.x/GA/#{hdp_update_version}"
-      when '2.1.10.0', '2.1.15.0', '2.2.1.0', '2.2.4.2', '2.2.6.0', '2.2.6.3', '2.2.8.0', '2.2.9.0', '2.3.0.0', '2.3.2.0', '2.3.4.0', '2.3.4.7', '2.4.0.0', '2.4.2.0', '2.5.0.0'
+      when '2.1.10.0', '2.1.15.0', '2.2.1.0', '2.2.4.2', '2.2.6.0', '2.2.6.3', '2.2.8.0', '2.2.9.0', '2.3.0.0', '2.3.2.0', '2.3.4.0', '2.3.4.7', '2.3.6.0', '2.4.0.0', '2.4.2.0', '2.4.3.0', '2.5.0.0'
         "2.x/updates/#{hdp_update_version}"
       else
         hdp_update_version
