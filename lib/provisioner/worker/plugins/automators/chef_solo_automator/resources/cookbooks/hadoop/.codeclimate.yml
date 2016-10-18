@@ -1,5 +1,11 @@
 ---
 engines:
+  duplication:
+    enabled: true
+    config:
+      languages:
+      - ruby
+        #mass_threshold: 20
   fixme:
     enabled: true
   foodcritic:
@@ -10,4 +16,4 @@ ratings:
   paths:
   - "**.rb"
 exclude_paths:
-- spec/**/*
+- spec/
