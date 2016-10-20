@@ -78,7 +78,7 @@ module Coopr
               klass = Object.const_get(jsondata[providertype]['classname'])
               if klass.ancestors.include? Object.const_get('Coopr').const_get('Plugin').const_get('Provider')
                 raise "plugin \"#{p_name}\" attempting to load duplicate provider type \"#{providertype}\"" if @providermap.key?(providertype)
-                @providermap.merge!({ providertype => jsondata[providertype] })
+                @providermap.merge!(providertype => jsondata[providertype])
               else
                 raise "Declared provider \"#{providertype}\" implementation class " \
                   "\"#{jsondata[providertype]['classname']}\" must extend Coopr::Plugin::Provider class"
@@ -96,7 +96,7 @@ module Coopr
               klass = Object.const_get(jsondata[automatortype]['classname'])
               if klass.ancestors.include? Object.const_get('Coopr').const_get('Plugin').const_get('Automator')
                 raise "plugin \"#{p_name}\" attempting to load duplicate automator type \"#{automatortype}\"" if @automatormap.key?(automatortype)
-                @automatormap.merge!({ automatortype => jsondata[automatortype] })
+                @automatormap.merge!(automatortype => jsondata[automatortype])
               else
                 raise "Declared automator \"#{automatortype}\" implementation class " \
                   "\"#{jsondata[automatortype]['classname']}\" must extend Coopr::Plugin::Automator class"

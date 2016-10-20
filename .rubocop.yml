@@ -3,8 +3,23 @@ AllCops:
   Exclude:
     - vendor/bundle/**/*
     - lib/provisioner/worker/plugins/**/*
+    - spec/**/*
     # Uncomment the following and comment above to only ignore cookbooks
     # - lib/provisioner/worker/plugins/automators/chef_solo_automator/resources/cookbooks/**/*
 # Disable specific cops below
 AsciiComments:
+  Enabled: false
+Metrics/AbcSize:
+  Enabled: false
+Metrics/BlockLength:
+  Enabled: false
+Metrics/ClassLength:
+  Enabled: false
+Metrics/CyclomaticComplexity:
+  Enabled: false
+Metrics/LineLength:
+  Enabled: false
+Metrics/MethodLength:
+  Enabled: false
+Metrics/PerceivedComplexity:
   Enabled: false
