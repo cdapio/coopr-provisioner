@@ -37,13 +37,13 @@ module Coopr
         case task['taskName'].downcase
         when 'create'
           create('flavor' => task['config']['flavor'], 'image' => task['config']['image'], 'hostname' => task['config']['hostname'], 'fields' => task['config']['provider']['provisioner'])
-          return @result
+          @result
         when 'confirm'
           confirm('providerid' => task['config']['providerid'], 'fields' => task['config']['provider']['provisioner'])
-          return @result
+          @result
         when 'delete'
           delete('providerid' => task['config']['providerid'], 'fields' => task['config']['provider']['provisioner'])
-          return @result
+          @result
         else
           raise "unhandled provider task type: #{task['taskName']}"
         end
