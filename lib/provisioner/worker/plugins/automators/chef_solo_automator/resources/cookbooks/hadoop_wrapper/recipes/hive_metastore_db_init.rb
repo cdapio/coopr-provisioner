@@ -2,7 +2,7 @@
 # Cookbook Name:: hadoop_wrapper
 # Recipe:: hive_metastore_db_init
 #
-# Copyright © 2014 Cask Data, Inc.
+# Copyright © 2014-2016 Cask Data, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -66,11 +66,15 @@ if node['hive'].key?('hive_site') && node['hive']['hive_site'].key?('javax.jdo.o
       privileges [:all]
       action :grant
     end
-    mysql_database 'import-hive-schema' do
-      connection mysql_connection_info
-      database_name db_name
-      sql lazy { ::File.open(Dir.glob("#{sql_dir}/mysql/hive-schema-*").sort_by! { |s| Gem::Version.new(s.split('/').last.gsub('hive-schema-', '').gsub('.mysql.sql', '')) }.last).read }
-      action :query
+    execute 'mysql-import-hive-schema' do # ~FC009
+      command <<-EOF
+        mysql --batch -D#{db_name} < $(ls -1 hive-schema-* | sort -n | tail -n 1)
+        EOF
+      sensitive true
+      user 'root'
+      action :run
+      cwd "#{sql_dir}/mysql"
+      environment('MYSQL_PWD' => node['mysql']['server_root_password'])
     end
     hive_uris.each do |hive_host|
       mysql_database_user "#{db_user}-#{hive_host}" do
@@ -101,11 +105,15 @@ if node['hive'].key?('hive_site') && node['hive']['hive_site'].key?('javax.jdo.o
       password db_pass
       action :create
     end
-    postgresql_database 'import-hive-schema' do
-      connection postgresql_connection_info
-      database_name db_name
-      sql lazy { ::File.open(Dir.glob("#{sql_dir}/postgres/hive-schema-*").sort_by! { |s| s[/\d+/].to_i }.last).read }
-      action :query
+    execute 'postgresql-import-hive-schema' do # ~FC009
+      command <<-EOF
+        psql #{db_name} < $(ls -1 hive-schema-* | sort -n | tail -n 1)
+        EOF
+      sensitive true
+      user 'postgres'
+      action :run
+      cwd "#{sql_dir}/postgres"
+      environment('PGPASSWORD' => node['postgresql']['password']['postgres'])
     end
     hive_uris.each do |hive_host|
       postgresql_database_user "#{db_user}-#{hive_host}" do
