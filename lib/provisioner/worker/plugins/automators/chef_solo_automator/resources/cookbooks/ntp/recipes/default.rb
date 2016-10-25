@@ -4,7 +4,7 @@
 # Author:: Joshua Timberman (<joshua@chef.io>)
 # Author:: Tim Smith (<tsmith@chef.io>)
 #
-# Copyright 2009-2015, Chef Software, Inc.
+# Copyright 2009-2016, Chef Software, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -26,6 +26,11 @@ else
 
   node['ntp']['packages'].each do |ntppkg|
     package ntppkg
+  end
+
+  package 'ntpdate' do
+    action :remove
+    only_if { node['platform_family'] == 'debian' && node['platform_version'].to_i >= 16 }
   end
 
   [node['ntp']['varlibdir'], node['ntp']['statsdir']].each do |ntpdir|
