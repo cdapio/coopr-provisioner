@@ -22,6 +22,8 @@ include_recipe 'hadoop::repo' if node['spark']['release']['install'].to_s == 'fa
 pkg =
   if node['hadoop']['distribution'] == 'cdh'
     'spark-core'
+  elsif iop?
+    hadoop_package('spark-core')
   else
     hadoop_package('spark')
   end
@@ -122,7 +124,7 @@ template "#{spark_conf_dir}/spark-env.sh" do
   owner 'root'
   group 'root'
   action :create
-  variables :options => node['spark']['spark_env']
+  variables options: node['spark']['spark_env']
   only_if { node['spark'].key?('spark_env') && !node['spark']['spark_env'].empty? }
 end # End spark-env.sh
 
@@ -132,7 +134,7 @@ template "#{spark_conf_dir}/spark-defaults.conf" do
   mode '0644'
   owner 'root'
   group 'root'
-  variables :properties => node['spark']['spark_defaults']
+  variables properties: node['spark']['spark_defaults']
   only_if { node['spark'].key?('spark_defaults') && !node['spark']['spark_defaults'].empty? }
 end # End spark-defaults.conf
 
@@ -144,7 +146,7 @@ end # End spark-defaults.conf
     owner 'root'
     group 'root'
     action :create
-    variables :properties => node['spark'][propfile]
+    variables properties: node['spark'][propfile]
     only_if { node['spark'].key?(propfile) && !node['spark'][propfile].empty? }
   end
 end # End metrics.properties log4j.properties
@@ -168,5 +170,5 @@ template '/etc/profile.d/spark.sh' do
   mode '0755'
   owner 'root'
   group 'root'
-  variables :options => { 'spark_conf_dir' => "/etc/spark/#{node['spark']['conf_dir']}" }
+  variables options: { 'spark_conf_dir' => "/etc/spark/#{node['spark']['conf_dir']}" }
 end
