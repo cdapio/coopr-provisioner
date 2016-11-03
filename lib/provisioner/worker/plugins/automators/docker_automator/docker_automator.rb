@@ -24,7 +24,7 @@ class DockerAutomator < Coopr::Plugin::Automator
     attr_accessor :ssh_key_dir
   end
 
-  def credentials(sshauth)
+  def set_credentials(sshauth)
     @credentials = {}
     @credentials[:paranoid] = false
     sshauth.each do |k, v|
@@ -163,6 +163,7 @@ class DockerAutomator < Coopr::Plugin::Automator
     log.debug "DockerAutomator performing bootstrap task #{@task['taskId']}"
     parse_inputmap(inputmap)
     ssh_file = write_ssh_file(File.join(Dir.pwd, self.class.ssh_key_dir), @task)
+    set_credentials(@sshauth)
     log.debug "Attempting ssh into ip: #{@ipaddress}, user: #{@sshuser}"
     begin
       Net::SSH.start(@ipaddress, @sshuser, @credentials) do |ssh|
@@ -195,6 +196,7 @@ class DockerAutomator < Coopr::Plugin::Automator
     log.debug "DockerAutomator performing install task #{@task['taskId']}"
     parse_inputmap(inputmap)
     ssh_file = write_ssh_file(File.join(Dir.pwd, self.class.ssh_key_dir), @task)
+    set_credentials(@sshauth)
     log.debug "Attempting ssh into ip: #{@ipaddress}, user: #{@sshuser}"
     setup_host_volumes(@vols)
     pull_image(@image_name) if search_image(@image_name)
@@ -219,6 +221,7 @@ class DockerAutomator < Coopr::Plugin::Automator
     log.debug "DockerAutomator performing start task #{@task['taskId']}"
     parse_inputmap(inputmap)
     ssh_file = write_ssh_file(File.join(Dir.pwd, self.class.ssh_key_dir), @task)
+    set_credentials(@sshauth)
     log.debug "Attempting ssh into ip: #{@ipaddress}, user: #{@sshuser}"
     @result['result'][@image_name]['id'] = run_container(@image_name, @command)[0].chomp
     @result['result']['ports'] = @ports
@@ -233,6 +236,7 @@ class DockerAutomator < Coopr::Plugin::Automator
     log.debug "DockerAutomator performing stop task #{@task['taskId']}"
     parse_inputmap(inputmap)
     ssh_file = write_ssh_file(File.join(Dir.pwd, self.class.ssh_key_dir), @task)
+    set_credentials(@sshauth)
     log.debug "Attempting ssh into ip: #{@ipaddress}, user: #{@sshuser}"
     stop_container(@task['config'][@image_name]['id'])
     @result['result']['ports'] = nil
@@ -247,6 +251,7 @@ class DockerAutomator < Coopr::Plugin::Automator
     log.debug "DockerAutomator performing remove task #{@task['taskId']}"
     parse_inputmap(inputmap)
     ssh_file = write_ssh_file(File.join(Dir.pwd, self.class.ssh_key_dir), @task)
+    set_credentials(@sshauth)
     log.debug "Attempting ssh into ip: #{@ipaddress}, user: #{@sshuser}"
     remove_container(@task['config'][@image_name]['id'])
     @task['config'][@image_name] = {}
