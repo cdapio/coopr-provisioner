@@ -36,7 +36,7 @@ class DockerAutomator < Coopr::Plugin::Automator
     end
   end
 
-  def remote_command(cmd, root=false)
+  def remote_command(cmd, root = false)
     sudo =
       if root == false || @sshuser == 'root'
         nil
@@ -80,11 +80,11 @@ class DockerAutomator < Coopr::Plugin::Automator
     ports = @task['config']['ports'] ? @task['config']['ports'] : []
     # TODO: check for port conflicts and error
     @fields['publish_ports'].split(',').each do |port|
-      if port.include?(':') # Mapping is host:container
-        portmap = "#{portmap}-p #{port} " # extra space at end
-      else
-        portmap = "#{portmap}-p #{port}:#{port} " # extra space at end
-      end
+      portmap = if port.include?(':') # Mapping is host:container
+                  "#{portmap}-p #{port} " # extra space at end
+                else
+                  "#{portmap}-p #{port}:#{port} " # extra space at end
+                end
       # Drop container-side port, if specified
       port = port.split(':').first
       if !ports.nil? && ports.include?(port)
@@ -99,15 +99,15 @@ class DockerAutomator < Coopr::Plugin::Automator
 
   def envmap
     # TODO: allow commas inside quotes
-    @envs.map {|x| "-e #{x}" }.join(' ')
+    @envs.map { |x| "-e #{x}" }.join(' ')
   end
 
   def linkmap
-    @links.map {|x| "--link #{x}" }.join(' ')
+    @links.map { |x| "--link #{x}" }.join(' ')
   end
 
   def volmap
-    @vols.map {|x| "-v #{x}" }.join(' ')
+    @vols.map { |x| "-v #{x}" }.join(' ')
   end
 
   def container_name(image_name)
@@ -148,6 +148,7 @@ class DockerAutomator < Coopr::Plugin::Automator
   def parse_inputmap(inputmap)
     @sshauth = inputmap['sshauth']
     @sshuser = inputmap['sshauth']['user']
+    @hostname = inputmap['hostname']
     @ipaddress = inputmap['ipaddress']
     @fields = inputmap['fields']
     @image_name = @fields && @fields.key?('image_name') ? @fields['image_name'].gsub(/\s+/, '') : nil
@@ -169,6 +170,19 @@ class DockerAutomator < Coopr::Plugin::Automator
       end
     rescue Net::SSH::AuthenticationFailed
       raise $!, "SSH Authentication failure for #{@ipaddress}: #{$!}", $!.backtrace
+    end
+    log.debug "Checking if #{@hostname} is CoreOS"
+    begin
+      remote_command('grep CoreOS /etc/os-release 2>/dev/null')
+      log.debug 'CoreOS detected... stopping update-engine/locksmithd'
+      begin
+        remote_command('systemctl stop update-engine')
+        remote_command('systemctl stop locksmithd')
+      rescue CommandExecutionError
+        log.debug 'Stop update-engine/locksmithd failed... maybe not started?'
+      end
+    rescue CommandExecutionError
+      log.debug "CoreOS not detected on #{@hostname}"
     end
     @result['status'] = 0
     log.debug "DockerAutomator bootstrap completed successfully: #{@result}"
