@@ -176,8 +176,8 @@ class DockerAutomator < Coopr::Plugin::Automator
       remote_command('grep CoreOS /etc/os-release 2>/dev/null')
       log.debug 'CoreOS detected... stopping update-engine/locksmithd'
       begin
-        remote_command('systemctl stop update-engine')
-        remote_command('systemctl stop locksmithd')
+        remote_command('systemctl stop update-engine', true)
+        remote_command('systemctl stop locksmithd', true)
       rescue CommandExecutionError
         log.debug 'Stop update-engine/locksmithd failed... maybe not started?'
       end
