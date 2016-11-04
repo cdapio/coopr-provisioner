@@ -25,3 +25,4 @@ gem 'fog-profitbricks', '< 2.0' # requires a newer fog 1.42+
 gem 'net-ssh', '~> 2.6'
 
 gem 'google-api-client', '~> 0.8.6'
+gem 'addressable', '< 2.5' # dependency of google-api-client, 2.5 requires Ruby 2.0+
