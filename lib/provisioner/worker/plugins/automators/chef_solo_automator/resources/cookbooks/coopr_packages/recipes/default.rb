@@ -29,9 +29,11 @@ end
 # Install platform-specific packages
 pf = node['platform_family']
 %w(remove install upgrade).each do |act|
-  node['coopr_packages'][pf][act].each do |cb|
-    package cb do
-      action act.to_sym
+  if node['coopr_packages'].key?(pf) && node['coopr_packages'][pf].key?(act)
+    node['coopr_packages'][pf][act].each do |cb|
+      package cb do
+        action act.to_sym
+      end
     end
   end
 end
