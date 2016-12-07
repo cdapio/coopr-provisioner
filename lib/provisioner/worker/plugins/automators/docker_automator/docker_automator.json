@@ -12,7 +12,7 @@
             "label": "Image Name",
             "override": false,
             "type": "text",
-            "tip": "Image name in NAME[:TAG] format"
+            "tip": "Image name in [REPOSITORY/]NAME[:TAG] format"
           },
           "environment_variables": {
             "label": "Environment variables",

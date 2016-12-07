@@ -59,15 +59,31 @@ class DockerAutomator < Coopr::Plugin::Automator
   end
 
   def search_image(image_name)
-    search = docker_command("search #{image_name} | tail -n +2 | awk '{print $1}'")[0].split(/\r?\n/)
-    case search.count
-    when 1
-      return true
-    when 0
-      raise "Image #{image_name} not found!"
+    # Repository == URL == must include at least one dot, which image names cannot contain
+    if image_name.split('/')[0].include?('.')
+      log.debug "Image name #{image_name} includes repository... skipping search"
+      true
     else
-      log.debug "More than one image found for #{image_name}!"
-      return true
+      search = docker_command("search #{image_name} | tail -n +2 | awk '{print $1}'")[0].split(/\r?\n/)
+      case search.count
+      when 1
+        return true
+      when 0
+        case image_name.split('/').count
+        when 1
+          raise "Image #{image_name} not found on Docker Hub!"
+        when 2
+          log.debug "Checking if #{image_name.split('/')[0]} is a username"
+          if docker_command("search #{image_name.split('/')[0]} | tail -n +2 | awk '{print $1}'")[0].split(/\r?\n/).count >= 1
+            raise "Image #{image_name} not found on Docker Hub!"
+          end
+        end
+        log.debug "Cannot find user #{image_name.split('/')[0]} on Docker Hub, assuming it's a repository"
+        return true
+      else
+        log.debug "More than one image found for #{image_name}!"
+        return true
+      end
     end
   end
 

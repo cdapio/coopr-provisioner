@@ -20,6 +20,7 @@ gem 'rake'
 
 group :dependencies do
   # These gems are used by the provisioner
+  gem 'deep_merge', '~> 1.0', require: 'deep_merge/rails_compat'
   gem 'json', '~> 1.7.7'
   gem 'logger'
   gem 'mime-types', '< 3.0'
@@ -27,17 +28,20 @@ group :dependencies do
   gem 'rest_client', '~> 1.7'
   gem 'sinatra', '~> 1.4'
   gem 'thin', '~> 1.6'
-  gem 'deep_merge', '~> 1.0', require: 'deep_merge/rails_compat'
 end
 
 group :test do
   gem 'rack-test', '~> 0.6'
   gem 'rspec', '~> 3.0'
+  # rubocop: disable Lint/UnneededDisable
+  # rubocop: disable Bundler/DuplicatedGem
   if RUBY_VERSION.to_f < 2.0
     gem 'rubocop', '< 0.42'
   else
     gem 'rubocop', '~> 0.24'
   end
+  # rubocop: enable Bundler/DuplicatedGem
+  # rubocop: enable Lint/UnneededDisable
   gem 'simplecov', '~> 0.7.1', require: false
 end
 
