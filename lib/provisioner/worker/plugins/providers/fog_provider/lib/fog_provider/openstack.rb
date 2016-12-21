@@ -295,6 +295,7 @@ class FogProviderOpenstack < Coopr::Plugin::Provider
         return addr['addr'] if addr['OS-EXT-IPS:type'] == 'floating'
       end
     end
+    nil
   end
 
   def primary_public_ip_address(addresses)
