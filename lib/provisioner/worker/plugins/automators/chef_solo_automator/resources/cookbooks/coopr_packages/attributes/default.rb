@@ -27,4 +27,8 @@ default['coopr_packages']['rhel']['install'] = []
 default['coopr_packages']['rhel']['upgrade'] = []
 default['coopr_packages']['rhel']['remove'] = ['yum-cron']
 
+# options passed to the package resources, as well as the initial package upgrade
+default['coopr_packages']['debian']['options'] = '-y -o Dpkg::Options::="--force-confnew"'
+default['coopr_packages']['rhel']['options'] = '-y'
+
 default['coopr_packages']['skip_updates'] = false

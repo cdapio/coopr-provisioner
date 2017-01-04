@@ -1,5 +1,5 @@
 #
-# Copyright © 2012-2015 Cask Data, Inc.
+# Copyright © 2012-2017 Cask Data, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -26,3 +26,4 @@ gem 'net-ssh', '~> 2.6'
 
 gem 'google-api-client', '~> 0.8.6'
 gem 'addressable', '< 2.5' # dependency of google-api-client, 2.5 requires Ruby 2.0+
+gem 'nokogiri', '< 1.7' # dependency of fog (fog-xml), 1.7 requires Ruby 2.1+
