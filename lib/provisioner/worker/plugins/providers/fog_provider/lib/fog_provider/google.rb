@@ -260,7 +260,7 @@ class FogProviderGoogle < Coopr::Plugin::Provider
         # validate credentials
         validate!
       rescue
-        log.debug 'Credential validation failed, assuming nothing created, setting providerid to nil'
+        log.warn 'Credential validation failed, assuming nothing created, setting providerid to nil'
         providerid = nil
       end
       # delete server

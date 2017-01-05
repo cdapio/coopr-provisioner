@@ -277,7 +277,7 @@ class FogProviderAWS < Coopr::Plugin::Provider
         # Run EC2 credential validation
         validate!
       rescue
-        log.debug 'Credential validation failed, assuming nothing created, setting providerid to nil'
+        log.warn 'Credential validation failed, assuming nothing created, setting providerid to nil'
         providerid = nil
       end
       # Delete server
