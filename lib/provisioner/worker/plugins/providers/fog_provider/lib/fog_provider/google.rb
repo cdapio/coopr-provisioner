@@ -256,8 +256,13 @@ class FogProviderGoogle < Coopr::Plugin::Provider
       fields.each do |k, v|
         instance_variable_set('@' + k, v)
       end
-      # validate credentials
-      validate!
+      begin
+        # validate credentials
+        validate!
+      rescue
+        log.warn 'Credential validation failed, assuming nothing created, setting providerid to nil'
+        providerid = nil
+      end
       # delete server
       log.debug 'Invoking server delete'
 
