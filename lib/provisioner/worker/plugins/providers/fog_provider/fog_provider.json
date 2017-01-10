@@ -422,6 +422,12 @@
             "type": "password",
             "tip": "Your Openstack password"
           },
+          "availability_zone": {
+            "type": "text",
+            "label": "Availability Zone",
+            "override": true,
+            "tip": "Openstack Availability Zone"
+          },
           "openstack_tenant": {
             "label": "Tenant",
             "type": "text",
@@ -459,6 +465,13 @@
             "label": "Verify SSL peers",
             "type": "checkbox",
             "tip": "Verify peer SSL certificates"
+          },
+          "security_groups": {
+            "type": "text",
+            "label": "Security Group",
+            "default": "default",
+            "override": true,
+            "tip": "Openstack security groups (comma separated)"
           }
         },
         "required": [
@@ -474,17 +487,6 @@
       },
       "user": {
         "fields": {
-          "security_groups": {
-            "type": "text",
-            "label": "Security Group",
-            "default": "default",
-            "tip": "Openstack security groups (comma separated)"
-          },
-          "availability_zone": {
-            "type": "text",
-            "label": "Availability Zone",
-            "tip": "Openstack Availability Zone"
-          },
           "user_data_resource": {
             "label": "User Data Resource Name",
             "type": "text",
