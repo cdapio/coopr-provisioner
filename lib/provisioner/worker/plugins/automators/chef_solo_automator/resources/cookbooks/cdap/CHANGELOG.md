@@ -1,6 +1,25 @@
 cdap CHANGELOG
 ==============
 
+v2.28.1 (Jan 26, 2017)
+----------------------
+- Properly constrain version of base package installed with CLI ( Issue: #198 )
+- Add CDAP 4.0.1, 3.5.3, and Ambari Service 4.0.2 ( Issue: #199 )
+
+v2.28.0 (Jan 19, 2017)
+----------------------
+- Use krb5_principal and krb5_keytab LWRPs ( Issue: #181 )
+- Add 3.5.2 and 4.0.0 and make 4.0.0 default ( Issues: #194 #195 )
+
+v2.27.0 (Dec 14, 2016)
+----------------------
+- Do not set kafka.server.log.dirs so kafka.log.dir can be used ( Issue: #187 )
+- Sync script with CDAP init scripts ( Issue: #188 )
+- Include Java in CLI recipe, unless skip is requested ( Issue: #189 )
+- Support HDP 2.5.3.0 ( Issue: #190 )
+- Use precise repo for up through xenial ( Issue: #191 )
+- Restrict ark cookbook version ( Issue: #192 )
+
 v2.26.2 (Nov 10, 2016)
 ----------------------
 - Always run security recipe in fullstack ( Issue: #185 )
