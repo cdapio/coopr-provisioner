@@ -28,9 +28,9 @@ default['hadoop']['distribution_version'] =
   if node['hadoop'].key?('distribution_version')
     node['hadoop']['distribution_version']
   elsif node['hadoop']['distribution'] == 'hdp'
-    '2.3.4.7'
+    '2.4.3.0'
   elsif node['hadoop']['distribution'] == 'cdh'
-    '5.6.0'
+    '5.7.3'
   elsif node['hadoop']['distribution'] == 'bigtop'
     '1.0.0'
   elsif node['hadoop']['distribution'] == 'iop'
@@ -133,6 +133,8 @@ full_version =
     '2.4.3.0-227'
   when '2.5.0.0'
     '2.5.0.0-1245'
+  when '2.5.3.0'
+    '2.5.3.0-37'
   else
     node['hadoop']['distribution_version']
   end
