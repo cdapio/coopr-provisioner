@@ -2,10 +2,19 @@
 
 This file is used to list changes made in each version of the ntp cookbook.
 
+## 3.3.1 (2016-12-21)
+- Fix resource cloning warning in recipe[default]
+
+## 3.3.0 (2016-12-16)
+- Add Mac OS X client config support
+
+## 3.2.1 (2016-11-23)
+- Update leap seconds file to version 3676924800
+
 ## 3.2.0 (2016-09-28)
 - Remove support for Arch
-- Remove legacy apparmore config that wasn't used
-- Don't install apparmor (and uninstall it) on Ubuntu 16.04+
+- Remove legacy apparmor config that wasn't used
+- Don't install ntpdate (and uninstall it) on Ubuntu 16.04+
 - Expand specs and avoid deprecation warnings
 
 ## 3.1.0 (2016-09-16)
