@@ -1,6 +1,23 @@
 cdap CHANGELOG
 ==============
 
+v2.28.4 (Feb 16, 2017)
+----------------------
+- Switch to using Chef::VERSION for cookbook restrictions ( Issue #207 )
+- Set testing log level to error ( Issue #208 )
+- Wrap all node attributes in version check ( Issue #209 )
+- Restrict build-essential on Chef < 12.5 ( Issue: #211 )
+
+v2.28.3 (Feb 9, 2017)
+---------------------
+- Set Node.js version for SDK 4.0+ ( Issue #204 )
+- Add guard to prevent error on insecure clusters ( Issue #205 )
+
+v2.28.2 (Feb 2, 2017)
+---------------------
+- Install rkerberos gem during init ( Issue: #201 )
+- Move HBase grant commands to init ( Issue: #202 )
+
 v2.28.1 (Jan 26, 2017)
 ----------------------
 - Properly constrain version of base package installed with CLI ( Issue: #198 )

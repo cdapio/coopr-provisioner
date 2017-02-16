@@ -2,7 +2,7 @@
 # Cookbook Name:: cdap
 # Recipe:: init
 #
-# Copyright © 2013-2016 Cask Data, Inc.
+# Copyright © 2013-2017 Cask Data, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -55,7 +55,10 @@ end
   end
 end
 
-include_recipe 'krb5' if hadoop_kerberos?
+if hadoop_kerberos?
+  include_recipe 'krb5'
+  include_recipe 'krb5::rkerberos_gem'
+end
 
 princ =
   if node['cdap']['cdap_site'].key?('cdap.master.kerberos.principal')
@@ -90,5 +93,21 @@ krb5_keytab keytab do
   group 'cdap'
   mode '0640'
   action :create
+  only_if { hadoop_kerberos? }
+end
+
+# Template for HBase grant - this is done here to ensure it's present
+template "#{Chef::Config[:file_cache_path]}/hbase-grant.hbase" do
+  source 'hbase-shell.erb'
+  owner 'hbase'
+  group 'hadoop'
+  action :create
+  only_if { hadoop_kerberos? }
+end
+
+hbkt = "#{node['krb5']['keytabs_dir']}/hbase.service.keytab"
+execute 'kinit-as-hbase-and-grant' do
+  command "kinit -kt #{hbkt} hbase/#{node['fqdn']} && hbase shell #{Chef::Config[:file_cache_path]}/hbase-grant.hbase"
+  user 'hbase'
   only_if { hadoop_kerberos? }
 end

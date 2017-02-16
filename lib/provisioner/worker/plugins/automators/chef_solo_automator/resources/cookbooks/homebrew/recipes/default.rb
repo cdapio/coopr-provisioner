@@ -1,10 +1,10 @@
 #
 # Author:: Joshua Timberman (<jtimberman@chef.io>)
 # Author:: Graeme Mathieson (<mathie@woss.name>)
-# Cookbook Name:: homebrew
+# Cookbook:: homebrew
 # Recipe:: default
 #
-# Copyright 2011-2016, Chef Software, Inc.
+# Copyright:: 2011-2016, Chef Software, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -19,9 +19,6 @@
 # limitations under the License.
 #
 
-Chef::Resource.send(:include, Homebrew::Mixin)
-Chef::Recipe.send(:include, Homebrew::Mixin)
-
 homebrew_go = "#{Chef::Config[:file_cache_path]}/homebrew_go"
 
 Chef::Log.debug("Homebrew owner is '#{homebrew_owner}'")
@@ -29,7 +26,8 @@ Chef::Log.debug("Homebrew owner is '#{homebrew_owner}'")
 remote_file homebrew_go do
   source node['homebrew']['installer']['url']
   checksum node['homebrew']['installer']['checksum'] unless node['homebrew']['installer']['checksum'].nil?
-  mode 00755
+  mode '755'
+  not_if { ::File.exist? '/usr/local/bin/brew' }
 end
 
 execute 'install homebrew' do
@@ -37,6 +35,13 @@ execute 'install homebrew' do
   environment lazy { { 'HOME' => ::Dir.home(homebrew_owner), 'USER' => homebrew_owner } }
   user homebrew_owner
   not_if { ::File.exist? '/usr/local/bin/brew' }
+end
+
+execute 'set analytics' do
+  environment lazy { { 'HOME' => ::Dir.home(homebrew_owner), 'USER' => homebrew_owner } }
+  user homebrew_owner
+  command "/usr/local/bin/brew analytics #{node['homebrew']['enable-analytics'] ? 'on' : 'off'}"
+  only_if { shell_out('/usr/local/bin/brew analytics state', user: homebrew_owner).stdout.include?('enabled') != node['homebrew']['enable-analytics'] }
 end
 
 if node['homebrew']['auto-update']
