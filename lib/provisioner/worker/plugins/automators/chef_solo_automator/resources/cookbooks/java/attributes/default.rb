@@ -43,10 +43,16 @@ when 'windows'
   default['java']['windows']['package_name'] = 'Java(TM) SE Development Kit 7 (64-bit)'
   default['java']['windows']['public_jre_home'] = nil
   default['java']['windows']['owner'] = 'administrator'
+  default['java']['windows']['remove_obsolete'] = false
 when 'mac_os_x'
   default['java']['install_flavor'] = 'homebrew'
 else
   default['java']['install_flavor'] = 'openjdk'
+end
+
+# S390(X) - IBM zSeries Architecture - only IBM jre / jdk can be used. Download from https://developer.ibm.com/javasdk/downloads/
+if node['kernel']['machine'].start_with?('s390')
+  default['java']['install_flavor'] = 'ibm'
 end
 
 case node['java']['install_flavor']
@@ -62,6 +68,7 @@ when 'ibm', 'ibm_tar'
                                                schemagen serialver tnameserv wsgen wsimport xjc)
 
   default['java']['ibm']['7']['bin_cmds'] = node['java']['ibm']['6']['bin_cmds'] + %w(pack200 unpack200)
+  default['java']['ibm']['8']['bin_cmds'] = node['java']['ibm']['7']['bin_cmds']
 when 'oracle_rpm'
   # type of java RPM : jdk or jre
   default['java']['oracle_rpm']['type'] = 'jdk'
