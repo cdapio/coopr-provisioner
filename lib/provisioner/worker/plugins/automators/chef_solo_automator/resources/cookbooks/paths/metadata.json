@@ -1,0 +1,29 @@
+{
+  "name": "paths",
+  "description": "Configures paths",
+  "long_description": "paths Cookbook\n=================\nSet bin, lib and etc paths as node attributes.\n\nLicense and Authors\n-------------------\nAuthors: Blake Irvin (<bixv@icloud.com>)\n",
+  "maintainer": "Wanelo, Inc.",
+  "maintainer_email": "bixu@wanelo.com",
+  "license": "Apache 2.0",
+  "platforms": {
+  },
+  "dependencies": {
+  },
+  "recommendations": {
+  },
+  "suggestions": {
+  },
+  "conflicting": {
+  },
+  "providing": {
+  },
+  "replacing": {
+  },
+  "attributes": {
+  },
+  "groupings": {
+  },
+  "recipes": {
+  },
+  "version": "0.3.0"
+}
