@@ -304,6 +304,12 @@
             "override": true,
             "tip": "Zone"
           },
+          "auto_restart": {
+            "label": "Automatically restart instances on failure",
+            "type": "checkbox",
+            "override": true,
+            "tip": "Automatically restart instances on failure"
+          },
           "provider_hostname": {
             "label": "Set hostname to provider-specific public DNS hostname (overrides DNS suffix)",
             "type": "checkbox",

@@ -346,6 +346,7 @@ class FogProviderGoogle < Coopr::Plugin::Provider
     }
     # optional attrs
     server_def[:network] = @network unless @network.to_s == ''
+    server_def[:auto_restart] = @auto_restart
     server_def
   end
 
