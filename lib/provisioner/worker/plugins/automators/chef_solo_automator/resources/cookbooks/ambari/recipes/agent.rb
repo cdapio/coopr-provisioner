@@ -17,18 +17,15 @@
 # limitations under the License.
 #
 
+include_recipe 'ambari::default'
 include_recipe 'ambari::setup_package_manager'
 
-%w(ambari-agent).each do |pack|
-  package pack do
-    action :install
-  end
-end
+package 'ambari-agent'
 
 directory '/etc/ambari-agent/conf.chef' do
   owner 'root'
   group 'root'
-  mode '0755'
+  mode 0o755
   action :create
 end
 
@@ -41,6 +38,7 @@ end
 
 execute 'alternatives configured confdir' do
   command 'update-alternatives --install /etc/ambari-agent/conf ambari-agent-conf /etc/ambari-agent/conf.chef 90'
+  not_if 'update-alternatives --display ambari-agent-conf |grep "/etc/ambari-agent/conf.chef"'
 end
 
 # Get Ambari Server FQDN
@@ -57,32 +55,29 @@ ambari_server_fqdn =
   elsif node['recipes'].include?('ambari::server') # Server is me
     node['fqdn']
   else # must search
-    if Chef::Config[:solo] # chef-solo can't search, by default
-      if node['recipes'].include?('chef-solo-search::default')
-        do_search = true # it can with chef-solo-search
-      else
-        do_search = false
-      end
-    else
-      do_search = true
-    end
+    do_search = if Chef::Config[:solo] # chef-solo can't search, by default
+                  if node['recipes'].include?('chef-solo-search::default')
+                    true # it can with chef-solo-search
+                  else
+                    false
+                  end
+                else
+                  true
+                end
     if do_search == true
-      search('node', 'recipes:ambari\:\:server AND chef_environment:' + node.chef_environment).first['fqdn']
+      search('node', 'recipes:ambari\:\:server AND chef_environment:' + node.chef_environment).first['fqdn'] # ~FC010
     end
   end
 
 template '/etc/ambari-agent/conf/ambari-agent.ini' do
   source 'ambari-agent.ini.erb'
-  mode 0755
+  mode 0o755
   user 'root'
   group 'root'
   variables(ambari_server_fqdn: ambari_server_fqdn)
 end
 
 service 'ambari-agent' do
+  supports :status => true, :restart => true, :reload => false
   action [:enable, :start]
-end
-
-service 'iptables' do
-  action [:disable, :stop]
 end
