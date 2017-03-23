@@ -27,6 +27,16 @@ if node['hive'].key?('hive_site') && node['hive']['hive_site'].key?('javax.jdo.o
    node['hive']['hive_site']['javax.jdo.option.ConnectionDriverName'] != 'org.apache.derby.jdbc.EmbeddedDriver'
   jdo_array = node['hive']['hive_site']['javax.jdo.option.ConnectionURL'].split(':')
   hive_uris = node['hive']['hive_site']['hive.metastore.uris'].gsub('thrift://', '').gsub(':9083', '').split(',')
+  # resolve hostnames so that db permissions are also granted for IPs. Mysql fails when hostname looks like an IP.
+  begin
+    require 'resolv'
+    hive_ips = hive_uris.map { |h| Resolv.getaddress(h) }
+    hive_ips.each do |ip|
+      hive_uris.push(ip) unless hive_uris.include?(ip)
+    end
+  rescue LoadError, Resolv::ResolvError => e
+    Chef::Log.warn("Could not resolve hive.metastore.uris, not explicitly granting db permissions for them : #{e.message}")
+  end
   hive_uris.push('localhost')
   db_type = jdo_array[1]
   db_name = jdo_array[3].split('/').last.split('?').first
@@ -44,9 +54,9 @@ if node['hive'].key?('hive_site') && node['hive']['hive_site'].key?('javax.jdo.o
   when 'mysql'
     include_recipe 'database::mysql'
     mysql_connection_info = {
-      :host     => 'localhost',
-      :username => 'root',
-      :password => node['mysql']['server_root_password']
+      host: 'localhost',
+      username: 'root',
+      password: node['mysql']['server_root_password']
     }
     mysql_database db_name do
       connection mysql_connection_info
@@ -91,10 +101,10 @@ if node['hive'].key?('hive_site') && node['hive']['hive_site'].key?('javax.jdo.o
   when 'postgresql'
     include_recipe 'database::postgresql'
     postgresql_connection_info = {
-      :host     => '127.0.0.1',
-      :port     => node['postgresql']['config']['port'],
-      :username => 'postgres',
-      :password => node['postgresql']['password']['postgres']
+      host: '127.0.0.1',
+      port: node['postgresql']['config']['port'],
+      username: 'postgres',
+      password: node['postgresql']['password']['postgres']
     }
     postgresql_database db_name do
       connection postgresql_connection_info

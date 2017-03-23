@@ -22,6 +22,6 @@ include_recipe 'hadoop::hadoop_hdfs_namenode'
 
 ruby_block 'initaction-hdfs-namenode-initialize-sharededits' do
   block do
-    resources(:execute => 'hdfs-namenode-initialize-sharededits').run_action(:run)
+    resources(execute: 'hdfs-namenode-initialize-sharededits').run_action(:run)
   end
 end

@@ -2,7 +2,7 @@
 # Cookbook Name:: hadoop_wrapper
 # Attribute:: krb5
 #
-# Copyright © 2013-2016 Cask Data, Inc.
+# Copyright © 2013-2017 Cask Data, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -27,17 +27,6 @@ if node['hadoop'].key?('core_site') && node['hadoop']['core_site'].key?('hadoop.
    node['hadoop']['core_site']['hadoop.security.authentication'] == 'kerberos'
 
   include_attribute 'krb5'
-  include_attribute 'krb5_utils'
-
-  # Create service keytabs for all services, since we may be a client
-  default['krb5_utils']['krb5_service_keytabs']['HTTP'] = { 'owner' => 'hdfs', 'group' => 'hadoop', 'mode' => '0640' }
-  default['krb5_utils']['krb5_service_keytabs']['hdfs'] = { 'owner' => 'hdfs', 'group' => 'hadoop', 'mode' => '0640' }
-  default['krb5_utils']['krb5_service_keytabs']['hbase'] = { 'owner' => 'hbase', 'group' => 'hadoop', 'mode' => '0640' }
-  default['krb5_utils']['krb5_service_keytabs']['hive'] = { 'owner' => 'hive', 'group' => 'hadoop', 'mode' => '0640' }
-  default['krb5_utils']['krb5_service_keytabs']['mapred'] = { 'owner' => 'mapred', 'group' => 'hadoop', 'mode' => '0640' }
-  default['krb5_utils']['krb5_service_keytabs']['spark'] = { 'owner' => 'spark', 'group' => 'hadoop', 'mode' => '0640' }
-  default['krb5_utils']['krb5_service_keytabs']['yarn'] = { 'owner' => 'yarn', 'group' => 'hadoop', 'mode' => '0640' }
-  default['krb5_utils']['krb5_service_keytabs']['zookeeper'] = { 'owner' => 'zookeeper', 'group' => 'hadoop', 'mode' => '0640' }
 
   # Hadoop
 
@@ -79,19 +68,19 @@ if node['hadoop'].key?('core_site') && node['hadoop']['core_site'].key?('hadoop.
   default['hadoop']['hdfs_site']['dfs.web.authentication.kerberos.principal'] = "HTTP/_HOST@#{node['krb5']['krb5_conf']['realms']['default_realm'].upcase}"
   default['hadoop']['hdfs_site']['dfs.namenode.kerberos.internal.spnego.principal'] = "HTTP/_HOST@#{node['krb5']['krb5_conf']['realms']['default_realm'].upcase}"
   default['hadoop']['hdfs_site']['dfs.secondary.namenode.kerberos.internal.spnego.principal'] = "HTTP/_HOST@#{node['krb5']['krb5_conf']['realms']['default_realm'].upcase}"
-  default['hadoop']['hdfs_site']['dfs.datanode.keytab.file'] = "#{node['krb5_utils']['keytabs_dir']}/hdfs.service.keytab"
-  default['hadoop']['hdfs_site']['dfs.namenode.keytab.file'] = "#{node['krb5_utils']['keytabs_dir']}/hdfs.service.keytab"
-  default['hadoop']['hdfs_site']['dfs.secondary.namenode.keytab.file'] = "#{node['krb5_utils']['keytabs_dir']}/hdfs.service.keytab"
+  default['hadoop']['hdfs_site']['dfs.datanode.keytab.file'] = "#{node['krb5']['keytabs_dir']}/hdfs.service.keytab"
+  default['hadoop']['hdfs_site']['dfs.namenode.keytab.file'] = "#{node['krb5']['keytabs_dir']}/hdfs.service.keytab"
+  default['hadoop']['hdfs_site']['dfs.secondary.namenode.keytab.file'] = "#{node['krb5']['keytabs_dir']}/hdfs.service.keytab"
   default['hadoop']['hdfs_site']['dfs.datanode.address'] = '0.0.0.0:1004'
   default['hadoop']['hdfs_site']['dfs.datanode.http.address'] = '0.0.0.0:1006'
 
   # mapred-site.xml
-  default['hadoop']['mapred_site']['mapreduce.jobhistory.keytab'] = "#{node['krb5_utils']['keytabs_dir']}/mapred.service.keytab"
+  default['hadoop']['mapred_site']['mapreduce.jobhistory.keytab'] = "#{node['krb5']['keytabs_dir']}/mapred.service.keytab"
   default['hadoop']['mapred_site']['mapreduce.jobhistory.principal'] = "mapred/_HOST@#{node['krb5']['krb5_conf']['realms']['default_realm'].upcase}"
 
   # yarn-site.xml
-  default['hadoop']['yarn_site']['yarn.resourcemanager.keytab'] = "#{node['krb5_utils']['keytabs_dir']}/yarn.service.keytab"
-  default['hadoop']['yarn_site']['yarn.nodemanager.keytab'] = "#{node['krb5_utils']['keytabs_dir']}/yarn.service.keytab"
+  default['hadoop']['yarn_site']['yarn.resourcemanager.keytab'] = "#{node['krb5']['keytabs_dir']}/yarn.service.keytab"
+  default['hadoop']['yarn_site']['yarn.nodemanager.keytab'] = "#{node['krb5']['keytabs_dir']}/yarn.service.keytab"
   default['hadoop']['yarn_site']['yarn.resourcemanager.principal'] = "yarn/_HOST@#{node['krb5']['krb5_conf']['realms']['default_realm'].upcase}"
   default['hadoop']['yarn_site']['yarn.nodemanager.principal'] = "yarn/_HOST@#{node['krb5']['krb5_conf']['realms']['default_realm'].upcase}"
   default['hadoop']['yarn_site']['yarn.nodemanager.linux-container-executor.group'] = 'yarn'
@@ -102,8 +91,8 @@ if node['hadoop'].key?('core_site') && node['hadoop']['core_site'].key?('hadoop.
   # hbase-site.xml
   default['hbase']['hbase_site']['hbase.security.authorization'] = 'true'
   default['hbase']['hbase_site']['hbase.security.authentication'] = 'kerberos'
-  default['hbase']['hbase_site']['hbase.master.keytab.file'] = "#{node['krb5_utils']['keytabs_dir']}/hbase.service.keytab"
-  default['hbase']['hbase_site']['hbase.regionserver.keytab.file'] = "#{node['krb5_utils']['keytabs_dir']}/hbase.service.keytab"
+  default['hbase']['hbase_site']['hbase.master.keytab.file'] = "#{node['krb5']['keytabs_dir']}/hbase.service.keytab"
+  default['hbase']['hbase_site']['hbase.regionserver.keytab.file'] = "#{node['krb5']['keytabs_dir']}/hbase.service.keytab"
   default['hbase']['hbase_site']['hbase.master.kerberos.principal'] = "hbase/_HOST@#{node['krb5']['krb5_conf']['realms']['default_realm'].upcase}"
   default['hbase']['hbase_site']['hbase.regionserver.kerberos.principal'] = "hbase/_HOST@#{node['krb5']['krb5_conf']['realms']['default_realm'].upcase}"
   default['hbase']['hbase_site']['hbase.coprocessor.region.classes'] = 'org.apache.hadoop.hbase.security.token.TokenProvider,org.apache.hadoop.hbase.security.access.SecureBulkLoadEndpoint,org.apache.hadoop.hbase.security.access.AccessController'
@@ -114,18 +103,19 @@ if node['hadoop'].key?('core_site') && node['hadoop']['core_site'].key?('hadoop.
 
   # hive-site.xml
   default['hive']['hive_site']['hive.metastore.sasl.enabled'] = 'true'
-  default['hive']['hive_site']['hive.metastore.kerberos.keytab.file'] = "#{node['krb5_utils']['keytabs_dir']}/hive.service.keytab"
+  default['hive']['hive_site']['hive.metastore.kerberos.keytab.file'] = "#{node['krb5']['keytabs_dir']}/hive.service.keytab"
   default['hive']['hive_site']['hive.metastore.kerberos.principal'] = "hive/_HOST@#{node['krb5']['krb5_conf']['realms']['default_realm'].upcase}"
   default['hive']['hive_site']['hive.server2.authentication'] = 'KERBEROS'
-  default['hive']['hive_site']['hive.server2.authentication.kerberos.keytab'] = "#{node['krb5_utils']['keytabs_dir']}/hive.service.keytab"
+  default['hive']['hive_site']['hive.server2.authentication.kerberos.keytab'] = "#{node['krb5']['keytabs_dir']}/hive.service.keytab"
   default['hive']['hive_site']['hive.server2.authentication.kerberos.principal'] = "hive/_HOST@#{node['krb5']['krb5_conf']['realms']['default_realm'].upcase}"
 
   # Spark
 
   # spark-defaults.conf
   default['spark']['spark_defaults']['spark.history.kerberos.enabled'] = 'true'
-  default['spark']['spark_defaults']['spark.history.kerberos.principal'] = "spark/_HOST@#{node['krb5']['krb5_conf']['realms']['default_realm'].upcase}"
-  default['spark']['spark_defaults']['spark.history.kerberos.keytab'] = "#{node['krb5_utils']['keytabs_dir']}/spark.service.keytab"
+  # We cannot use _HOST here... https://issues.apache.org/jira/browse/SPARK-17121
+  default['spark']['spark_defaults']['spark.history.kerberos.principal'] = "spark/#{node['fqdn']}@#{node['krb5']['krb5_conf']['realms']['default_realm'].upcase}"
+  default['spark']['spark_defaults']['spark.history.kerberos.keytab'] = "#{node['krb5']['keytabs_dir']}/spark.service.keytab"
 
   # ZooKeeper
 
@@ -134,7 +124,7 @@ if node['hadoop'].key?('core_site') && node['hadoop']['core_site'].key?('hadoop.
     default[svc]['master_jaas']['client']['usekeytab'] = 'true'
     # We cannot use _HOST here... https://issues.apache.org/jira/browse/ZOOKEEPER-1422
     default[svc]['master_jaas']['client']['principal'] = "#{svc}/#{node['fqdn']}@#{node['krb5']['krb5_conf']['realms']['default_realm'].upcase}"
-    default[svc]['master_jaas']['client']['keytab'] = "#{node['krb5_utils']['keytabs_dir']}/#{svc}.service.keytab"
+    default[svc]['master_jaas']['client']['keytab'] = "#{node['krb5']['keytabs_dir']}/#{svc}.service.keytab"
     default[svc]['client_jaas']['client']['usekeytab'] = 'false'
   end
   jsalc = '-Djava.security.auth.login.config'
