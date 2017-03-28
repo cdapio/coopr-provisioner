@@ -258,7 +258,7 @@ class ChefSoloAutomator < Coopr::Plugin::Automator
     begin
       Net::SSH.start(ipaddress, sshauth['user'], @credentials) do |ssh|
 
-        ssh_exec!(ssh, "#{sudo} chef-solo -j #{@@remote_cache_dir}/#{@task['taskId']}.json -o '#{run_list}'", 'Running Chef-solo')
+        ssh_exec!(ssh, "#{sudo} chef-solo --no-color -j #{@@remote_cache_dir}/#{@task['taskId']}.json -o '#{run_list}'", 'Running Chef-solo')
       end
     rescue Net::SSH::AuthenticationFailed
       raise $!, "SSH Authentication failure for #{ipaddress}: #{$!}", $!.backtrace
