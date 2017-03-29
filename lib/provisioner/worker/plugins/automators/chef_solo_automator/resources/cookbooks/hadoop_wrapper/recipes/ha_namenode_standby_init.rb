@@ -22,6 +22,6 @@ include_recipe 'hadoop::hadoop_hdfs_namenode'
 
 ruby_block 'initaction-hdfs-namenode-bootstrap-standby' do
   block do
-    resources(:execute => 'hdfs-namenode-bootstrap-standby').run_action(:run)
+    resources(execute: 'hdfs-namenode-bootstrap-standby').run_action(:run)
   end
 end

@@ -25,7 +25,7 @@ include_recipe 'hadoop::hadoop_hdfs_namenode'
 marker_file = "#{Chef::Config[:file_cache_path]}/hadoop_wrapper.nnformatted"
 ruby_block 'initaction-format-namenode' do
   block do
-    resources(:execute => 'hdfs-namenode-format').run_action(:run)
+    resources(execute: 'hdfs-namenode-format').run_action(:run)
     File.open(marker_file, 'w') {}
   end
   not_if { File.exist? marker_file }
