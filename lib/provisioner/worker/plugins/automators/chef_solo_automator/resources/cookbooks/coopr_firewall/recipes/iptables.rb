@@ -2,7 +2,7 @@
 # Cookbook Name:: coopr_firewall
 # Recipe:: iptables
 #
-# Copyright © 2013-2014 Cask Data, Inc.
+# Copyright © 2013-2017 Cask Data, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -26,7 +26,7 @@ when 'debian'
     owner 'root'
     group 'root'
     mode '0755'
-    content "#!/bin/bash\niptables-restore < #{iptable_rules}\n"
+    content "#!/bin/bash\niptables-restore --noflush < #{iptable_rules}\n"
     action :create
   end
 when 'rhel'
@@ -38,13 +38,13 @@ when 'rhel'
 end
 
 execute 'reload-iptables' do
-  command "iptables-restore < #{iptable_rules}"
+  command "iptables-restore --noflush < #{iptable_rules}"
   user 'root'
   action :nothing
 end
 
 template iptable_rules do
   source 'iptables.erb'
-  notifies :run, 'execute[reload-iptables]'
+  notifies :run, 'execute[reload-iptables]', :immediately
   action :create
 end
