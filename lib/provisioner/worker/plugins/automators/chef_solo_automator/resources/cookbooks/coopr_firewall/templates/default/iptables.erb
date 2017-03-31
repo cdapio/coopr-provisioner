@@ -69,6 +69,12 @@ COMMIT
 
 # Allow all traffic from loopback
 -A INPUT -i lo -j ACCEPT 
+<% node['network']['interfaces'].each do |n, v| %>
+# Allow all traffic from Docker interfaces
+<% if v.key?('type') && v['type'] == 'docker' %>
+-A INPUT -i <%= n =%> -j ACCEPT
+<% end %>
+<% end %>
 
 ###
 ## Nodes
