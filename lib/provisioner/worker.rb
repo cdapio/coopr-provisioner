@@ -1,5 +1,6 @@
 #!/usr/bin/env ruby
 # encoding: UTF-8
+
 #
 # Copyright © 2012-2015 Cask Data, Inc.
 #
@@ -321,7 +322,6 @@ module Coopr
             rescue => e
               log.error "Caught exception posting back to coopr server #{server_uri}/v2/tasks/finish: #{e}"
             end
-
           rescue => e
             result = {} if result.nil? == true
             result['status'] = '1'

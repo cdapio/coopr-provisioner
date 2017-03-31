@@ -1,4 +1,5 @@
 # encoding: UTF-8
+
 #
 # Copyright © 2012-2015 Cask Data, Inc.
 #
@@ -51,7 +52,6 @@ module Coopr
     def load_file(file = @default_file)
       if File.file?(file) && File.readable?(file)
         begin
-
           doc = REXML::Document.new(File.open(file))
           doc.elements.each('configuration/*') do |e|
             # look for <property>..</property> elements
