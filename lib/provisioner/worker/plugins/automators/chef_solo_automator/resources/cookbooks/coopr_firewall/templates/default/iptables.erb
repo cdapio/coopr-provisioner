@@ -9,7 +9,7 @@
 :OUTPUT ACCEPT [0:0]
 <% if node['coopr_firewall']['notrack_ports'] %>
 # NOTRACK ports
-<% node['coopr_firewall']['notrack_ports'].each do |p| %>
+<% node['coopr_firewall']['notrack_ports'].sort.each do |p| %>
 -A PREROUTING -p tcp --dport <%= p =%> -j NOTRACK
 -A OUTPUT -p tcp --sport <%= p =%> -j NOTRACK
 -A OUTPUT -p tcp --dport <%= p =%> -j NOTRACK
@@ -50,14 +50,14 @@ COMMIT
 
 <% if node['coopr_firewall']['open_tcp_ports'] %>
 # Open TCP ports
-<% node['coopr_firewall']['open_tcp_ports'].each do |p| %>
+<% node['coopr_firewall']['open_tcp_ports'].sort.each do |p| %>
 -A INPUT -p tcp --dport <%= p =%> -j ACCEPT
 <% end %>
 <% end %>
 
 <% if node['coopr_firewall']['open_udp_ports'] %>
 # Open UDP ports
-<% node['coopr_firewall']['open_udp_ports'].each do |p| %>
+<% node['coopr_firewall']['open_udp_ports'].sort.each do |p| %>
 -A INPUT -p udp --dport <%= p =%> -j ACCEPT
 -A INPUT -p udp --sport <%= p =%> -j ACCEPT
 <% end %>
@@ -83,14 +83,14 @@ COMMIT
 
 <% if node['coopr_firewall']['whitelist_nodes'] %>
 # Whitelisted nodes
-<% node['coopr_firewall']['whitelist_nodes'].each do |n| %>
+<% node['coopr_firewall']['whitelist_nodes'].sort.each do |n| %>
 -A INPUT -s <%= n =%> -j ACCEPT
 <% end %>
 
 <% end %>
 <% if node['coopr_firewall']['blacklist_nodes'] %>
 # Blacklisted nodes
-<% node['coopr_firewall']['blacklist_nodes'].each do |n| %>
+<% node['coopr_firewall']['blacklist_nodes'].sort.each do |n| %>
 -A INPUT -s <%= n =%> -j DROP
 <% end %>
 
