@@ -20,11 +20,22 @@
 <% end %>
 COMMIT
 
+*filter
+<% unless node['coopr_firewall']['no_flush'] %>
+
+###
+## Flush filter tables
+###
+
+-F INPUT
+-F FORWARD
+-F OUTPUT
+
+<% end %>
 ###
 ## Set defaults
 ###
 
-*filter
 # node['coopr_firewall']['INPUT_policy']
 <% if node['coopr_firewall']['INPUT_policy'] %>
 :INPUT <%= node['coopr_firewall']['INPUT_policy'] =%> [0:0]
