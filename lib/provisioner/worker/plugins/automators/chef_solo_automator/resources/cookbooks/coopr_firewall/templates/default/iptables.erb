@@ -9,7 +9,7 @@
 :OUTPUT ACCEPT [0:0]
 <% if node['coopr_firewall']['notrack_ports'] %>
 # NOTRACK ports
-<% node['coopr_firewall']['notrack_ports'].each do |p| %>
+<% node['coopr_firewall']['notrack_ports'].sort.each do |p| %>
 -A PREROUTING -p tcp --dport <%= p =%> -j NOTRACK
 -A OUTPUT -p tcp --sport <%= p =%> -j NOTRACK
 -A OUTPUT -p tcp --dport <%= p =%> -j NOTRACK
@@ -20,11 +20,22 @@
 <% end %>
 COMMIT
 
+*filter
+<% unless node['coopr_firewall']['no_flush'] %>
+
+###
+## Flush filter tables
+###
+
+-F INPUT
+-F FORWARD
+-F OUTPUT
+
+<% end %>
 ###
 ## Set defaults
 ###
 
-*filter
 # node['coopr_firewall']['INPUT_policy']
 <% if node['coopr_firewall']['INPUT_policy'] %>
 :INPUT <%= node['coopr_firewall']['INPUT_policy'] =%> [0:0]
@@ -50,14 +61,14 @@ COMMIT
 
 <% if node['coopr_firewall']['open_tcp_ports'] %>
 # Open TCP ports
-<% node['coopr_firewall']['open_tcp_ports'].each do |p| %>
+<% node['coopr_firewall']['open_tcp_ports'].sort.each do |p| %>
 -A INPUT -p tcp --dport <%= p =%> -j ACCEPT
 <% end %>
 <% end %>
 
 <% if node['coopr_firewall']['open_udp_ports'] %>
 # Open UDP ports
-<% node['coopr_firewall']['open_udp_ports'].each do |p| %>
+<% node['coopr_firewall']['open_udp_ports'].sort.each do |p| %>
 -A INPUT -p udp --dport <%= p =%> -j ACCEPT
 -A INPUT -p udp --sport <%= p =%> -j ACCEPT
 <% end %>
@@ -69,6 +80,12 @@ COMMIT
 
 # Allow all traffic from loopback
 -A INPUT -i lo -j ACCEPT 
+<% node['network']['interfaces'].sort.each do |n, v| %>
+# Allow all traffic from Docker interfaces
+<% if v.key?('type') && v['type'] == 'docker' %>
+-A INPUT -i <%= n =%> -j ACCEPT
+<% end %>
+<% end %>
 
 ###
 ## Nodes
@@ -83,14 +100,14 @@ COMMIT
 
 <% if node['coopr_firewall']['whitelist_nodes'] %>
 # Whitelisted nodes
-<% node['coopr_firewall']['whitelist_nodes'].each do |n| %>
+<% node['coopr_firewall']['whitelist_nodes'].sort.each do |n| %>
 -A INPUT -s <%= n =%> -j ACCEPT
 <% end %>
 
 <% end %>
 <% if node['coopr_firewall']['blacklist_nodes'] %>
 # Blacklisted nodes
-<% node['coopr_firewall']['blacklist_nodes'].each do |n| %>
+<% node['coopr_firewall']['blacklist_nodes'].sort.each do |n| %>
 -A INPUT -s <%= n =%> -j DROP
 <% end %>
 

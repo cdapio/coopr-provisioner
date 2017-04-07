@@ -23,3 +23,5 @@ Metrics/MethodLength:
   Enabled: false
 Metrics/PerceivedComplexity:
   Enabled: false
+Style/PercentLiteralDelimiters:
+  Enabled: false
