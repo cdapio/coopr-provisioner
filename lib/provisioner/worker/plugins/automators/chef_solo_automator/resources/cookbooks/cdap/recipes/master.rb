@@ -19,9 +19,8 @@
 
 include_recipe 'cdap::default'
 
-# All released versions support HBase 0.96
-pkgs = ['cdap-hbase-compat-0.96']
-pkgs += ['cdap-hbase-compat-0.98'] if node['cdap']['version'].to_f >= 2.6
+# All supported release versions support HBase 0.96 and 0.98
+pkgs = ['cdap-hbase-compat-0.96', 'cdap-hbase-compat-0.98']
 pkgs += ['cdap-hbase-compat-1.0', 'cdap-hbase-compat-1.0-cdh'] if node['cdap']['version'].to_f >= 3.1
 pkgs += ['cdap-hbase-compat-1.1'] if node['cdap']['version'].to_f >= 3.2
 pkgs += ['cdap-hbase-compat-1.0-cdh5.5.0'] if node['cdap']['version'].to_f >= 3.3
@@ -45,10 +44,7 @@ if hadoop_kerberos?
 
   if node['cdap'].key?('kerberos') && node['cdap']['kerberos'].key?('cdap_keytab') &&
      node['cdap']['kerberos'].key?('cdap_principal') &&
-     node['cdap'].key?('cdap_site') && node['cdap']['cdap_site'].key?('kerberos.auth.enabled') &&
-     node['cdap']['cdap_site']['kerberos.auth.enabled'].to_s == 'true'
-
-    my_vars = { :options => node['cdap']['kerberos'] }
+     cdap_property?('kerberos.auth.enabled').to_s == 'true'
 
     directory '/etc/default' do
       owner 'root'
@@ -63,12 +59,8 @@ if hadoop_kerberos?
       owner 'root'
       group 'root'
       action :create
-      variables my_vars
+      variables options: node['cdap']['kerberos']
     end # End /etc/default/cdap-master
-
-    include_recipe 'yum-epel' if node['platform_family'] == 'rhel'
-
-    package 'kstart'
 
     group 'hadoop' do
       append true
@@ -77,11 +69,11 @@ if hadoop_kerberos?
     end
   else
     # Hadoop is secure, but we're not configured for Kerberos
-    log 'bad-security-configuration' do
-      message "Invalid security configuration: You must specify node['cdap']['cdap_site']['kerberos.auth.enabled']"
+    log 'bad-kerberos-configuration' do
+      message "Invalid Kerberos configuration: You must specify node['cdap']['cdap_site']['kerberos.auth.enabled']"
       level :error
     end
-    Chef::Application.fatal!('Invalid Hadoop/CDAP security configuration')
+    Chef::Application.fatal!('Invalid Hadoop/CDAP kerberos configuration')
   end
 end
 

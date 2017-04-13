@@ -23,10 +23,6 @@ default['cdap']['sdk']['url'] = "http://repository.cask.co/downloads/co/cask/cda
 # shasum -a 256 filename
 default['cdap']['sdk']['checksum'] =
   case ver
-  when '2.8.0'
-    '1f5824a67fcbb5b2fcec02524d59b7befd1c315ed4046d02221fe8f54bbf233a'
-  when '2.8.2'
-    'add767a5e5a0828e13178cc78854c17b5d6b9b2f43b669622274ddc53dd5703b'
   when '3.0.0'
     'a45125208015c8ade3ac3a01002a9989ccc8432bcb5785e2625d17a406cabcff'
   when '3.0.1'
@@ -89,6 +85,8 @@ default['cdap']['sdk']['checksum'] =
     '57b5733f7a2a828fe589bc89feeb7e318464e2e270b4bccd081c54981c83e859'
   when '4.0.1'
     '47f01b0079132a267ec8436c5ad94470acf6285caba8be0d68732fed6b36c319'
+  when '4.1.0'
+    'a952fad174d50efef62c4b103f6d9ae0d5d0e22b378d1b5da9030de19451d0b7'
   end
 default['cdap']['sdk']['install_path'] = '/opt/cdap'
 default['cdap']['sdk']['user'] = 'cdap'
