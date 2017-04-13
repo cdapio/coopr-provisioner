@@ -19,8 +19,8 @@
 
 # Default: conf.chef
 default['cdap']['conf_dir'] = 'conf.chef'
-# Default: 4.0.1-1
-default['cdap']['version'] = '4.0.1-1'
+# Default: 4.1.0-2
+default['cdap']['version'] = '4.1.0-2'
 # cdap-site.xml
 default['cdap']['cdap_site']['root.namespace'] = 'cdap'
 # ideally we could put the macro '/${cdap.namespace}' here but this attribute is used elsewhere in the cookbook
@@ -28,15 +28,13 @@ default['cdap']['cdap_site']['hdfs.namespace'] = "/#{node['cdap']['cdap_site']['
 default['cdap']['cdap_site']['hdfs.user'] = 'yarn'
 default['cdap']['cdap_site']['kafka.seed.brokers'] = "#{node['fqdn']}:9092"
 default['cdap']['cdap_site']['log.retention.duration.days'] = '7'
+# COOK-85
+if node['cdap']['version'].to_f < 4.0
+  default['cdap']['cdap_site']['metadata.updates.kafka.broker.list'] = node['cdap']['cdap_site']['kafka.seed.brokers']
+end
 default['cdap']['cdap_site']['zookeeper.quorum'] = "#{node['fqdn']}:2181/#{node['cdap']['cdap_site']['root.namespace']}"
 default['cdap']['cdap_site']['router.bind.address'] = node['fqdn']
 default['cdap']['cdap_site']['router.server.address'] = node['fqdn']
-# These are only used with CDAP < 2.6
-if node['cdap']['version'].to_f < 2.6
-  default['cdap']['cdap_site']['gateway.server.address'] = node['fqdn']
-  default['cdap']['cdap_site']['gateway.server.port'] = '10000'
-  default['cdap']['cdap_site']['gateway.memory.mb'] = '512'
-end
 
 # HDP 2.2+ support
 hdp_version =
@@ -78,6 +76,8 @@ hdp_version =
       '2.5.0.0-1245'
     when '2.5.3.0'
       '2.5.3.0-37'
+    when '2.6.0.3'
+      '2.6.0.3-8'
     else
       node['hadoop']['distribution_version']
     end
