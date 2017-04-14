@@ -39,7 +39,7 @@ if subdomain_whitelist.nil? || subdomain_whitelist.include?(subdomain)
   include_recipe 'dynect'
 
   # Get credentials
-  if node['dynect']['username'] && node['dynect']['password'] && node['dynect']['customer']
+  if node.key?('dynect') && node['dynect']['username'] && node['dynect']['password'] && node['dynect']['customer']
     dynect = node['dynect']
   else
     begin
