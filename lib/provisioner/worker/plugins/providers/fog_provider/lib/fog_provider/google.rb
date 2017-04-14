@@ -343,6 +343,7 @@ class FogProviderGoogle < Coopr::Plugin::Provider
       disks: @disks,
       machine_type: @flavor,
       zone_name: @zone_name,
+      external_ip: @external_ip,
       tags: ['coopr']
     }
     # optional attrs

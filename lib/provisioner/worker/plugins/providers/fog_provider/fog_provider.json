@@ -304,6 +304,13 @@
             "override": true,
             "tip": "Zone"
           },
+          "external_ip": {
+            "label": "Associate public IP",
+            "type": "checkbox",
+            "override": true,
+            "default": true,
+            "tip": "Associate public IP"
+          },
           "auto_restart": {
             "label": "Automatically restart instances on failure",
             "type": "checkbox",
