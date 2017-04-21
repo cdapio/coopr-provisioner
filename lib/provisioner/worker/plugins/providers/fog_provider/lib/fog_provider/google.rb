@@ -343,11 +343,11 @@ class FogProviderGoogle < Coopr::Plugin::Provider
       disks: @disks,
       machine_type: @flavor,
       zone_name: @zone_name,
-      external_ip: @external_ip,
       tags: ['coopr']
     }
     # optional attrs
     server_def[:network] = @network unless @network.to_s == ''
+    server_def[:external_ip] = false unless @external_ip.to_s == 'true'
     server_def[:auto_restart] = @auto_restart
     server_def
   end
