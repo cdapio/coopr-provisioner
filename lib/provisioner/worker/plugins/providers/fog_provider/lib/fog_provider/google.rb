@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
 # encoding: UTF-8
 #
-# Copyright © 2012-2014 Cask Data, Inc.
+# Copyright © 2012-2017 Cask Data, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -151,9 +151,12 @@ class FogProviderGoogle < Coopr::Plugin::Provider
           @task['config']['hostname']
         end
 
+      bind_ip = server.private_ip_address
       bootstrap_ip =
         if server.public_ip_address
           server.public_ip_address
+        else
+          bind_ip
         end
       if bootstrap_ip.nil?
         log.error 'No IP address available for bootstrapping.'
@@ -161,7 +164,6 @@ class FogProviderGoogle < Coopr::Plugin::Provider
       else
         log.debug "Bootstrap IP address #{bootstrap_ip}"
       end
-      bind_ip = server.private_ip_address
 
       wait_for_sshd(bootstrap_ip, 22)
       log.debug "Server #{server.name} sshd is up"
