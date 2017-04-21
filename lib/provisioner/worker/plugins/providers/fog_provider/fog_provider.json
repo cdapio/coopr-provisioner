@@ -322,6 +322,13 @@
             "type": "checkbox",
             "override": true,
             "tip": "Set hostname to provider-specific public DNS hostname (overrides DNS suffix)"
+          },
+          "network": {
+            "label": "Network name",
+            "type": "text",
+            "override": true,
+            "default": "default",
+            "tip": "Google network for the instances"
           }
         },
         "required": [
@@ -332,18 +339,6 @@
             "ssh_key_resource",
             "zone_name"
           ]
-        ]
-      },
-      "user": {
-        "fields": {
-          "network": {
-            "label": "Network",
-            "type": "text",
-            "tip": "Google custom network"
-          }
-        },
-        "required": [
-          []
         ]
       }
     }
