@@ -349,7 +349,7 @@ class FogProviderGoogle < Coopr::Plugin::Provider
     }
     # optional attrs
     server_def[:network] = @network unless @network.to_s == ''
-    server_def[:external_ip] = false unless @external_ip.to_s == 'true'
+    server_def[:external_ip] = false if @external_ip.to_s == 'false'
     server_def[:auto_restart] = @auto_restart
     server_def
   end
