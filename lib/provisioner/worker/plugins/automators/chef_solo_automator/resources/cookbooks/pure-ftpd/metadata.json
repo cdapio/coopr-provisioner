@@ -1,0 +1,32 @@
+{
+  "name": "pure-ftpd",
+  "description": "Installs and configures pure-ftp",
+  "long_description": "pure-ftpd\n=========\n\nInstalls and configures the `pure-ftpd` daemon. Defines a `pure_ftpd_virtual_user`\nprovider for configuring ftp users. `pure-ftpd` is run as a user `ftpd`,\nso that we don't have to fight with chroot.\n\nVirtual users are not system users. Files uploaded by virtual users are\nuploaded to `/var/data/ftp/<username>`, and are owned by the `ftpd` user.\n\n`pure-ftpd` runs with the `--uploadscript` directive. This configures a\nnamed pipe at `/var/run/pure-ftpd/pure-ftpd.upload.pipe`. The file name\nof each uploaded pipe is written to this named pipe, so that upload\nhooks can easily be written.\n\n## Requirements\n\nTested on:\n* SmartOS\n\n\n## Usage\n\n```ruby\ninclude_recipe 'pure-ftpd'\n\npure_ftpd_virtual_user 'my user' do\n  username 'my-user'\n  password 'my-password'\nend\n```\n",
+  "maintainer": "Wanelo, Inc",
+  "maintainer_email": "dev@wanelo.com",
+  "license": "MIT",
+  "platforms": {
+  },
+  "dependencies": {
+    "build-essential": ">= 0.0.0",
+    "paths": ">= 0.0.0",
+    "smf": ">= 0.0.0"
+  },
+  "recommendations": {
+  },
+  "suggestions": {
+  },
+  "conflicting": {
+  },
+  "providing": {
+  },
+  "replacing": {
+  },
+  "attributes": {
+  },
+  "groupings": {
+  },
+  "recipes": {
+  },
+  "version": "0.2.3"
+}
