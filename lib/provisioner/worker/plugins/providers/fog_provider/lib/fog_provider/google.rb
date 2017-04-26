@@ -60,7 +60,7 @@ class FogProviderGoogle < Coopr::Plugin::Provider
       # disks are managed separately, so CREATE must first create and confirm the disk to be used
       # handle boot disk
       @disks = []
-      create_disk(@providerid, @google_root_disk_size_gb, @google_root_disk_type, @zone_name, @image)
+      create_disk(@providerid, @google_root_disk_size_gb.to_i, @google_root_disk_type, @zone_name, @image)
       disk = confirm_disk(@providerid)
 
       @disks << disk
