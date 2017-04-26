@@ -80,10 +80,14 @@ COMMIT
 
 # Allow all traffic from loopback
 -A INPUT -i lo -j ACCEPT 
+# Allow all traffic from Docker interfaces (if any)
 <% node['network']['interfaces'].sort.each do |n, v| %>
-# Allow all traffic from Docker interfaces
 <% if v.key?('type') && v['type'] == 'docker' %>
 -A INPUT -i <%= n =%> -j ACCEPT
+-A FORWARD -o <%= n =%> -j DOCKER
+-A FORWARD -o <%= n =%> -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
+-A FORWARD -i <%= n =%> ! -o <%= n =%> -j ACCEPT
+-A FORWARD -i <%= n =%> -o <%= n =%> -j ACCEPT
 <% end %>
 <% end %>
 
