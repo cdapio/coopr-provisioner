@@ -47,6 +47,12 @@ if subdomain_whitelist.nil? || subdomain_whitelist.include?(subdomain)
   r = package( zpkg ) { action :nothing }
   r.run_action( :install )
 
+  chef_gem 'fog-core' do
+    version '1.43.0' # newer requires xmlrpc which requires ruby >= 2.3
+    compile_time true if Chef::Resource::ChefGem.instance_methods(false).include?(:compile_time)
+    action :install
+  end
+
   include_recipe 'dnsimple'
 
   # Get credentials
