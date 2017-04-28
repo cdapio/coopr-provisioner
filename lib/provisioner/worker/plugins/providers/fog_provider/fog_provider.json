@@ -304,6 +304,17 @@
             "override": true,
             "tip": "Zone"
           },
+          "bootstrap_interface": {
+            "label": "Bootstrap interface",
+            "type": "select",
+            "options": [
+              "access_v4",
+              "bind_v4"
+            ],
+            "default": "access_v4",
+            "override": true,
+            "tip": "Interface Coopr will use for connecting to instance"
+          },
           "external_ip": {
             "label": "Associate public IP",
             "type": "checkbox",
