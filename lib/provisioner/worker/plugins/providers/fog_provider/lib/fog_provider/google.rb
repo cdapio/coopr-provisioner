@@ -152,11 +152,18 @@ class FogProviderGoogle < Coopr::Plugin::Provider
         end
 
       bind_ip = server.private_ip_address
-      bootstrap_ip =
+      access_ip =
         if server.public_ip_address
           server.public_ip_address
         else
           bind_ip
+        end
+
+      bootstrap_ip =
+        if @bootstrap_interface == 'bind_v4'
+          bind_ip
+        else
+          access_ip
         end
       if bootstrap_ip.nil?
         log.error 'No IP address available for bootstrapping.'
@@ -170,7 +177,7 @@ class FogProviderGoogle < Coopr::Plugin::Provider
 
       # Process results
       @result['ipaddresses'] = {
-        'access_v4' => bootstrap_ip,
+        'access_v4' => access_ip,
         'bind_v4' => bind_ip
       }
       @result['hostname'] = hostname
