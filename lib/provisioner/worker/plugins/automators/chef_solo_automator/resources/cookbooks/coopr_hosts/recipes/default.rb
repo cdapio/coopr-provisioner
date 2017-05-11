@@ -2,7 +2,7 @@
 # Cookbook Name:: coopr_hosts
 # Recipe:: default
 #
-# Copyright © 2013-2014 Cask Data, Inc.
+# Copyright © 2013-2017 Cask Data, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -21,13 +21,13 @@
 # see: https://github.com/customink-webops/hostsfile/blob/v2.4.2/libraries/entry.rb#L158
 START = 60
 node['coopr']['cluster']['nodes'].each do |n, v|
-  short_host = v.hostname.split('.').first
+  short_host = v['hostname'].split('.').first
   arr = node['coopr_hosts']['address_types'] || []
   arr.each do |addr|
     next unless v.key?('ipaddresses') && v['ipaddresses'].key?(addr)
     pri = START + (arr.length - arr.index(addr))
     hostsfile_entry v['ipaddresses'][addr] do
-      hostname v.hostname
+      hostname v['hostname']
       aliases [short_host]
       unique true
       priority pri
