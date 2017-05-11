@@ -96,10 +96,14 @@ COMMIT
 ###
 
 # This cluster (automatic)
+<% if node.key?('coopr') && node['coopr'].key?('cluster') && node['coopr']['cluster'].key?('nodes') %>
 <% node['coopr']['cluster']['nodes'].each do |n, v| %>
+<% next unless v.key?('ipaddresses'] && v['ipaddresses'].key?('access_v4') %>
 -A INPUT -s <%= v['ipaddresses']['access_v4'] =%> -j ACCEPT
+<% next unless v.key?('ipaddresses'] && v['ipaddresses'].key?('bind_v4') %>
 <% next if v['ipaddresses']['bind_v4'] == v['ipaddresses']['access_v4'] %>
 -A INPUT -s <%= v['ipaddresses']['bind_v4'] =%> -j ACCEPT
+<% end %>
 <% end %>
 
 <% if node['coopr_firewall']['whitelist_nodes'] %>
