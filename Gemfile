@@ -28,6 +28,10 @@ group :dependencies do
   gem 'rest_client', '~> 1.7'
   gem 'sinatra', '~> 1.4'
   gem 'thin', '~> 1.6'
+  if RUBY_VERSION.to_f < 2.0
+    # Rack can be unpinned when a fix for https://github.com/rack/rack/issues/1168 is released
+    gem 'rack', '< 1.6.7'
+  end
 end
 
 group :test do
