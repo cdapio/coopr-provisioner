@@ -1,6 +1,19 @@
 cdap CHANGELOG
 ==============
 
+v3.2.0 (Jun 12, 2017)
+---------------------
+
+- Support CDAP 4.1.1 ( Issue: #251 )
+- Set CDAP 4.2.0 as default, and rename SDK to Sandbox ( Issue: #252 )
+
+v3.1.1 (May 30, 2017)
+---------------------
+
+- Fix Test Kitchen ( Issue: #247 )
+- Make /etc/profile.d/cdap-sdk.sh options configurable ( Issue: #248 )
+- Switch to HTTPS for repository.cask.co ( Issue: #249 )
+
 v3.1.0 (May 23, 2017)
 ---------------------
 
