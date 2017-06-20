@@ -4,7 +4,7 @@ maintainer_email 'ops@cask.co'
 license          'Apache-2.0'
 description      'Installs/Configures Hadoop (HDFS/YARN/MRv2), HBase, Hive, Flume, Oozie, Pig, Spark, Storm, Tez, and ZooKeeper'
 long_description IO.read(File.join(File.dirname(__FILE__), 'README.md'))
-version          '2.10.1'
+version          '2.11.1'
 
 depends 'yum', '>= 3.0'
 depends 'apt', '>= 2.1.2'
@@ -26,3 +26,4 @@ end
 
 source_url 'https://github.com/caskdata/hadoop_cookbook' if respond_to?(:source_url)
 issues_url 'https://issues.cask.co/browse/COOK/component/10600' if respond_to?(:issues_url)
+chef_version '>= 11' if respond_to?(:chef_version)

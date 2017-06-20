@@ -1,5 +1,5 @@
 #
-# Cookbook Name:: hadoop
+# Cookbook:: hadoop
 # Recipe:: repo
 #
 # Copyright © 2013-2016 Cask Data, Inc.
@@ -46,7 +46,11 @@ when 'hdp'
     Chef::Log.warn("Short versions for node['hadoop']['distribution_version'] are deprecated! Please use full version!")
     node.override['hadoop']['distribution_version'] = hdp_update_version
   # 2.3, 2.4, and 2.5 do not have their own base version
-  when '2.2.1.0', '2.2.4.2', '2.2.4.4', '2.2.6.0', '2.2.6.3', '2.2.8.0', '2.2.9.0', '2.3.0.0', '2.3.2.0', '2.3.4.0', '2.3.4.7', '2.3.6.0', '2.4.0.0', '2.4.2.0', '2.4.3.0', '2.5.0.0', '2.5.3.0', '2.6.0.3'
+  when '2.2.1.0', '2.2.4.2', '2.2.4.4', '2.2.6.0', '2.2.6.3', '2.2.8.0', '2.2.9.0',
+       '2.3.0.0', '2.3.2.0', '2.3.4.0', '2.3.4.7', '2.3.6.0',
+       '2.4.0.0', '2.4.2.0', '2.4.3.0',
+       '2.5.0.0', '2.5.3.0', '2.5.5.0',
+       '2.6.0.3', '2.6.1.0'
     hdp_version = '2.2.0.0'
     hdp_update_version = node['hadoop']['distribution_version']
   when '2.2'
@@ -66,12 +70,12 @@ when 'hdp'
     node.override['hadoop']['distribution_version'] = hdp_update_version
   when '2.5'
     hdp_version = '2.2.0.0'
-    hdp_update_version = '2.5.3.0'
+    hdp_update_version = '2.5.5.0'
     Chef::Log.warn("Short versions for node['hadoop']['distribution_version'] are deprecated! Please use full version!")
     node.override['hadoop']['distribution_version'] = hdp_update_version
   when '2.6', '2'
     hdp_version = '2.2.0.0'
-    hdp_update_version = '2.6.0.3'
+    hdp_update_version = '2.6.1.0'
     Chef::Log.warn("Short versions for node['hadoop']['distribution_version'] are deprecated! Please use full version!")
     node.override['hadoop']['distribution_version'] = hdp_update_version
   else
@@ -81,7 +85,7 @@ when 'hdp'
   hdp_utils_version = '1.1.0.20'
 
   case node['platform_family']
-  when 'rhel'
+  when 'rhel', 'amazon'
     yum_base_url = 'http://public-repo-1.hortonworks.com/HDP'
     os = if major_platform_version == 5 || hdp_version.to_f >= 2.3
            "centos#{major_platform_version}"
@@ -142,7 +146,11 @@ when 'hdp'
       case hdp_update_version
       when '2.2.0.0'
         "2.x/GA/#{hdp_update_version}"
-      when '2.1.10.0', '2.1.15.0', '2.2.1.0', '2.2.4.2', '2.2.6.0', '2.2.6.3', '2.2.8.0', '2.2.9.0', '2.3.0.0', '2.3.2.0', '2.3.4.0', '2.3.4.7', '2.3.6.0', '2.4.0.0', '2.4.2.0', '2.4.3.0', '2.5.0.0', '2.5.3.0', '2.6.0.3'
+      when '2.1.10.0', '2.1.15.0', '2.2.1.0', '2.2.4.2', '2.2.6.0', '2.2.6.3', '2.2.8.0', '2.2.9.0',
+           '2.3.0.0', '2.3.2.0', '2.3.4.0', '2.3.4.7', '2.3.6.0',
+           '2.4.0.0', '2.4.2.0', '2.4.3.0',
+           '2.5.0.0', '2.5.3.0', '2.5.5.0',
+           '2.6.0.3', '2.6.1.0'
         "2.x/updates/#{hdp_update_version}"
       else
         hdp_update_version
@@ -180,7 +188,7 @@ when 'cdh'
   end
   Chef::Log.warn("Short versions for node['hadoop']['distribution_version'] are deprecated! Please use full version!") if node['hadoop']['distribution_version'].to_s == '5'
   case node['platform_family']
-  when 'rhel'
+  when 'rhel', 'amazon'
     yum_base_url = "http://archive.cloudera.com/cdh#{cdh_release}/redhat"
     yum_repo_url = node['hadoop']['yum_repo_url'] ? node['hadoop']['yum_repo_url'] : "#{yum_base_url}/#{major_platform_version}/#{node['kernel']['machine']}/cdh/#{node['hadoop']['distribution_version']}"
     yum_repo_key_url = node['hadoop']['yum_repo_key_url'] ? node['hadoop']['yum_repo_key_url'] : "#{yum_base_url}/#{major_platform_version}/#{node['kernel']['machine']}/cdh/#{key}-cloudera"
@@ -243,7 +251,7 @@ when 'bigtop'
   Chef::Log.warn('Allowing install of unsigned binaries') unless validate_repo_key
 
   case node['platform_family']
-  when 'rhel'
+  when 'rhel', 'amazon'
 
     case major_platform_version
     when 5, 6
@@ -308,7 +316,7 @@ when 'iop'
   iop_utils_version = '1.2.0.0'
 
   case node['platform_family']
-  when 'rhel'
+  when 'rhel', 'amazon'
     # https://ibm-open-platform.ibm.com/repos/IOP/rhel/6/x86_64/4.1.x/GA/4.1.0.0/
     yum_base_url = 'https://ibm-open-platform.ibm.com/repos/IOP'
     os = 'rhel'
