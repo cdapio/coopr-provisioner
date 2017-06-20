@@ -1,10 +1,32 @@
 hadoop CHANGELOG
-===============
+================
+
+v2.11.1 (Jun 19, 2017)
+----------------------
+
+- Add HDP 2.5.5.0 ( Issue: #328 )
+- Update cookbook headers ( Issue: #329 )
+- Support installing Slider ( Issue: #330 )
+- Support Hive2 installation and configuration ( Issue: #331 )
+- Support Spark 2.x (spark2) package ( Issue: #332 )
+- Add HDP 2.6.1 ( Issue: #333 )
+
+v2.11.0 (Apr 18, 2017)
+----------------------
+
+- Remove MRv1 daemon support ( Issues: #313 [COOK-118](https://issues.cask.co/browse/COOK-118) )
+- Setup NodeManager local directories with defaults ( Issues: #315 [COOK-42](https://issues.cask.co/browse/COOK-42) )
+- Create directory for dfs.domain.socket.path ( Issues: #316 [COOK-56](https://issues.cask.co/browse/COOK-56) )
+- Create Derby DB directories ( Issues: #317 [COOK-55](https://issues.cask.co/browse/COOK-55) )
+- Support `amazon` platform_family for Chef 13 ( Issues: #323 [COOK-123](https://issues.cask.co/browse/COOK-123) )
+- Explicitly require 'chef/version' before using Chef::VERSION ( Issue: #324 )
+- Properly configure mass_threshold and inline disable FC023 ( Issue: #325 )
+- Test Chef 13: remove Ruby 2.0, add Ruby 2.3 ( Issue: #326 )
 
 v2.10.1 (Apr 11, 2017)
----------------------
+----------------------
 
-- Fix issue with 2.6.0.3 ( Issue: #321 )
+- Fix issue with HDP 2.6.0.3 ( Issue: #321 )
 
 v2.10.0 (Apr 6, 2017)
 ---------------------

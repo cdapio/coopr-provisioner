@@ -1,5 +1,5 @@
 #
-# Cookbook Name:: hadoop
+# Cookbook:: hadoop
 # Attribute:: default
 #
 # Copyright © 2013-2016 Cask Data, Inc.
@@ -45,8 +45,10 @@ default['flume']['conf_dir'] = node['hadoop']['conf_dir']
 default['hadoop_kms']['conf_dir'] = node['hadoop']['conf_dir']
 default['hbase']['conf_dir'] = node['hadoop']['conf_dir']
 default['hive']['conf_dir'] = node['hadoop']['conf_dir']
+default['hive2']['conf_dir'] = node['hadoop']['conf_dir']
 default['oozie']['conf_dir'] = node['hadoop']['conf_dir']
 default['spark']['conf_dir'] = node['hadoop']['conf_dir']
+default['spark2']['conf_dir'] = node['hadoop']['conf_dir']
 default['storm']['conf_dir'] = node['hadoop']['conf_dir']
 default['tez']['conf_dir'] = node['hadoop']['conf_dir']
 default['zookeeper']['conf_dir'] = node['hadoop']['conf_dir']
@@ -135,8 +137,12 @@ full_version =
     '2.5.0.0-1245'
   when '2.5.3.0'
     '2.5.3.0-37'
+  when '2.5.5.0'
+    '2.5.5.0-157'
   when '2.6.0.3'
     '2.6.0.3-8'
+  when '2.6.1.0'
+    '2.6.1.0-129'
   else
     node['hadoop']['distribution_version']
   end
