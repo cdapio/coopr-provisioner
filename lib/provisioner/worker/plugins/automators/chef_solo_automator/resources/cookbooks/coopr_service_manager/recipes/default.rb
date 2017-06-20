@@ -2,7 +2,7 @@
 # Cookbook Name:: coopr_service_manager
 # Recipe:: default
 #
-# Copyright © 2013-2014 Cask Data, Inc.
+# Copyright © 2013-2017 Cask Data, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@
 
 if node['coopr']['node'].has_key?('services')
   node['coopr']['node']['services'].each do |k, v|
-  #  if resources(service: k)
+    if resources(service: k)
       log "service-#{v}-#{k}" do
         message "Service: #{k}, action: #{v}"
       end
@@ -30,6 +30,6 @@ if node['coopr']['node'].has_key?('services')
           resources("service[#{k}]").run_action(v.to_sym)
         end # block
       end # ruby_block
-  #  end # if
+    end # if
   end # each
 end # if
