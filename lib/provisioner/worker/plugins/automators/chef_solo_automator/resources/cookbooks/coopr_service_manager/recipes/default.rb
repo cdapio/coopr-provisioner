@@ -19,17 +19,19 @@
 
 # We run through all of the services listed, and start/stop them, if a service resource exists
 
-if node['coopr']['node'].has_key?('services')
+if node['coopr']['node'].key?('services')
   node['coopr']['node']['services'].each do |k, v|
-    if resources(service: k)
-      log "service-#{v}-#{k}" do
-        message "Service: #{k}, action: #{v}"
-      end
-      ruby_block "service-#{v}-#{k}" do
-        block do
-          resources("service[#{k}]").run_action(v.to_sym)
-        end # block
-      end # ruby_block
-    end # if
+    ruby_block "service-#{v}-#{k}-if-exists" do
+      block do
+        begin
+          r = resources("service[#{k}]")
+          Chef::Log.info("Service: #{r}, action: #{v}")
+          r.run_action(v.to_sym)
+        rescue Chef::Exceptions::ResourceNotFound => e
+          raise e if node['coopr_service_manager']['strict'].to_s == 'true'
+          Chef::Log.warn("Service: #{k} not found")
+        end # begin
+      end # block
+    end # ruby_block
   end # each
 end # if
