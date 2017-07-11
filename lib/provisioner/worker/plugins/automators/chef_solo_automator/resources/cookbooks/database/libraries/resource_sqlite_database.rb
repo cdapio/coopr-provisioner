@@ -1,7 +1,5 @@
 #
-# Author:: Seth Chisamore (<schisamo@chef.io>)
-# Author:: Sean OMeara (<sean@sean.io>)
-# Copyright:: 2011-2016 Chef Software, Inc.
+# Author:: Ronald Doorn (<rdoorn@schubergphilis.com>)
 # License:: Apache License, Version 2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,15 +15,25 @@
 # limitations under the License.
 #
 
-require File.join(File.dirname(__FILE__), 'provider_database_mysql')
+require File.join(File.dirname(__FILE__), 'resource_database')
+require File.join(File.dirname(__FILE__), 'provider_database_sqlite')
 
 class Chef
   class Resource
-    class MysqlDatabase < Chef::Resource::Database
+    class SqliteDatabase < Chef::Resource::Database
       def initialize(name, run_context = nil)
         super
-        @resource_name = :mysql_database
-        @provider = Chef::Provider::Database::Mysql
+        @resource_name = :sqlite_database
+        @provider = Chef::Provider::Database::Sqlite
+      end
+
+      def sql(arg = nil, &block)
+        arg ||= block
+        set_or_return(
+          :sql,
+          arg,
+          kind_of: [String, Proc, Array]
+        )
       end
     end
   end
