@@ -20,9 +20,9 @@
 # Create resources for any declared database instances
 
 # mysql
-if node.key?('coopr_database')
-  if node['coopr_database'].key?('mysql_service')
-    node['coopr_database']['mysql_service'].each do |db_name, props|
+if node.key?('coopr_mysql')
+  if node['coopr_mysql'].key?('mysql_service')
+    node['coopr_mysql']['mysql_service'].each do |db_name, props|
       mysql_service db_name do
         # json attributes are called as keys to the mysql_service resource
         props.each do |k, v|
@@ -40,8 +40,8 @@ if node.key?('coopr_database')
       # We want to avoid running :create more than once, since it resets base permissions every time
       # Coopr services can set this attribute in start or stop actions
       db_action =
-        if node['coopr_database'].key?('action')
-          node['coopr_database']['action']
+        if node['coopr_mysql'].key?('action')
+          node['coopr_mysql']['action']
         else
           'create'
         end

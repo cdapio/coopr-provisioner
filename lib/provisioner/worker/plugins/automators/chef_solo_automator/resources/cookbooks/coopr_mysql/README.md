@@ -8,7 +8,7 @@ For example, the following JSON:
 
 ```
 {
-  "coopr_database": {
+  "coopr_mysql": {
     "mysql_service": {
       "example": {
         "bind_address": "0.0.0.0",
@@ -36,7 +36,7 @@ Additionally, the attribute:
 
 ```
 {
-  "coopr_database": {
+  "coopr_mysql": {
     "action": "start"
   }
 }
