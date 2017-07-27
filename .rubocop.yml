@@ -1,9 +1,12 @@
 inherit_from: .rubocop_todo.yml
 AllCops:
   Exclude:
-    - vendor/bundle/**/*
-    - lib/provisioner/worker/plugins/**/*
-    - spec/**/*
+    - '**/vendor/bundle/**/*'
+    - '**/vendor/bundle/**/.*'
+    - 'lib/provisioner/worker/plugins/**/*'
+    - 'lib/provisioner/worker/plugins/**/.*'
+    - 'spec/**/*'
+    - 'spec/**/.*'
     # Uncomment the following and comment above to only ignore cookbooks
     # - lib/provisioner/worker/plugins/automators/chef_solo_automator/resources/cookbooks/**/*
 # Disable specific cops below
