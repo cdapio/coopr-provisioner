@@ -8,8 +8,9 @@ version          '2.2.0'
 
 depends 'java', '~> 1.40'
 depends 'hadoop', '>= 2.0.0'
-depends 'mysql', '< 5.0.0'
-depends 'database', '< 2.1.0'
+depends 'mysql'
+depends 'database'
+depends 'mysql2_chef_gem'
 depends 'krb5', '>= 2.2.0'
 
 source_url 'https://github.com/caskdata/hadoop_wrapper_cookbook' if respond_to?(:source_url)

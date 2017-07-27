@@ -1,4 +1,3 @@
-#!/usr/bin/env ruby
 # encoding: UTF-8
 
 #
@@ -63,7 +62,7 @@ module Coopr
     end
 
     def resource_sync_needed?
-      'STALE' == @status && @sync_requests > 0
+      @status == 'STALE' && @sync_requests > 0
     end
 
     def sync
