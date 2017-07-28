@@ -53,4 +53,4 @@ if node.key?('coopr_mysql')
       end
     end
   end
-end 
+end
