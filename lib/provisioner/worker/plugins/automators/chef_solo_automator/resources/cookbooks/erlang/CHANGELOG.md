@@ -2,6 +2,22 @@
 
 This file is used to list changes made in each version of the erlang cookbook.
 
+## 4.1.1 (2017-03-01)
+- Fix packaging issue related to nox package on Ubuntu 16.04+
+- Cookstyle fixes
+- Loosen up the yum dependency
+
+## 4.1.0 (2016-12-22)
+- Replace BATS tests with InSpec
+- Fix package and source installs for Fedora and openSUSE
+- Update source version to 19.2
+- Improved version check for source install guard
+
+## 4.0.0 (2016-09-16)
+- Testing updates
+- Remove traces of minitest handler from the code
+- Require Chef 12.1+ and use multipackage for installs
+
 ## v3.0.0 (2016-04-29)
 
 - Default to Erlang 18.3
