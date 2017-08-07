@@ -1,12 +1,12 @@
 #
-# Cookbook Name:: erlang
+# Cookbook:: erlang
 # Recipe:: package
 # Author:: Joe Williams <joe@joetify.com>
 # Author:: Matt Ray <matt@chef.io>
 # Author:: Hector Castro <hector@basho.com>
 #
-# Copyright 2008-2009, Joe Williams
-# Copyright 2011-2016, Chef Software Inc.
+# Copyright:: 2008-2016, Joe Williams
+# Copyright:: 2011-2016, Chef Software Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -23,11 +23,13 @@
 
 case node['platform_family']
 when 'debian'
-  erlpkg = node['erlang']['gui_tools'] ? 'erlang-x11' : 'erlang-nox'
-  package erlpkg
+  if node['platform_version'].to_i < 16.04
+    erlpkg = node['erlang']['gui_tools'] ? 'erlang-x11' : 'erlang-nox'
+    package erlpkg
+  end
   package 'erlang-dev'
 
-when 'rhel'
+when 'rhel', 'suse', 'fedora'
   if node['platform_version'].to_i == 5
     Chef::Log.warn('Adding EPEL Erlang Repo. This will have SSL verification disabled, as')
     Chef::Log.warn('RHEL/CentOS 5.x will not be able to verify the SSL certificate of this')
@@ -43,6 +45,8 @@ when 'rhel'
     end
   end
 
-  include_recipe 'yum-epel'
-  package 'erlang'
+  include_recipe 'yum-epel' if node['platform_family'] == 'rhel'
+  package 'erlang' do
+    version node['erlang']['package']['version'] if node['erlang']['package']['version']
+  end
 end

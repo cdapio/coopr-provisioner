@@ -1,6 +1,12 @@
 # yum-erlang_solutions Cookbook CHANGELOG
 This file is used to list changes made in each version of the yum-erlang_solutions cookbook.
 
+## 1.0.0 (2016-09-06)
+- Testing updates
+- Resolve foodcritic warnings
+- Add chef_version metadata
+- Remove support for Chef 11
+
 ## v0.3.1 (2015-12-01)
 - Removed an attribute case statement that caused the cookbook to fail on RHEL 7.X releases
 

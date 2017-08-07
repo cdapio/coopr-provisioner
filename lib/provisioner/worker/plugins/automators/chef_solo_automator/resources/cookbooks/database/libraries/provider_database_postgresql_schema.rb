@@ -1,6 +1,6 @@
 #
 # Author:: Marco Betti (<m.betti@gmail.com>)
-# Copyright:: Copyright (c) 2013 Opscode, Inc.
+# Copyright:: 2013-2016 Chef Software, Inc.
 # License:: Apache License, Version 2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -26,7 +26,12 @@ class Chef
 
         def load_current_resource
           Gem.clear_paths
-          require 'pg'
+          begin
+            require 'pg'
+          rescue LoadError
+            Chef::Log.fatal('Could not load the required pg gem. Make sure to include the database::postgresql or postgresql::ruby recipes in your runlist')
+            raise
+          end
           @current_resource = Chef::Resource::PostgresqlDatabaseSchema.new(@new_resource.name)
           @current_resource.schema_name(@new_resource.schema_name)
           @current_resource
@@ -34,16 +39,16 @@ class Chef
 
         def action_create
           unless exists?
-          begin
-            if new_resource.owner
-              db(@new_resource.database_name).query("CREATE SCHEMA \"#{@new_resource.schema_name}\" AUTHORIZATION \"#{@new_resource.owner}\"")
-            else
-              db(@new_resource.database_name).query("CREATE SCHEMA \"#{@new_resource.schema_name}\"")
+            begin
+              if new_resource.owner
+                db(@new_resource.database_name).query("CREATE SCHEMA \"#{@new_resource.schema_name}\" AUTHORIZATION \"#{@new_resource.owner}\"")
+              else
+                db(@new_resource.database_name).query("CREATE SCHEMA \"#{@new_resource.schema_name}\"")
+              end
+              @new_resource.updated_by_last_action(true)
+            ensure
+              close
             end
-            @new_resource.updated_by_last_action(true)
-          ensure
-            close
-          end
           end
         end
 
@@ -59,6 +64,7 @@ class Chef
         end
 
         private
+
         def exists?
           begin
             exists = db(@new_resource.database_name).query("SELECT schema_name FROM information_schema.schemata WHERE schema_name='#{@new_resource.schema_name}'").num_tuples != 0
