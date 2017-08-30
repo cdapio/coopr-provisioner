@@ -2,7 +2,7 @@
 # Cookbook Name:: hadoop_wrapper
 # Recipe:: hive_metastore_db_init
 #
-# Copyright © 2014-2016 Cask Data, Inc.
+# Copyright © 2014-2017 Cask Data, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -52,7 +52,6 @@ if node['hive'].key?('hive_site') && node['hive']['hive_site'].key?('javax.jdo.o
 
   case db_type
   when 'mysql'
-
     # Install dependency gem for the database cookbook LWRPs below
     mysql2_chef_gem 'default' do
       action :install
@@ -94,9 +93,8 @@ if node['hive'].key?('hive_site') && node['hive']['hive_site'].key?('javax.jdo.o
       action :grant
     end
 
-    #mysql --batch -D#{db_name} -h 127.0.0.1 --socket /var/run/mysql-#{db_svcname}/mysqld.sock < $(ls -1 hive-schema-* | sort -n | tail -n 1)
-
     # import hive SQL via execute resource
+    # connect via 127.0.0.1 instead of localhost to avoid using an incorrect (default) socket file
     execute 'mysql-import-hive-schema' do # ~FC009
       command <<-EOF
         mysql --batch -D#{db_name} -h 127.0.0.1 < $(ls -1 hive-schema-* | sort -n | tail -n 1)
