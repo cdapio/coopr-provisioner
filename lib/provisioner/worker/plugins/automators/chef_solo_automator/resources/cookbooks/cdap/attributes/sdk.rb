@@ -36,6 +36,8 @@ default['cdap']['sdk']['product_name'] =
     'sandbox'
   end
 
+# Enforce checksum matching by default
+default['cdap']['sdk']['enforce_checksum'] = true
 # shasum -a 256 filename
 default['cdap']['sdk']['checksum'] =
   case ver
@@ -107,6 +109,8 @@ default['cdap']['sdk']['checksum'] =
     'd1cc052aa0bf924b5f0934c0d6c14a1b25c969c570ed3117e202c7b1eddc04a7'
   when '4.2.0'
     'd593b38c0382e244f7390b1e1a8c1dfcd551db20b898976d544b1c01e25221d7'
+  when '4.3.0'
+    '97cb0437077f007f88d661de891426c7e8bb7926a28c4e2b5ac4a7f259f64762'
   end
 default['cdap']['sdk']['install_path'] = '/opt/cdap'
 default['cdap']['sdk']['user'] = 'cdap'

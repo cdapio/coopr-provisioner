@@ -1,6 +1,22 @@
 cdap CHANGELOG
 ==============
 
+v3.2.3 (Sep 12, 2017)
+---------------------
+
+- Support HDP 2.6.2 and 2.5.6 ( Issue: #260 )
+
+v3.2.2 (Aug 9, 2017)
+--------------------
+
+- Configure repos correctly on Debian ( Issue: #257 )
+
+v3.2.1 (Jun 26, 2017)
+---------------------
+
+- Ability to disable checksum enforcing ( Issue: #254 )
+- Support HDP 2.6.1.0 ( Issue: #255 )
+
 v3.2.0 (Jun 12, 2017)
 ---------------------
 
