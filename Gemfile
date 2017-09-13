@@ -26,9 +26,8 @@ group :dependencies do
   gem 'mime-types', '< 3.0'
   gem 'net-scp'
   gem 'rest-client', '~> 1.7'
-  gem 'sinatra', "~> 1.4"
-  gem 'thin', "~> 1.6"
-  gem "deep_merge", '~> 1.0', :require => 'deep_merge/rails_compat'
+  gem 'sinatra', '~> 1.4'
+  gem 'thin', '~> 1.6'
   gem 'public_suffix', '< 1.5.0' # ruby 1.9.3
   gem 'nokogiri', '< 1.7.0' # ruby 1.9.3
   gem 'retriable', '< 3.0.0' # ruby 1.9.3
