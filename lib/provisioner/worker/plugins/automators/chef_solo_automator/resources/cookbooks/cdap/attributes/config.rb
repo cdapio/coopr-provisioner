@@ -19,8 +19,8 @@
 
 # Default: conf.chef
 default['cdap']['conf_dir'] = 'conf.chef'
-# Default: 4.2.0-1
-default['cdap']['version'] = '4.2.0-1'
+# Default: 4.3.0-1
+default['cdap']['version'] = '4.3.0-1'
 # cdap-site.xml
 default['cdap']['cdap_site']['root.namespace'] = 'cdap'
 # ideally we could put the macro '/${cdap.namespace}' here but this attribute is used elsewhere in the cookbook
@@ -78,8 +78,14 @@ hdp_version =
       '2.5.3.0-37'
     when '2.5.5.0'
       '2.5.5.0-157'
+    when '2.5.6.0'
+      '2.5.6.0-40'
     when '2.6.0.3'
       '2.6.0.3-8'
+    when '2.6.1.0'
+      '2.6.1.0-129'
+    when '2.6.2.0'
+      '2.6.2.0-205'
     else
       node['hadoop']['distribution_version']
     end
