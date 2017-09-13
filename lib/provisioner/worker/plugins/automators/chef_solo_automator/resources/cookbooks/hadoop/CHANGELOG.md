@@ -1,6 +1,32 @@
 hadoop CHANGELOG
 ================
 
+v2.12.0 (Sep 12, 2017)
+----------------------
+
+- Remove redundant HDP version attributes ( Issue: #344 )
+- Update HDP-UTILS repo to 1.1.0.21 ( Issues: #346 [COOK-127](https://issues.cask.co/browse/COOK-127) )
+- Use libsnappy1 from hdp-utils on Ubuntu 16 ( Issue: #347 )
+- Add Support for HDP 2.6.2.0 and HDP 2.5.6.0 ( Issue: #348 )
+- Fix CentOS7 support for HDP, configure only update or GA repo ( Issues: #349 [COOK-129](https://issues.cask.co/browse/COOK-129) )
+- Drop support for RHEL 5 and derivatives ( Issues: #351 [COOK-130](https://issues.cask.co/browse/COOK-130) )
+
+v2.11.5 (Aug 7, 2017)
+---------------------
+
+- Support sysctl cookbook 0.10.0 on Chef 12.5+ ( Issues: #340 )
+
+v2.11.4 (Aug 7, 2017)
+---------------------
+
+- Constrain sysctl due to its Chef version dependency ( Issues: #341 )
+
+v2.11.3 (Jul 28, 2017)
+----------------------
+
+- Use correct libsnappy package on Ubuntu 16, per @gwohletz ( Issues: #337 [COOK-126](https://issues.cask.co/browse/COOK-126) )
+- Cleanup Gemfile ( Issue: #338 )
+
 v2.11.2 (Jun 20, 2017)
 ----------------------
 

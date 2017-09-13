@@ -24,7 +24,12 @@ pkgs = []
 # Everybody gets snappy
 case node['platform_family']
 when 'debian'
-  pkgs += ['libsnappy1', 'libsnappy-dev']
+  # HDP-UTILS repo provides its own libsnappy1, which conflicts with Ubuntu's libsnappy1v5
+  pkgs += if node['platform_version'].to_i >= 16 && node['hadoop']['distribution'] != 'hdp'
+            ['libsnappy1v5', 'libsnappy-dev']
+          else
+            ['libsnappy1', 'libsnappy-dev']
+          end
 when 'rhel', 'amazon'
   pkgs += ['snappy', 'snappy-devel']
 end
