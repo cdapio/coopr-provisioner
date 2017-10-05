@@ -68,6 +68,17 @@
             "default": true,
             "tip": "Delete EBS volumes on termination"
           },
+          "aws_root_ebs_volume_type": {
+            "label": "Root disk type",
+            "type": "select",
+            "options": [
+              "standard",
+              "gp2"
+            ],
+            "default": "standard",
+            "override": true,
+            "tip": "Disk type"
+          },
           "security_groups": {
             "label": "Security Groups",
             "type": "text",
