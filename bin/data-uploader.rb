@@ -21,7 +21,7 @@ gem 'json', '~> 1.7.7' # activesupport
 
 require 'json'
 require 'optparse'
-require 'rest_client'
+require 'rest-client'
 require 'tmpdir'
 require 'fileutils'
 require 'rubygems/package'
