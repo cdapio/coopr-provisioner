@@ -396,17 +396,13 @@ class FogProviderAWS < Coopr::Plugin::Provider
             ami_map['volumeSize'].to_s
           end
         end
-      delete_term =
-        if @aws_ebs_delete_on_term
-          'true'
-        else
-          'false'
-        end
+      delete_term = @aws_ebs_delete_on_term.to_s
       server_def[:block_device_mapping] =
         [{
           'DeviceName' => ami_map['deviceName'],
+          'Ebs.DeleteOnTermination' => delete_term,
           'Ebs.VolumeSize' => ebs_size,
-          'Ebs.DeleteOnTermination' => delete_term
+          'Ebs.VolumeType' => @aws_root_ebs_volume_type
         }]
     end
 
