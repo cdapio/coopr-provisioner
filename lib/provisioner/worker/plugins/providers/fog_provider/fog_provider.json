@@ -59,19 +59,19 @@
             "override": false,
             "tip": "AWS Region"
           },
-          "aws_ebs_size": {
-            "label": "EBS size",
+          "aws_root_ebs_size": {
+            "label": "Root EBS size",
             "type": "text",
             "default": 10,
             "override": true,
-            "tip": "Size of EBS volume in GB, for EBS-backed instances"
+            "tip": "Size of root EBS volume in GB, for EBS-backed instances"
           },
-          "aws_ebs_delete_on_term": {
-            "label": "EBS delete on termination",
+          "aws_root_ebs_delete_on_term": {
+            "label": "Delete EBS root on termination",
             "type": "checkbox",
             "override": true,
             "default": true,
-            "tip": "Delete EBS volumes on termination"
+            "tip": "Delete EBS root volume on termination"
           },
           "aws_root_ebs_volume_type": {
             "label": "Root disk type",

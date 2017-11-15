@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
 # encoding: UTF-8
 #
-# Copyright © 2012-2014 Cask Data, Inc.
+# Copyright © 2012-2017 Cask Data, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -388,20 +388,28 @@ class FogProviderAWS < Coopr::Plugin::Provider
     # Handle EBS-backed volume sizes
     if ami.root_device_type == 'ebs'
       ami_map = ami.block_device_mapping.first
-      ebs_size =
+      root_ebs_size =
         begin
-          if @aws_ebs_size
+          if @aws_root_ebs_size
+            Integer(@aws_root_ebs_size).to_s
+          elsif @aws_ebs_size
             Integer(@aws_ebs_size).to_s
           else
             ami_map['volumeSize'].to_s
           end
         end
-      delete_term = @aws_ebs_delete_on_term.to_s
+      root_delete_term =
+        begin
+          if @aws_root_ebs_delete_on_term || @aws_ebs_delete_on_term
+            'true'
+          else
+            'false'
+          end
       server_def[:block_device_mapping] =
         [{
           'DeviceName' => ami_map['deviceName'],
-          'Ebs.DeleteOnTermination' => delete_term,
-          'Ebs.VolumeSize' => ebs_size,
+          'Ebs.DeleteOnTermination' => root_delete_term,
+          'Ebs.VolumeSize' => root_ebs_size,
           'Ebs.VolumeType' => @aws_root_ebs_volume_type
         }]
     end
