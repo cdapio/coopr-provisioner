@@ -18,7 +18,7 @@
 #
 
 include_recipe 'hadoop::hive'
-include_recipe 'hadoop::_system_tuning'
+include_recipe 'hadoop::_system_tuning' if node['hadoop']['system_tuning_enabled']
 pkg = 'hive-metastore'
 
 hive_sql =
@@ -110,7 +110,7 @@ template "/etc/default/#{pkg}" do
     'hive_pid_dir' => '/var/run/hive',
     'hive_log_dir' => hive_log_dir,
     'hive_ident_string' => 'hive',
-    'hive_conf_dir' => '/etc/hive/conf'
+    'hive_conf_dir' => '/etc/hive/conf',
   }
 end
 
@@ -130,7 +130,7 @@ template "/etc/init.d/#{pkg}" do
     'user' => 'hive',
     'home' => "#{hadoop_lib_dir}/hive",
     'pidfile' => "${HIVE_PID_DIR}/#{pkg}.pid",
-    'logfile' => "${HIVE_LOG_DIR}/#{pkg}.log"
+    'logfile' => "${HIVE_LOG_DIR}/#{pkg}.log",
   }
 end
 

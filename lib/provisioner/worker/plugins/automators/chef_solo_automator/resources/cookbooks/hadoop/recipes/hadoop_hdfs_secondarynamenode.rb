@@ -2,7 +2,7 @@
 # Cookbook:: hadoop
 # Recipe:: hadoop_hdfs_secondarynamenode
 #
-# Copyright © 2013-2016 Cask Data, Inc.
+# Copyright © 2013-2017 Cask Data, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -19,7 +19,7 @@
 
 include_recipe 'hadoop::default'
 include_recipe 'hadoop::_hadoop_hdfs_checkconfig'
-include_recipe 'hadoop::_system_tuning'
+include_recipe 'hadoop::_system_tuning' if node['hadoop']['system_tuning_enabled']
 pkg = 'hadoop-hdfs-secondarynamenode'
 
 fs_checkpoint_dirs =
@@ -85,7 +85,7 @@ template "/etc/default/#{pkg}" do
     'hadoop_privileged_nfs_log_dir' => hadoop_log_dir,
     'hadoop_secure_dn_user' => 'hdfs',
     'hadoop_secure_dn_pid_dir' => hadoop_pid_dir,
-    'hadoop_secure_dn_log_dir' => hadoop_log_dir
+    'hadoop_secure_dn_log_dir' => hadoop_log_dir,
   }
 end
 
@@ -105,7 +105,7 @@ template "/etc/init.d/#{pkg}" do
     'user' => 'hdfs',
     'home' => "#{hadoop_lib_dir}/hadoop",
     'pidfile' => "${HADOOP_PID_DIR}/#{pkg}.pid",
-    'logfile' => "${HADOOP_LOG_DIR}/#{pkg}.log"
+    'logfile' => "${HADOOP_LOG_DIR}/#{pkg}.log",
   }
 end
 

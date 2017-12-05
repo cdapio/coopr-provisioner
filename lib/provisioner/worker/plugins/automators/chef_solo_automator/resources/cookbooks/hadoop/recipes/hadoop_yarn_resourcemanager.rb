@@ -2,7 +2,7 @@
 # Cookbook:: hadoop
 # Recipe:: hadoop_yarn_resourcemanager
 #
-# Copyright © 2013-2015 Cask Data, Inc.
+# Copyright © 2013-2017 Cask Data, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@
 #
 
 include_recipe 'hadoop::default'
-include_recipe 'hadoop::_system_tuning'
+include_recipe 'hadoop::_system_tuning' if node['hadoop']['system_tuning_enabled']
 pkg = 'hadoop-yarn-resourcemanager'
 
 # TODO: check for these and set them up
@@ -132,7 +132,7 @@ template "/etc/default/#{pkg}" do
     'yarn_pid_dir' => yarn_pid_dir,
     'yarn_log_dir' => yarn_log_dir,
     'yarn_ident_string' => 'yarn',
-    'yarn_conf_dir' => '/etc/hadoop/conf'
+    'yarn_conf_dir' => '/etc/hadoop/conf',
   }
 end
 
@@ -152,7 +152,7 @@ template "/etc/init.d/#{pkg}" do
     'user' => 'yarn',
     'home' => "#{hadoop_lib_dir}/hadoop",
     'pidfile' => '${YARN_PID_DIR}/yarn-yarn-resourcemanager.pid',
-    'logfile' => "${YARN_LOG_DIR}/#{pkg}.log"
+    'logfile' => "${YARN_LOG_DIR}/#{pkg}.log",
   }
 end
 

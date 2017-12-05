@@ -50,7 +50,7 @@ when 'hdp'
        '2.3.0.0', '2.3.2.0', '2.3.4.0', '2.3.4.7', '2.3.6.0',
        '2.4.0.0', '2.4.2.0', '2.4.3.0',
        '2.5.0.0', '2.5.3.0', '2.5.5.0', '2.5.6.0',
-       '2.6.0.3', '2.6.1.0', '2.6.2.0'
+       '2.6.0.3', '2.6.1.0', '2.6.2.0', '2.6.3.0'
     hdp_version = '2.2.0.0'
     hdp_update_version = node['hadoop']['distribution_version']
   when '2.2'
@@ -75,7 +75,7 @@ when 'hdp'
     node.override['hadoop']['distribution_version'] = hdp_update_version
   when '2.6', '2'
     hdp_version = '2.2.0.0'
-    hdp_update_version = '2.6.2.0'
+    hdp_update_version = '2.6.3.0'
     Chef::Log.warn("Short versions for node['hadoop']['distribution_version'] are deprecated! Please use full version!")
     node.override['hadoop']['distribution_version'] = hdp_update_version
   else
@@ -93,11 +93,13 @@ when 'hdp'
            'centos6'
          end
 
-    yum_repo_url = node['hadoop']['yum_repo_url'] ? node['hadoop']['yum_repo_url'] : "#{yum_base_url}/#{os}/2.x/GA/#{hdp_version}"
-    yum_repo_key_url = node['hadoop']['yum_repo_key_url'] ? node['hadoop']['yum_repo_key_url'] : "#{yum_base_url}/#{os}/#{key}/#{key}-Jenkins"
-
     if hdp_update_version.nil?
       # We are on one of the GA versions; configure the GA repo
+      # rubocop:disable Metrics/BlockNesting
+      yum_repo_url = node['hadoop']['yum_repo_url'] ? node['hadoop']['yum_repo_url'] : "#{yum_base_url}/#{os}/2.x/GA/#{hdp_version}"
+      yum_repo_key_url = node['hadoop']['yum_repo_key_url'] ? node['hadoop']['yum_repo_key_url'] : "#{yum_repo_url}/#{key}/#{key}-Jenkins"
+      # rubocop:enable Metrics/BlockNesting
+
       yum_repository 'hdp' do
         name 'HDP-2.x'
         description 'Hortonworks Data Platform Version - HDP-2.x'
@@ -107,10 +109,15 @@ when 'hdp'
       end
     else
       # We are on an update version; configure the update repo only
+      # rubocop:disable Metrics/BlockNesting
+      yum_repo_url = node['hadoop']['yum_repo_url'] ? node['hadoop']['yum_repo_url'] : "#{yum_base_url}/#{os}/2.x/updates/#{hdp_update_version}"
+      yum_repo_key_url = node['hadoop']['yum_repo_key_url'] ? node['hadoop']['yum_repo_key_url'] : "#{yum_repo_url}/#{key}/#{key}-Jenkins"
+      # rubocop:enable Metrics/BlockNesting
+
       yum_repository 'hdp-updates' do
         name 'Updates-HDP-2.x'
         description 'Updates for Hortonworks Data Platform Version - HDP-2.x'
-        url "#{yum_base_url}/#{os}/2.x/updates/#{hdp_update_version}"
+        url yum_repo_url
         gpgkey yum_repo_key_url
         action :add
       end
@@ -145,7 +152,7 @@ when 'hdp'
            '2.3.0.0', '2.3.2.0', '2.3.4.0', '2.3.4.7', '2.3.6.0',
            '2.4.0.0', '2.4.2.0', '2.4.3.0',
            '2.5.0.0', '2.5.3.0', '2.5.5.0', '2.5.6.0',
-           '2.6.0.3', '2.6.1.0', '2.6.2.0'
+           '2.6.0.3', '2.6.1.0', '2.6.2.0', '2.6.3.0'
         "2.x/updates/#{hdp_update_version}"
       else
         hdp_update_version
@@ -237,12 +244,12 @@ when 'bigtop'
   bigtop_release = node['hadoop']['distribution_version']
 
   # allow a developer mode for use when developing against bigtop, see https://issues.cask.co/browse/COOK-1
-  if bigtop_release.casecmp('develop').zero? && !(node['hadoop'].key?('yum_repo_url') || node['hadoop'].key?('apt_repo_url'))
+  if bigtop_release.casecmp('develop') == 0 && !(node['hadoop'].key?('yum_repo_url') || node['hadoop'].key?('apt_repo_url'))
     Chef::Application.fatal!("You must set node['hadoop']['yum_repo_url'] or node['hadoop']['apt_repo_url'] when specifying node['hadoop']['distribution_version'] == 'develop'")
   end
 
   # do not validate gpg repo keys when in develop mode
-  validate_repo_key = bigtop_release.casecmp('develop').zero? ? false : true
+  validate_repo_key = bigtop_release.casecmp('develop') == 0 ? false : true
   Chef::Log.warn('Allowing install of unsigned binaries') unless validate_repo_key
 
   case node['platform_family']

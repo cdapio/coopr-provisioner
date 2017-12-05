@@ -2,7 +2,7 @@
 # Cookbook:: hadoop
 # Recipe:: spark_master
 #
-# Copyright © 2013-2015 Cask Data, Inc.
+# Copyright © 2013-2017 Cask Data, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@
 #
 
 include_recipe 'hadoop::spark'
-include_recipe 'hadoop::_system_tuning'
+include_recipe 'hadoop::_system_tuning' if node['hadoop']['system_tuning_enabled']
 pkg = 'spark-master'
 
 spark_log_dir =
@@ -49,7 +49,7 @@ template "/etc/default/#{pkg}" do
     'spark_ident_string' => 'spark',
     'spark_history_server_log_dir' => eventlog_dir,
     'spark_history_opts' => '$SPARK_HISTORY_OPTS -Dspark.history.fs.logDirectory=${SPARK_HISTORY_SERVER_LOG_DIR}',
-    'spark_conf_dir' => '/etc/spark/conf'
+    'spark_conf_dir' => '/etc/spark/conf',
   }
 end
 
@@ -69,7 +69,7 @@ template "/etc/init.d/#{pkg}" do
     'user' => 'spark',
     'home' => "#{hadoop_lib_dir}/spark",
     'pidfile' => "${SPARK_PID_DIR}/#{pkg}.pid",
-    'logfile' => "${SPARK_LOG_DIR}/#{pkg}.log"
+    'logfile' => "${SPARK_LOG_DIR}/#{pkg}.log",
   }
 end
 

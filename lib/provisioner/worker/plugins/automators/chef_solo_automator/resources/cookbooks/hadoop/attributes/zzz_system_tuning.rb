@@ -2,7 +2,7 @@
 # Cookbook:: hadoop
 # Attribute:: zzz_system_tuning
 #
-# Copyright © 2013-2015 Cask Data, Inc.
+# Copyright © 2013-2017 Cask Data, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,6 +16,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+
+# Set this to false to disable running the _system_tuning recipe. This may be desirable when running in a container.
+default['hadoop']['system_tuning_enabled'] = true
 
 # This attributes file sets up the port reservations for sysctl for COOK-79. Since these values must be compiled into
 # a single value, everything is done in this one file, and is done at Chef compile time, versus in a recipe. This is
@@ -55,7 +58,7 @@ addr_ports = {
   'dfs.namenode.backup.http-address' => 50_105,
   'dfs.journalnode.rpc-address' => 8485,
   'dfs.journalnode.http-address' => 8480,
-  'dfs.journalnode.https-address' => 8481
+  'dfs.journalnode.https-address' => 8481,
 }
 
 addr_ports.each do |k, v|
@@ -91,7 +94,7 @@ addr_ports = {
   'yarn.nodemanager.webapp.address' => 8042,
   'yarn.timeline-service.address' => 10_200,
   'yarn.timeline-service.webapp.address' => 8188,
-  'yarn.timeline-service.webapp.https.address' => 8190
+  'yarn.timeline-service.webapp.https.address' => 8190,
 }
 
 addr_ports.each do |k, v|
@@ -114,7 +117,7 @@ addr_ports = {
   'hbase.rest.port' => 8080,
   'hbase.rest.info.port' => 8085,
   'hbase.thrift.port' => 9090,
-  'hbase.thrift.info.port' => 9095
+  'hbase.thrift.info.port' => 9095,
 }
 
 addr_ports.each do |k, v|
