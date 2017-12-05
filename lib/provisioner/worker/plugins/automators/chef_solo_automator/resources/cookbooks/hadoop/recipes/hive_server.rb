@@ -2,7 +2,7 @@
 # Cookbook:: hadoop
 # Recipe:: hive_server
 #
-# Copyright © 2013-2015 Cask Data, Inc.
+# Copyright © 2013-2017 Cask Data, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@
 #
 
 include_recipe 'hadoop::hive'
-include_recipe 'hadoop::_system_tuning'
+include_recipe 'hadoop::_system_tuning' if node['hadoop']['system_tuning_enabled']
 pkg = 'hive-server'
 
 hive_log_dir =
@@ -40,7 +40,7 @@ template "/etc/default/#{pkg}" do
     'hive_pid_dir' => '/var/run/hive',
     'hive_log_dir' => hive_log_dir,
     'hive_ident_string' => 'hive',
-    'hive_conf_dir' => '/etc/hive/conf'
+    'hive_conf_dir' => '/etc/hive/conf',
   }
 end
 
@@ -60,7 +60,7 @@ template "/etc/init.d/#{pkg}" do
     'user' => 'hive',
     'home' => "#{hadoop_lib_dir}/hive",
     'pidfile' => "${HIVE_PID_DIR}/#{pkg}.pid",
-    'logfile' => "${HIVE_LOG_DIR}/#{pkg}.log"
+    'logfile' => "${HIVE_LOG_DIR}/#{pkg}.log",
   }
 end
 
