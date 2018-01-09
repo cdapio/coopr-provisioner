@@ -43,7 +43,7 @@ module Coopr
       get '/heartbeat' do
         begin
           settings.provisioner.heartbeat.to_json
-        rescue
+        rescue StandardError
           halt 500
         end
       end
@@ -63,7 +63,7 @@ module Coopr
 
           data['status'] = 0
           body data.to_json
-        rescue
+        rescue StandardError
           halt 500
         end
       end
@@ -85,7 +85,7 @@ module Coopr
 
           data['status'] = 0
           body data.to_json
-        rescue
+        rescue StandardError
           halt 500
         end
       end
@@ -98,7 +98,7 @@ module Coopr
           else
             halt 404
           end
-        rescue
+        rescue StandardError
           halt 500
         end
       end

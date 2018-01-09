@@ -77,7 +77,7 @@ module Coopr
             @properties[p_name.downcase] = p_value
             @descriptions[p_name.downcase] = p_description
           end
-        rescue => e
+        rescue StandardError => e
           puts "Exception during parsing of config file: #{file}: #{e.message}, #{e.backtrace}"
           exit(1)
         end

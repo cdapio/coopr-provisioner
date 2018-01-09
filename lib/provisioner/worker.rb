@@ -178,12 +178,12 @@ module Coopr
       # automator take pecedence as presence indicates a 'software' task
       providerName = begin
                        task['config']['provider']['providertype']
-                     rescue
+                     rescue StandardError
                        nil
                      end
       automatorName = begin
                         task['config']['service']['action']['type']
-                      rescue
+                      rescue StandardError
                         nil
                       end
 
@@ -231,7 +231,7 @@ module Coopr
       sigterm.dont_interupt do
         result = delegate_task(task)
       end
-    rescue => e
+    rescue StandardError => e
       log.error "Caught exception when running task from file #{@file}"
 
       result = {} if result.nil? == true
@@ -257,7 +257,7 @@ module Coopr
         begin
           response = Coopr::RestHelper.post "#{server_uri}/v2/tasks/take", postdata
           break response
-        rescue => e
+        rescue StandardError => e
           log.error "Unable to connect to Coopr Server #{server_uri}/v2/tasks/take: #{e}"
           sleep poll_error_interval
         end
@@ -281,7 +281,7 @@ module Coopr
           else
             log.error "Received error code #{response.code} from coopr server: #{response.to_str}"
           end
-        rescue => e
+        rescue StandardError => e
           log.error "Caught exception processing response from coopr server: #{e.inspect}"
         end
         sleep poll_error_interval
@@ -319,10 +319,10 @@ module Coopr
             log.debug "Task <#{task['taskId']}> completed, updating results <#{result}>"
             begin
               response = Coopr::RestHelper.post "#{server_uri}/v2/tasks/finish", result.to_json
-            rescue => e
+            rescue StandardError => e
               log.error "Caught exception posting back to coopr server #{server_uri}/v2/tasks/finish: #{e}"
             end
-          rescue => e
+          rescue StandardError => e
             result = {} if result.nil? == true
             result['status'] = '1'
             result['workerId'] = @worker_id
@@ -340,7 +340,7 @@ module Coopr
             log.error "Task <#{task['taskId']}> failed, updating results <#{result}>"
             begin
               response = Coopr::RestHelper.post "#{server_uri}/v2/tasks/finish", result.to_json
-            rescue => e
+            rescue StandardError => e
               log.error "Caught exception posting back to server #{server_uri}/v2/tasks/finish: #{e}"
             end
           end
