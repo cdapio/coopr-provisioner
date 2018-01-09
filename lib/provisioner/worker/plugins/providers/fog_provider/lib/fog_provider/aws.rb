@@ -389,22 +389,19 @@ class FogProviderAWS < Coopr::Plugin::Provider
     if ami.root_device_type == 'ebs'
       ami_map = ami.block_device_mapping.first
       root_ebs_size =
-        begin
-          if @aws_root_ebs_size
-            Integer(@aws_root_ebs_size).to_s
-          elsif @aws_ebs_size
-            Integer(@aws_ebs_size).to_s
-          else
-            ami_map['volumeSize'].to_s
-          end
+        if @aws_root_ebs_size
+          Integer(@aws_root_ebs_size).to_s
+        elsif @aws_ebs_size
+          Integer(@aws_ebs_size).to_s
+        else
+          ami_map['volumeSize'].to_s
         end
       root_delete_term =
-        begin
-          if @aws_root_ebs_delete_on_term || @aws_ebs_delete_on_term
-            'true'
-          else
-            'false'
-          end
+        if @aws_root_ebs_delete_on_term || @aws_ebs_delete_on_term
+          'true'
+        else
+          'false'
+        end
       server_def[:block_device_mapping] =
         [{
           'DeviceName' => ami_map['deviceName'],
