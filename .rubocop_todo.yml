@@ -55,8 +55,6 @@ Style/VariableName:
     - 'lib/provisioner/worker/pluginmanager.rb'
 
 # Manually-added
-Lint/RescueWithoutErrorClass:
-  Enabled: false
 Performance/HashEachMethods:
   Enabled: false
 Style/Dir:

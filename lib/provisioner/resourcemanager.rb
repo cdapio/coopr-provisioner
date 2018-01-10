@@ -150,7 +150,7 @@ module Coopr
       log.debug "fetching resource at #{uri} for tenant #{@tenant}"
       begin
         response = Coopr::RestHelper.get(uri, 'Coopr-UserID' => 'admin', 'Coopr-TenantID' => @tenant)
-      rescue => e
+      rescue StandardError => e
         log.error "unable to fetch resource: #{e.inspect}"
         return
       end

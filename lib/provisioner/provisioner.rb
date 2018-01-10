@@ -203,7 +203,7 @@ module Coopr
                 log.warn "Response code #{resp.code}, #{resp.to_str} when sending heartbeat to coopr server #{uri}"
               end
             end
-          rescue => e
+          rescue StandardError => e
             log.error "Caught exception sending heartbeat to coopr server #{uri}: #{e.message}"
           end
           sleep 10
@@ -249,7 +249,7 @@ module Coopr
         else
           log.warn "Response code #{resp.code}, #{resp.to_str} when registering with coopr server #{uri}"
         end
-      rescue => e
+      rescue StandardError => e
         log.error "Caught exception when registering with server #{uri}: #{e.message}"
       end
     end
@@ -274,7 +274,7 @@ module Coopr
         else
           log.warn "Response code #{resp.code}, #{resp.to_str} when unregistering with coopr server #{uri}"
         end
-      rescue => e
+      rescue StandardError => e
         log.error "Caught exception when unregistering with coopr server #{uri}: #{e.message}"
       end
     end
@@ -354,7 +354,7 @@ module Coopr
     def local_ip
       server_ip = begin
                     Resolv.getaddress(@server_uri.sub(%r{^https?://}, '').split(':').first)
-                  rescue
+                  rescue StandardError
                     '127.0.0.1'
                   end
       orig = Socket.do_not_reverse_lookup
@@ -363,7 +363,7 @@ module Coopr
         s.connect server_ip, 1
         s.addr.last
       end
-    rescue => e
+    rescue StandardError => e
       log.error 'Unable to determine provisioner.register.ip, defaulting to 127.0.0.1. Please set it explicitly. '\
         "Server may not be able to connect to this provisioner: #{e.inspect}"
       '127.0.0.1'

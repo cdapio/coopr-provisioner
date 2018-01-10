@@ -39,7 +39,7 @@ module Coopr
         ipaddress = @task['config']['ipaddresses']['access_v4']
         fields = begin
                    @task['config']['service']['action']['fields']
-                 rescue
+                 rescue StandardError
                    nil
                  end
 

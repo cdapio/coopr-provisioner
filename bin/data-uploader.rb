@@ -331,7 +331,7 @@ rescue ArgumentError => e
   puts "Argument Error: #{e.message}"
   puts 'run with  -h or --help to get usage help'
   exit 1
-rescue => e
+rescue StandardError => e
   puts "Error: #{e.message} #{e.backtrace}"
   puts e.backtrace
   exit 1

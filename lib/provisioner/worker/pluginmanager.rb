@@ -107,7 +107,7 @@ module Coopr
             log.error "Could not load plugin, invalid json at #{jsonfile}: #{e.message}"
             @load_errors.push("Could not load plugin, invalid json at #{jsonfile}")
             next
-          rescue => e
+          rescue StandardError => e
             log.error "Could not load plugin at #{jsonfile}: #{e.message}"
             @load_errors.push("Could not load plugin at #{jsonfile}")
             next
@@ -136,13 +136,13 @@ module Coopr
             log.error "Response code #{resp.code}, #{resp.to_str} when trying to register #{name}"
             @register_errors.push("Response code #{resp.code}, #{resp.to_str} when trying to register #{name}")
           end
-        rescue => e
+        rescue StandardError => e
           log.error "Caught exception registering plugins to coopr server #{uri}"
           log.error e.message
           log.error e.backtrace.inspect
           @register_errors.push("Caught exception registering plugins to coopr server #{uri}")
         end
-      rescue => e
+      rescue StandardError => e
         log.error "Caught exception registering plugins to coopr server #{uri}"
         log.error e.message
         log.error e.backtrace.inspect
