@@ -2,7 +2,7 @@
 # Cookbook Name:: coopr_mysql
 # Recipe:: default
 #
-# Copyright © 2017 Cask Data, Inc.
+# Copyright © 2018 Cask Data, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -23,6 +23,21 @@
 if node.key?('coopr_mysql')
   if node['coopr_mysql'].key?('mysql_service')
     node['coopr_mysql']['mysql_service'].each do |db_name, props|
+      # Optionally, first setup platform-specific repositories
+      # Currently, only rhel via yum-mysql-community is implemented.  Required for CentOS 7+
+      if platform_family?('rhel', 'amazon', 'fedora') && node['coopr_mysql']['yum_mysql_community']['enabled'].to_s == 'true'
+        # Use mysql_service 'version' property if set, else our default
+        version =
+          if props.key?('version')
+            props['version']
+          else
+            node['coopr_mysql']['yum_mysql_community']['default_version']
+          end
+        community_recipe = "mysql#{version.tr('.', '')}"
+        include_recipe "yum-mysql-community::#{community_recipe}"
+      end
+
+      # Create the mysql_service resource
       mysql_service db_name do
         # json attributes are called as keys to the mysql_service resource
         props.each do |k, v|
@@ -33,6 +48,13 @@ if node.key?('coopr_mysql')
             Chef::Log.warn("Ignoring invalid JSON attribute \"#{k}\" set for database #{db_name}")
           end
           action :nothing
+        end
+        # If no version defined and running on a community-repo-enabled platform, inject coopr_mysql default version
+        # We dont want to risk a mismatch between our default repos and the mysql cookbook's platform default
+        unless props.key?('version')
+          if platform_family?('rhel', 'amazon', 'fedora') && node['coopr_mysql']['yum_mysql_community']['enabled'].to_s == 'true'
+            send('version', node['coopr_mysql']['yum_mysql_community']['default_version'])
+          end
         end
       end
 

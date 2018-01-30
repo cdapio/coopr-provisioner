@@ -41,6 +41,28 @@ Additionally, the attribute:
   }
 }
 ```
-will cause it to also create the ``mysql-example`` service and start it.
+will cause it to also create the ``mysql-example`` service and run the ``:start`` action.
 
 In a coopr context, this json can be stored in either a service or a clustertemplate.  The ``action`` attribute can be used for stop and start actions.
+
+
+## Platform-specific repository setup
+
+In the 8.x mysql cookbook series, it is the user's responsibility to configure the appropriate repositories if necessary.  Currently, the
+``yum-mysql-community`` cookbook is implemented for the rhel, fedora, and amazon platform families.  On these platforms, the example JSON
+above would be translated to the following resource call:
+
+```
+mysql_service 'example' do
+  bind_address '0.0.0.0'
+  port '3307'
+  initial_root_passord 'change me'
+  version node['coopr_mysql']['yum_mysql_community']['default_version']
+end
+```
+
+Additionally, the appropriate recipe from the ``yum-mysql-community`` cookbook would be run.
+
+A ``{ "coopr_mysql": { "mysql_service": { "example": { "version": "X.Y" }}}}`` attributed could also be specified in the JSON
+and it will take precedence over the ``default_version`` cookbook attribute.  Note that this would be a platform-specific attribute
+and would therefore require restricting the Coopr clustertemplate to the appropriate platform(s).
