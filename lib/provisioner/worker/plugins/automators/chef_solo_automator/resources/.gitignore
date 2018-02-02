@@ -1,0 +1,3 @@
+# Ignore cookbook Gemfile(s)
+Gemfile
+Gemfile.lock
