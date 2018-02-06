@@ -2,7 +2,7 @@
 # Cookbook Name:: coopr_mysql
 # Recipe:: default
 #
-# Copyright © 2018 Cask Data, Inc.
+# Copyright © 2017-2018 Cask Data, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -34,7 +34,7 @@ if node.key?('coopr_mysql')
             node['coopr_mysql']['yum_mysql_community']['default_version']
           end
         community_recipe = "mysql#{version.tr('.', '')}"
-        include_recipe "yum-mysql-community::#{community_recipe}"
+        include_recipe "yum-mysql-community::mysql#{version.tr('.', '')}"
       end
 
       # Create the mysql_service resource
