@@ -22,5 +22,5 @@ default['coopr_mysql']['yum_mysql_community']['enabled'] = true
 
 # This default version is applied when {'coopr_mysql': {'mysql_service': {'<name>': {'version': 'x.y'}}}}
 # is not set. This ensures the repos we configure match the version used by the mysql cookbook.
-default['coopr_mysql']['yum_mysql_community']['default_version'] = '5.7'
+default['coopr_mysql']['yum_mysql_community']['default_version'] = '5.5'
 
