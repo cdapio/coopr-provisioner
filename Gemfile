@@ -36,11 +36,7 @@ group :test do
   gem 'rspec', '~> 3.0'
   # rubocop: disable Lint/UnneededDisable
   # rubocop: disable Bundler/DuplicatedGem
-  if RUBY_VERSION.to_f < 2.0
-    gem 'rubocop', '< 0.42'
-  else
-    gem 'rubocop', '~> 0.24'
-  end
+  gem 'rubocop'
   # rubocop: enable Bundler/DuplicatedGem
   # rubocop: enable Lint/UnneededDisable
   gem 'simplecov', '~> 0.7.1', require: false
