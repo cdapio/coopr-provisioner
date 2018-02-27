@@ -12,12 +12,17 @@ Provides a set of Windows-specific resources to aid in the creation of cookbooks
 - Windows Server 2008 R2
 - Windows 8, 8.1
 - Windows Server 2012 (R1, R2)
+- Windows Server 2016
 
 ### Chef
 
-- Chef 12.6+
+- Chef 12.7+
 
 ## Resources
+
+### Deprecated Resources Note
+
+As of chef-client 13.0+ and 13.4+ windows_task and windows_path are now included in the Chef client. windows_task underwent a full rewrite that greatly improved the functionality and idempotency of the resource. We highly recommend using these new resources by upgrading to Chef 13.4 or later. If you are running these more recent Chef releases the windows_task and windows_path resources within chef-client will take precedence over those in this cookbook. In September 2018 we will release a new major version of this cookbook that removes windows_task and windows_path.
 
 ### windows_auto_run
 
@@ -28,9 +33,10 @@ Provides a set of Windows-specific resources to aid in the creation of cookbooks
 
 #### Properties
 
-- `name` - Name attribute. The name of the value to be stored in the registry
-- `program` - The program to be run at login
+- `program_name` - Name attribute. The name of the value to be stored in the registry
+- `path` - The program to be run at login. This property was previous named `program`. Cookbooks using the `program` property will continue to function, but should be updated.
 - `args` - The arguments for the program
+- `root` - The registry root key to put the entry under--`:machine` (default) or `:user`
 
 #### Examples
 
@@ -59,7 +65,20 @@ Installs a certificate into the Windows certificate store from a file, and grant
 - `source` - name attribute. The source file (for create and acl_add), thumbprint (for delete and acl_add) or subject (for delete).
 - `pfx_password` - the password to access the source if it is a pfx file.
 - `private_key_acl` - array of 'domain\account' entries to be granted read-only access to the certificate's private key. This is not idempotent.
-- `store_name` - the certificate store to manipulate. One of MY (default : personal store), CA (trusted intermediate store) or ROOT (trusted root store).
+- `store_name` - the certificate store to manipulate. One of:
+  - MY (Personal)
+  - CA (Intermediate Certification Authorities)
+  - ROOT (Trusted Root Certification Authorities)
+  - TRUSTEDPUBLISHER (Trusted Publishers)
+  - CLIENTAUTHISSUER (Client Authentication Issuers)
+  - REMOTE DESKTOP (Remote Desktop)
+  - TRUSTEDDEVICES (Trusted Devices)
+  - WEBHOSTING (Web Hosting)
+  - AUTHROOT (Third-Party Root Certification Authorities)
+  - TRUSTEDPEOPLE (Trusted People)
+  - SMARTCARDROOT (Smart Card Trusted Roots)
+  - TRUST (Enterprise Trust)
+  - DISALLOWED (Untrusted Certificates)
 - `user_store` - if false (default) then use the local machine store; if true then use the current user's store.
 
 #### Examples
@@ -99,10 +118,25 @@ Binds a certificate to an HTTP port in order to enable TLS communication.
 
 - `cert_name` - name attribute. The thumbprint(hash) or subject that identifies the certificate to be bound.
 - `name_kind` - indicates the type of cert_name. One of :subject (default) or :hash.
-- `address` - the address to bind against. Default is 0.0.0.0 (all IP addresses).
+- `address` - the address to bind against. Default is 0.0.0.0 (all IP addresses). One of:
+  - IP v4 address `1.2.3.4`
+  - IP v6 address `[::1]`
+  - Host name `www.foo.com`
 - `port` - the port to bind against. Default is 443.
 - `app_id` - the GUID that defines the application that owns the binding. Default is the values used by IIS.
-- `store_name` - the store to locate the certificate in. One of MY (default : personal store), CA (trusted intermediate store) or ROOT (trusted root store).
+- `store_name` - the store to locate the certificate in. One of:
+  - MY (Personal)
+  - CA (Intermediate Certification Authorities)
+  - ROOT (Trusted Root Certification Authorities)
+  - TRUSTEDPUBLISHER (Trusted Publishers)
+  - CLIENTAUTHISSUER (Client Authentication Issuers)
+  - REMOTE DESKTOP (Remote Desktop)
+  - TRUSTEDDEVICES (Trusted Devices)
+  - WEBHOSTING (Web Hosting)
+  - AUTHROOT (Third-Party Root Certification Authorities)
+  - TRUSTEDPEOPLE (Trusted People)
+  - SMARTCARDROOT (Smart Card Trusted Roots)
+  - TRUST (Enterprise Trust)
 
 #### Examples
 
@@ -119,6 +153,50 @@ windows_certificate_binding "me.acme.com" do
     name_kind    :hash
     store_name    "CA"
     port        4334
+end
+```
+
+### windows_dns
+
+Configures A and CNAME records in Windows DNS. This requires the DNSCMD to be installed, which is done by adding the DNS role to the server or installing the Remote Server Admin Tools.
+
+#### Actions
+
+- :create: creates/updates the DNS entry
+- :delete: deletes the DNS entry
+
+#### Properties
+
+- host_name: name attribute. FQDN of the entry to act on.
+- dns_server: the DNS server to update. Default is local machine (.)
+- record_type: the type of record to create. One of A (default) or CNAME
+- target: for A records an array of IP addresses to associate with the host; for CNAME records the FQDN of the host to alias
+- ttl: if > 0 then set the time to live of the record
+
+#### Examples
+
+```ruby
+# Create A record linked to 2 addresses with a 10 minute ttl
+windows_dns "m1.chef.test" do
+    target         ['10.9.8.7', '1.2.3.4']
+    ttl            600
+end
+```
+
+```ruby
+# Delete records. target is mandatory although not used
+windows_dns "m1.chef.test" do
+    action    :delete
+    target    []
+end
+```
+
+```ruby
+# Set an alias against the node in a role
+nodes = search( :node, "role:my_service" )
+windows_dns "myservice.chef.test" do
+    record_type    'CNAME'
+    target        nodes[0]['fqdn']
 end
 ```
 
@@ -163,9 +241,11 @@ get-windowsfeature
 #### Properties
 
 - `feature_name` - name of the feature/role(s) to install. The same feature may have different names depending on the provider used (ie DHCPServer vs DHCP; DNS-Server-Full-Role vs DNS).
-- `all` - Boolean. Optional. Default: false. DISM and Powershell providers only. Forces all dependencies to be installed.
-- `source` - String. Optional. DISM provider only. Uses local repository for feature install.
-- `install_method` - Symbol. Optional. **REPLACEMENT FOR THE PREVIOUS PROVIDER OPTION** If not supplied, Chef will determine which method to use (in the order of `:windows_feature_dism`, `:windows_feature_servercmd`, `:windows_feature_powershell`)
+- `all` - Boolean. Optional. Default: false. DISM and PowerShell providers only. For DISM this is the equivalent of specifying the /All switch to dism.exe, forcing all parent dependencies to be installed. With the PowerShell install method, the `-InstallAllSubFeatures` switch is applied. Note that these two methods may not produce identical results.
+- `management_tools` - Boolean. Optional. Default: false. PowerShell provider only. Includes the `-IncludeManagementTools` switch. Installs all applicable management tools of the roles, role services, or features specified by the feature name.
+- `source` - String. Optional. DISM and PowerShell providers only. Uses local repository for feature install.
+- `timeout` - Integer. Optional. Default: 600. Specifies a timeout (in seconds) for feature install.
+- `install_method` - Symbol. Optional. If not supplied, Chef will determine which method to use (in the order of `:windows_feature_dism`, `:windows_feature_servercmd`, `:windows_feature_powershell`)
 
 #### Examples
 
@@ -177,13 +257,14 @@ windows_feature 'DHCPServer' do
 end
 ```
 
-Install the .Net 3.5.1 feature on Server 2012 using repository files on DVD and install all dependencies
+Install the .Net 3.5.1 feature on Server 2012 using repository files on DVD and install all dependencies with a timeout of 900 seconds
 
 ```ruby
 windows_feature "NetFx3" do
   action :install
   all true
   source "d:\sources\sxs"
+  timeout 900
 end
 ```
 
@@ -214,11 +295,19 @@ windows_feature ['Web-Asp-Net45', 'Web-Net-Ext45'] do
 end
 ```
 
+Install the Network Policy and Access Service feature, including the management tools. Which, for this example, will automatically install `RSAT-NPAS` as well.
+
+```ruby
+windows_feature 'NPAS' do
+  action :install
+  management_tools true
+  install_method :windows_feature_powershell
+end
+```
+
 ### windows_font
 
-Installs a font.
-
-Font files should be included in the cookbooks
+Installs font files. Sources the font by default from the cookbook, but a URI source can be specified as well.
 
 #### Actions
 
@@ -226,13 +315,17 @@ Font files should be included in the cookbooks
 
 #### Properties
 
-- `name` - The file name of the font file name to install. The path defaults to the files/default directory of the cookbook you're calling windows_font from. Defaults to the resource name.
-- `source` - Set an alternate path to the font file.
+- `font_name` - The file name of the font file name to install. The path defaults to the files/default directory of the cookbook you're calling windows_font from. Defaults to the resource name.
+- `source` - A local filesystem path or URI to source the font file from..
 
 #### Examples
 
 ```ruby
 windows_font 'Code New Roman.otf'
+
+windows_font 'Custom.otf' do
+  source "https://example.com/Custom.otf"
+end
 ```
 
 ### windows_http_acl
@@ -275,7 +368,6 @@ end
 
 Configures the file that provides virtual memory for applications requiring more memory than available RAM or that are paged out to free up memory in use.
 
-
 #### Actions
 
 - `:set` - configures the default pagefile, creating if it doesn't exist.
@@ -283,7 +375,7 @@ Configures the file that provides virtual memory for applications requiring more
 
 #### Properties
 
-- `name` - the path to the pagefile,  String, name_property: true
+- `path` - the path to the pagefile, String, name_property: true
 - `system_managed` - configures whether the system manages the pagefile size. [true, false]
 - `automatic_managed` - all of the settings are managed by the system. If this is set to true, other settings will be ignored. [true, false], default: false
 - `initial_size` - initial size of the pagefile in bytes. Integer
@@ -348,23 +440,23 @@ end
 
 Create Windows printer. Note that this doesn't currently install a printer driver. You must already have the driver installed on the system.
 
-The Windows Printer LWRP will automatically create a TCP/IP printer port for you using the `ipv4_address` property. If you want more granular control over the printer port, just create it using the `windows_printer_port` LWRP before creating the printer.
+The Windows Printer resource will automatically create a TCP/IP printer port for you using the `ipv4_address` property. If you want more granular control over the printer port, just create it using the `windows_printer_port` resource before creating the printer.
 
 #### Actions
 
 - `:create` - Create a new printer
-- `:delete` - Delete a new printer
+- `:delete` - Delete an existing printer
 
 #### Properties
 
-- `device_id` - Name attribute. Required. Printer queue name, e.g. 'HP LJ 5200 in fifth floor copy room'
+- `device_id` - Printer queue name, e.g. 'HP LJ 5200 in fifth floor copy room'. Name property.
 - `comment` - Optional string describing the printer queue.
 - `default` - Boolean. Optional. Defaults to false. Note that Windows sets the first printer defined to the default printer regardless of this setting.
 - `driver_name` - String. Required. Exact name of printer driver. Note that the printer driver must already be installed on the node.
 - `location` - Printer location, e.g. 'Fifth floor copy room', or 'US/NYC/Floor42/Room4207'
 - `shared` - Boolean. Defaults to false.
 - `share_name` - Printer share name.
-- `ipv4_address` - Printer IPv4 address, e.g. '10.4.64.23'. You don't have to be able to ping the IP address to set it. Required.
+- `ipv4_address` - Printer's IPv4 address, e.g. '10.4.64.23'. You don't have to be able to ping the IP address to set it. Required.
 
 An error of "Set-WmiInstance : Generic failure" is most likely due to the printer driver name not matching or not being installed.
 
@@ -432,8 +524,8 @@ Creates and modifies Windows shortcuts.
 
 #### Properties
 
-- `name` - name attribute. The shortcut to create/modify.
-- `target` - what the shortcut links to
+- `shortcut_name` - The name for the shortcut if it differs from the resource name. Name property
+- `target` - Where the shortcut links to.
 - `arguments` - arguments to pass to the target when the shortcut is executed
 - `description` - description of the shortcut
 - `cwd` - Working directory to use when the target is executed
@@ -441,25 +533,17 @@ Creates and modifies Windows shortcuts.
 
 #### Examples
 
-Add a shortcut all users desktop:
+Add a shortcut to all users desktop:
 
 ```ruby
 require 'win32ole'
 all_users_desktop = WIN32OLE.new("WScript.Shell").SpecialFolders("AllUsersDesktop")
 
 windows_shortcut "#{all_users_desktop}/Notepad.lnk" do
-  target "C:\\WINDOWS\\notepad.exe"
+  target "C:\\Windows\\notepad.exe"
   description "Launch Notepad"
-  iconlocation "C:\\windows\\notepad.exe, 0"
+  iconlocation "C:\\Windows\\notepad.exe,0"
 end
-```
-
-#### Library Methods
-
-```ruby
-Registry.value_exists?('HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Run','BGINFO')
-Registry.key_exists?('HKLM\SOFTWARE\Microsoft')
-BgInfo = Registry.get_value('HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Run','BGINFO')
 ```
 
 ### windows_path
@@ -714,60 +798,6 @@ case ::Windows::VersionHelper.nt_version node
 end
 ```
 
-## Windows ChefSpec Matchers
-
-The Windows cookbook includes custom [ChefSpec](https://github.com/sethvargo/chefspec) matchers you can use to test your own cookbooks that consume Windows cookbook LWRPs.
-
-### Example Matcher Usage
-
-```ruby
-expect(chef_run).to install_windows_package('Node.js').with(
-  source: 'http://nodejs.org/dist/v0.10.26/x64/node-v0.10.26-x64.msi')
-```
-
-### Windows Cookbook Matchers
-
-- create_windows_auto_run
-- remove_windows_auto_run
-- create_windows_certificate
-- delete_windows_certificate
-- add_acl_to_windows_certificate
-- create_windows_certificate_binding
-- delete_windows_certificate_binding
-- install_windows_feature
-- install_windows_feature_dism
-- install_windows_feature_servermanagercmd
-- install_windows_feature_powershell
-- remove_windows_feature
-- remove_windows_feature_dism
-- remove_windows_feature_servermanagercmd
-- remove_windows_feature_powershell
-- delete_windows_feature
-- delete_windows_feature_dism
-- delete_windows_feature_powershell
-- install_windows_font
-- create_windows_http_acl
-- delete_windows_http_acl
-- install_windows_package
-- remove_windows_package
-- set_windows_pagefile
-- add_windows_path
-- remove_windows_path
-- create_windows_printer
-- delete_windows_printer
-- create_windows_printer_port
-- delete_windows_printer_port
-- create_windows_shortcut
-- create_windows_shortcut
-- create_windows_task
-- disable_windows_task
-- enable_windows_task
-- delete_windows_task
-- run_windows_task
-- change_windows_task
-- unzip_windows_zipfile_to
-- zip_windows_zipfile_to
-
 ## Usage
 
 Place an explicit dependency on this cookbook (using depends in the cookbook's metadata.rb) from any cookbook where you would like to use the Windows-specific resources/providers that ship with this cookbook.
@@ -784,7 +814,7 @@ depends 'windows'
 - Author:: Doug Ireton ([doug.ireton@nordstrom.com](mailto:doug.ireton@nordstrom.com))
 
 ```text
-Copyright 2011-2016, Chef Software, Inc.
+Copyright 2011-2018, Chef Software, Inc.
 Copyright 2010, VMware, Inc.
 Copyright 2011, Business Intelligence Associates, Inc
 Copyright 2012, Nordstrom, Inc.
