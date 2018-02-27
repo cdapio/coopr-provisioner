@@ -25,8 +25,11 @@ ruby_block "sensu_service_trigger" do
   action :nothing
 end
 
-if platform_family?("windows")
+case node["platform_family"]
+when "windows"
   include_recipe "sensu::_windows"
+when "aix"
+  include_recipe "sensu::_aix"
 else
   include_recipe "sensu::_linux"
 end
@@ -45,7 +48,7 @@ end
   extensions
 ].each do |dir|
   directory File.join(node["sensu"]["directory"], dir) do
-    owner node["sensu"]["admin_user"]
+    owner node["sensu"]["user"]
     group node["sensu"]["group"]
     recursive true
     mode node["sensu"]["directory_mode"]
@@ -87,10 +90,10 @@ if node["sensu"]["use_ssl"]
     owner node["sensu"]["admin_user"]
     group node["sensu"]["group"]
     mode 0640
-    sensitive true if Chef::Resource::ChefGem.instance_methods(false).include?(:sensitive)
+    sensitive true if respond_to?(:sensitive)
   end
 else
-  if node["sensu"]["rabbitmq"].port == 5671
+  if node["sensu"]["rabbitmq"]["port"] == 5671
     Chef::Log.warn("Setting Sensu RabbitMQ port to 5672 as you have disabled SSL.")
     node.override["sensu"]["rabbitmq"]["port"] = 5672
   end

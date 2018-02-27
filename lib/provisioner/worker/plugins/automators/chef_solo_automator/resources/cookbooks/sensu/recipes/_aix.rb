@@ -1,8 +1,8 @@
 #
 # Cookbook Name:: sensu
-# Recipe:: enterprise_dashboard
+# Recipe:: _aix
 #
-# Copyright 2014, Heavy Water Operations, LLC.
+# Copyright 2016, Heavy Water Operations, LLC.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,10 +17,17 @@
 # limitations under the License.
 #
 
-include_recipe "sensu::_enterprise_repo"
+bff_path = File.join(Chef::Config[:file_cache_path], 'sensu.bff')
 
-package "sensu-enterprise-dashboard" do
-  version node["sensu"]["enterprise-dashboard"]["version"]
+remote_file bff_path do
+  source "#{node["sensu"]["aix_package_root_url"]}/sensu-#{node["sensu"]["version"]}.powerpc.bff"
 end
 
-sensu_dashboard_config node.name
+package "sensu" do
+  source bff_path
+end
+
+template "/etc/default/sensu" do
+  source "sensu.default.erb"
+  notifies :create, "ruby_block[sensu_service_trigger]"
+end

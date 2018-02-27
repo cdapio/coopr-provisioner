@@ -1,9 +1,6 @@
 actions :create, :delete
+default_action :create
 
 attribute :attributes, :kind_of => Hash, :required => true
 attribute :negate, :kind_of => [TrueClass, FalseClass]
-
-def initialize(*args)
-  super
-  @action = :create
-end
+attribute :days, :kind_of => Hash

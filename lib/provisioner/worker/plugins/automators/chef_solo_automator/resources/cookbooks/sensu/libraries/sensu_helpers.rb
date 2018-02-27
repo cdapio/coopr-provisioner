@@ -31,6 +31,8 @@ module Sensu
       def gem_binary
         if File.exists?("/opt/sensu/embedded/bin/gem")
           "/opt/sensu/embedded/bin/gem"
+        elsif File.exists?('c:\opt\sensu\embedded\bin\gem.bat')
+          'c:\opt\sensu\embedded\bin\gem.bat'
         else
           "gem"
         end
@@ -94,6 +96,56 @@ module Sensu
         end
         password
       end
+
+      # Wraps the Chef::Util::Windows::NetUser, returning false if the Win32 constant
+      # is undefined, or returning false if the user does not exist. This indirection
+      # seems like the most expedient way to make the sensu::_windows recipe testable
+      # via chefspec on non-windows platforms.
+      #
+      # @param [String] the name of the user to test for
+      # @return [TrueClass, FalseClass]
+      def windows_user_exists?(user)
+        if defined?(Win32)
+          net_user = Chef::Util::Windows::NetUser.new(user)
+          !!net_user.get_info rescue false
+        else
+          false
+        end
+      end
+
+      # Wraps Win32::Service, returning false if the Win32 constant
+      # is undefined, or returning false if the user does not exist. This indirection
+      # seems like the most expedient way to make the sensu::_windows recipe testable
+      # via chefspec on non-windows platforms.
+      #
+      # @param [String] the name of the service to test for
+      # @return [TrueClass, FalseClass]
+      def windows_service_exists?(service)
+        if defined?(Win32)
+          ::Win32::Service.exists?(service)
+        else
+          false
+        end
+      end
+
+      # Derives Sensu package version strings for Redhat platforms.
+      # When the desired Sensu version is '0.27.0' or later, the package
+      # requires a '.elX' suffix.
+      #
+      # @param [String] Sensu version string
+      # @param [String] Platform version
+      # @param [String,NilClass] Suffix to override default '.elX'
+      def redhat_version_string(sensu_version, platform_version, suffix_override = nil)
+        bare_version = sensu_version.split('-').first
+        if Gem::Version.new(bare_version) < Gem::Version.new('0.27.0')
+          sensu_version
+        else
+          platform_major = Gem::Version.new(platform_version).segments.first
+          suffix = suffix_override || ".el#{platform_major}"
+          [sensu_version, suffix].join
+        end
+      end
+
     end
   end
 end

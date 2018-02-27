@@ -30,6 +30,7 @@ if node["sensu"]["use_ssl"]
   ssl_directory = "/etc/rabbitmq/ssl"
 
   directory ssl_directory do
+    mode '0755'
     recursive true
   end
 
@@ -52,12 +53,14 @@ if node["sensu"]["use_ssl"]
       content lazy { get_sensu_state(node, "ssl", "server", item) }
       group "rabbitmq"
       mode 0640
-      sensitive true if Chef::Resource::ChefGem.instance_methods(false).include?(:sensitive)
+      sensitive true if respond_to?(:sensitive)
     end
     node.override["rabbitmq"]["ssl_#{item}"] = path
   end
 
-  directory File.join(ssl_directory, "client")
+  directory File.join(ssl_directory, "client") do
+    mode '0755'
+  end
 
   %w[
     cert
@@ -68,16 +71,13 @@ if node["sensu"]["use_ssl"]
       content lazy { get_sensu_state(node, "ssl", "client", item) }
       group "rabbitmq"
       mode 0640
-      sensitive true if Chef::Resource::ChefGem.instance_methods(false).include?(:sensitive)
+      sensitive true if respond_to?(:sensitive)
     end
   end
 end
 
-# The packaged erlang in 12.04 (and below) is vulnerable to
-# the poodle exploit which stops rabbitmq starting its SSL listener
-if node["platform"] == "ubuntu" && node["platform_version"] <= "12.04"
-  node.override["erlang"]["install_method"] = "esl"
-end
+# Sensu recommends Erlang Solutions' erlang runtime distribution
+node.override["erlang"]["install_method"] = "esl"
 
 include_recipe "rabbitmq"
 include_recipe "rabbitmq::mgmt_console"
