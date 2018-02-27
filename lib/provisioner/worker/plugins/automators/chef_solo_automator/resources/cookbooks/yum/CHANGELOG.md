@@ -2,7 +2,37 @@
 
 This file is used to list changes made in each version of the yum cookbook.
 
+## 5.1.0 (2017-08-04)
+
+- Avoid spec deprecation warnings
+- Use an empty string `releasever` to lock an Amazon Linux AMI to its current verison
+
+## 5.0.1 (2017-04-06)
+
+- Switch from Rake testing to Local Delivery
+- Rename kitchen-docker to kitchen-dokken
+- Update apache2 license string
+- use true/false vs. TrueClass and FalseClass in the resource
+
+## 5.0.0 (2017-02-12)
+
+### Breaking changes
+
+- Removed the yum_repository resource and instead require chef-client 12.14 or later, which has the yum repository functionality built in. This resolves Chef 13 compatibility warnings for any cookbook with the yum cookbook.
+
+### Other changes
+
+- Convert yum_globalconfig from an LWRP to a custom resource
+
+## 4.2.0 (2017-02-12)
+
+- Make cache in the DNF compat recipe
+- Fix `fastestmirror_enabled`.
+- Require Chef 12.1 not 12.0
+- Convert to Inspec
+
 ## 4.1.0 (2016-10-21)
+
 - Purge yum cache before removing a repo not after
 
 ## 4.0.0 (2016-09-06)
