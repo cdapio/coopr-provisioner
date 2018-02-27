@@ -1,0 +1,29 @@
+driver:
+  name: vagrant
+
+provisioner:
+  name: chef_zero
+  # We have tests that ensure our deprecated features still
+  # work so we can't turn this on globally.
+  # deprecations_as_errors: true
+
+platforms:
+  - name: centos-6.8
+  - name: centos-7.3
+  # - name: debian-7.11
+  - name: debian-8.6
+  - name: fedora-25
+  - name: opensuse-leap-42.1
+  - name: ubuntu-14.04
+  - name: ubuntu-16.04
+
+suites:
+  - name: default
+    run_list:
+      - recipe[logrotate::default]
+  - name: definition
+    run_list:
+      - recipe[fake::definition]
+  - name: global
+    run_list:
+      - recipe[logrotate::global]
