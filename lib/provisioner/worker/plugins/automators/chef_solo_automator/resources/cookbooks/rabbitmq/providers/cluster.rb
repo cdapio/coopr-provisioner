@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 #
 # Cookbook Name:: rabbitmq
 # Provider:: cluster
@@ -201,12 +202,18 @@ action :join do
   var_node_name = node_name
   var_node_name_to_join = parse_cluster_nodes_string(new_resource.cluster_nodes).first['name']
   var_node_type = parse_cluster_nodes_string(new_resource.cluster_nodes).first['type']
+  var_cluster_name = new_resource.cluster_name
 
   if var_node_name == var_node_name_to_join
     Chef::Log.warn('[rabbitmq_cluster] Trying to join cluster node itself. Joining cluster will be skipped.')
-  elsif joined_cluster?(var_node_name, var_cluster_status)
-    Chef::Log.warn("[rabbitmq_cluster] Node is already member of #{current_cluster_name(var_cluster_status)}. Joining cluster will be skipped.")
+  elsif joined_cluster?(var_node_name, var_cluster_status) && current_cluster_name(var_cluster_status) == var_cluster_name
+    Chef::Log.warn("[rabbitmq_cluster] Node is already member of your desired cluster #{current_cluster_name(var_cluster_status)}. Joining cluster will be skipped.")
   else
+    if joined_cluster?(var_node_name, var_cluster_status) && current_cluster_name(var_cluster_status) != var_cluster_name
+      unless var_cluster_name.nil?
+        Chef::Log.warn("[rabbitmq_cluster] Node is already member of #{current_cluster_name(var_cluster_status)}. Rejoining the desired cluster.")
+      end
+    end
     run_rabbitmqctl('stop_app')
 
     # Catch JoinError so that we can leave Rabbit started, if possible
@@ -249,7 +256,7 @@ action :change_cluster_node_type do
   var_cluster_status = cluster_status
   var_node_name = node_name
   var_current_cluster_node_type = current_cluster_node_type(var_node_name, var_cluster_status)
-  var_cluster_node_type = parse_cluster_nodes_string(new_resource.cluster_nodes).each { |node| node['name'] == var_node_name }.first['type'] # ~FC039
+  var_cluster_node_type = parse_cluster_nodes_string(new_resource.cluster_nodes).compact.select { |node| node['name'] == var_node_name }.first['type'] # ~FC039
 
   if var_current_cluster_node_type == var_cluster_node_type
     Chef::Log.warn('[rabbitmq_cluster] Skip changing cluster node type : trying to change to same cluster node type')

@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 #
 # Cookbook Name:: rabbitmq
 # Recipe:: policy_management
@@ -24,17 +25,16 @@ include_recipe 'rabbitmq::default'
 node['rabbitmq']['policies'].each do |name, policy|
   rabbitmq_policy name do
     pattern policy['pattern']
-    params policy['params']
+    parameters policy['params']
     priority policy['priority']
     vhost policy['vhost']
+    apply_to policy['apply_to']
     action :set
-    notifies :restart, "service[#{node['rabbitmq']['service_name']}]"
   end
 end
 
 node['rabbitmq']['disabled_policies'].each do |policy|
   rabbitmq_policy policy do
     action :clear
-    notifies :restart, "service[#{node['rabbitmq']['service_name']}]"
   end
 end
