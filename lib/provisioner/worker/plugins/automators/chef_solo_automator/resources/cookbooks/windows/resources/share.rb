@@ -20,7 +20,7 @@
 #
 
 property :share_name, String, name_property: true
-property :path, String, required: true
+property :path, String
 property :description, String, default: ''
 property :full_users, Array, default: []
 property :change_users, Array, default: []
@@ -36,6 +36,8 @@ ACCESS_CHANGE = 1_245_631
 ACCESS_READ = 1_179_817
 
 action :create do
+  raise 'No path property set' unless new_resource.path
+
   if different_path?
     unless current_resource.path.nil? || current_resource.path.empty?
       converge_by('Removing previous share') do
@@ -145,7 +147,7 @@ action_class do
   end
 
   def different_members?(permission_type)
-    !(current_resource.send(permission_type.to_sym) - new_resource.send(permission_type.to_sym).map(&:downcase)).empty? &&
+    !(current_resource.send(permission_type.to_sym) - new_resource.send(permission_type.to_sym).map(&:downcase)).empty? ||
       !(new_resource.send(permission_type.to_sym).map(&:downcase) - current_resource.send(permission_type.to_sym)).empty?
   end
 
@@ -228,7 +230,7 @@ action_class do
         )
         #Create the Trusteee Object
         $Trustee = ([WMIClass] "\\\\$env:computername\\root\\cimv2:Win32_Trustee").CreateInstance()
-        $account = get-wmiobject Win32_Account -filter "Name like '$Name' and Domain like '$Domain'"
+        $account = get-wmiobject Win32_Account -filter "Name = '$Name' and Domain = '$Domain'"
         $accountSID = [WMI] "\\\\$env:ComputerName\\root\\cimv2:Win32_SID.SID='$($account.sid)'"
 
         $Trustee.Domain = $Domain

@@ -1,7 +1,189 @@
 # Change Log
 
-## [4.9.0](https://github.com/rabbitmq/chef-cookbook/tree/v4.9.0) (2016-08-02)
+## [v5.5.0](https://github.com/rabbitmq/chef-cookbook/tree/v5.5.0) (2018-02-14)
 
+[Full Diff](https://github.com/rabbitmq/chef-cookbook/compare/v5.4.0...v5.5.0)
+
+**Enhancements:**
+
+ - RabbitMQ 3.7.x releases [now can be provisioned](https://github.com/rabbitmq/chef-cookbook/blob/master/README.md#supported-rabbitmq-versions)
+
+**Closed issues:**
+
+- Not honoring Version - always installs 3.6.8 [\#480](https://github.com/rabbitmq/chef-cookbook/issues/480)
+- Github link seems to no longer be valid [\#479](https://github.com/rabbitmq/chef-cookbook/issues/479)
+- Failing to create vhost and users [\#474](https://github.com/rabbitmq/chef-cookbook/issues/474)
+
+**Merged pull requests:**
+
+- fixed change cluster node type [\#477](https://github.com/rabbitmq/chef-cookbook/pull/477) ([pauldmccann](https://github.com/pauldmccann))
+- add the ability to load definitions on start [\#472](https://github.com/rabbitmq/chef-cookbook/pull/472) ([esabelhaus](https://github.com/esabelhaus))
+- Updated spec for upgrade\_dpkg\_package [\#471](https://github.com/rabbitmq/chef-cookbook/pull/471) ([k-popov](https://github.com/k-popov))
+- Ability to set interface to listen for SSL connections [\#470](https://github.com/rabbitmq/chef-cookbook/pull/470) ([k-popov](https://github.com/k-popov))
+
+## [v5.4.0](https://github.com/rabbitmq/chef-cookbook/tree/v5.4.0) (2017-12-18)
+[Full Changelog](https://github.com/rabbitmq/chef-cookbook/compare/v5.3.1...v5.4.0)
+
+**Closed issues:**
+
+- add the abitity to add a queue [\#401](https://github.com/rabbitmq/chef-cookbook/issues/401)
+- Upgrade to RabbitMQ 3.6.0 [\#329](https://github.com/rabbitmq/chef-cookbook/issues/329)
+
+**Merged pull requests:**
+
+- Allow override of rabbitmq-env template [\#468](https://github.com/rabbitmq/chef-cookbook/pull/468) ([wjdavis5](https://github.com/wjdavis5))
+
+## [v5.3.1](https://github.com/rabbitmq/chef-cookbook/tree/v5.3.1) (2017-10-19)
+[Full Changelog](https://github.com/rabbitmq/chef-cookbook/compare/v5.3.0...v5.3.1)
+
+**Fixed bugs:**
+
+- .erlang.cookie template is not marked as sensitive [\#465](https://github.com/rabbitmq/chef-cookbook/issues/465)
+
+**Closed issues:**
+
+- User management execution optimisation  [\#463](https://github.com/rabbitmq/chef-cookbook/issues/463)
+- Time for a new release \(5.3.0\)? [\#462](https://github.com/rabbitmq/chef-cookbook/issues/462)
+
+**Merged pull requests:**
+
+- Mark the .erlang.cookie as sensitive. [\#466](https://github.com/rabbitmq/chef-cookbook/pull/466) ([smekalayahoo](https://github.com/smekalayahoo))
+- Listen ip address configuration for management console. [\#464](https://github.com/rabbitmq/chef-cookbook/pull/464) ([dragonsmith](https://github.com/dragonsmith))
+
+## [v5.3.0](https://github.com/rabbitmq/chef-cookbook/tree/v5.3.0) (2017-10-04)
+[Full Changelog](https://github.com/rabbitmq/chef-cookbook/compare/v5.2.0...v5.3.0)
+
+**Closed issues:**
+
+- version is hard coded so that we can't change the default version in wrap cookbooks [\#457](https://github.com/rabbitmq/chef-cookbook/issues/457)
+
+**Merged pull requests:**
+
+- Make it possible to override base package URL location; switch default to GitHub [\#458](https://github.com/rabbitmq/chef-cookbook/pull/458) ([Wing924](https://github.com/Wing924))
+- Request for adding retry to node start  [\#454](https://github.com/rabbitmq/chef-cookbook/pull/454) ([amulyas](https://github.com/amulyas))
+
+## [v5.2.0](https://github.com/rabbitmq/chef-cookbook/tree/v5.2.0) (2017-06-16)
+[Full Changelog](https://github.com/rabbitmq/chef-cookbook/compare/v5.1.0...v5.2.0)
+
+**Merged pull requests:**
+
+- Remediate RabbitMQ reset failures [\#449](https://github.com/rabbitmq/chef-cookbook/pull/449) ([jkugler](https://github.com/jkugler))
+- Add configuration for logrotate [\#448](https://github.com/rabbitmq/chef-cookbook/pull/448) ([foxdalas](https://github.com/foxdalas))
+- Fix resource cloning deprecation warnings [\#446](https://github.com/rabbitmq/chef-cookbook/pull/446) ([rdeusser](https://github.com/rdeusser))
+- Do not restart RabbitMQ for Policy Change [\#445](https://github.com/rabbitmq/chef-cookbook/pull/445) ([bdwyertech](https://github.com/bdwyertech))
+- replace logrotate script, for debian upstart [\#349](https://github.com/rabbitmq/chef-cookbook/pull/349) ([flah00](https://github.com/flah00))
+
+## [v5.1.0](https://github.com/rabbitmq/chef-cookbook/tree/v5.1.0) (2017-04-28)
+[Full Changelog](https://github.com/rabbitmq/chef-cookbook/compare/v5.0.0...v5.1.0)
+
+**Closed issues:**
+
+- CentOS 7 is broken \(in dokken\) [\#435](https://github.com/rabbitmq/chef-cookbook/issues/435)
+- Tests are broken… [\#434](https://github.com/rabbitmq/chef-cookbook/issues/434)
+- Add ability to leave a cluster. [\#432](https://github.com/rabbitmq/chef-cookbook/issues/432)
+- Separete recipes for installation and file configuration [\#431](https://github.com/rabbitmq/chef-cookbook/issues/431)
+- 3.6.2 released [\#365](https://github.com/rabbitmq/chef-cookbook/issues/365)
+
+**Merged pull requests:**
+
+- Prep for 5.1.0 [\#440](https://github.com/rabbitmq/chef-cookbook/pull/440) ([jjasghar](https://github.com/jjasghar))
+- allow set\_parameter changes to existing parameters [\#439](https://github.com/rabbitmq/chef-cookbook/pull/439) ([stevenolen](https://github.com/stevenolen))
+- improve tests: migrate to inspec [\#438](https://github.com/rabbitmq/chef-cookbook/pull/438) ([rmoriz](https://github.com/rmoriz))
+- Serverspec 2 upgrade [\#437](https://github.com/rabbitmq/chef-cookbook/pull/437) ([rmoriz](https://github.com/rmoriz))
+- mount cgroup in docker, even when privileged [\#436](https://github.com/rabbitmq/chef-cookbook/pull/436) ([rmoriz](https://github.com/rmoriz))
+- closes \#432 [\#433](https://github.com/rabbitmq/chef-cookbook/pull/433) ([majormoses](https://github.com/majormoses))
+
+## [v5.0.0](https://github.com/rabbitmq/chef-cookbook/tree/v5.0.0) (2017-04-12)
+[Full Changelog](https://github.com/rabbitmq/chef-cookbook/compare/v4.12.1...v5.0.0)
+
+**Closed issues:**
+
+- policy provider prevents updating an existing policy [\#424](https://github.com/rabbitmq/chef-cookbook/issues/424)
+
+**Merged pull requests:**
+
+- Update to default.rb library to handle frozen strings [\#430](https://github.com/rabbitmq/chef-cookbook/pull/430) ([bphinney](https://github.com/bphinney))
+- Update kitchen dokken [\#428](https://github.com/rabbitmq/chef-cookbook/pull/428) ([shortdudey123](https://github.com/shortdudey123))
+- Rename params property to parameters [\#427](https://github.com/rabbitmq/chef-cookbook/pull/427) ([shortdudey123](https://github.com/shortdudey123))
+- Change node.set to node.normal [\#426](https://github.com/rabbitmq/chef-cookbook/pull/426) ([shortdudey123](https://github.com/shortdudey123))
+- make set action idempotent [\#425](https://github.com/rabbitmq/chef-cookbook/pull/425) ([brendenyule](https://github.com/brendenyule))
+
+## [v4.12.1](https://github.com/rabbitmq/chef-cookbook/tree/v4.12.1) (2017-03-24)
+[Full Changelog](https://github.com/rabbitmq/chef-cookbook/compare/v4.12.0...v4.12.1)
+
+**Closed issues:**
+
+- rabbitmq::policy\_management tries to modify a frozen string [\#422](https://github.com/rabbitmq/chef-cookbook/issues/422)
+
+**Merged pull requests:**
+
+- reassign variable with frozen string  instead of appending to it [\#423](https://github.com/rabbitmq/chef-cookbook/pull/423) ([brendenyule](https://github.com/brendenyule))
+
+## [v4.12.0](https://github.com/rabbitmq/chef-cookbook/tree/v4.12.0) (2017-03-19)
+[Full Changelog](https://github.com/rabbitmq/chef-cookbook/compare/v4.11.2...v4.12.0)
+
+**Merged pull requests:**
+
+- Getting tests green [\#420](https://github.com/rabbitmq/chef-cookbook/pull/420) ([jjasghar](https://github.com/jjasghar))
+
+## [v4.11.2](https://github.com/rabbitmq/chef-cookbook/tree/v4.11.2) (2017-03-19)
+[Full Changelog](https://github.com/rabbitmq/chef-cookbook/compare/v4.11.1...v4.11.2)
+
+**Merged pull requests:**
+
+- Fix Case Statement for RHEL [\#419](https://github.com/rabbitmq/chef-cookbook/pull/419) ([bdwyertech](https://github.com/bdwyertech))
+
+## [v4.11.1](https://github.com/rabbitmq/chef-cookbook/tree/v4.11.1) (2017-03-18)
+[Full Changelog](https://github.com/rabbitmq/chef-cookbook/compare/v4.11.0...v4.11.1)
+
+**Closed issues:**
+
+- cookbook defaults broken with update to rabbitmq rpm names [\#416](https://github.com/rabbitmq/chef-cookbook/issues/416)
+
+**Merged pull requests:**
+
+- Fixes for rhel based pkgs [\#418](https://github.com/rabbitmq/chef-cookbook/pull/418) ([jjasghar](https://github.com/jjasghar))
+- Policies Attribute Fix [\#417](https://github.com/rabbitmq/chef-cookbook/pull/417) ([bdwyertech](https://github.com/bdwyertech))
+
+## [v4.11.0](https://github.com/rabbitmq/chef-cookbook/tree/v4.11.0) (2017-03-17)
+[Full Changelog](https://github.com/rabbitmq/chef-cookbook/compare/v4.10.0...v4.11.0)
+
+**Closed issues:**
+
+- To install version 3.6.6 [\#414](https://github.com/rabbitmq/chef-cookbook/issues/414)
+- Change default hearbeat to 60 [\#412](https://github.com/rabbitmq/chef-cookbook/issues/412)
+- Erlang cookbook dependency is out of date [\#403](https://github.com/rabbitmq/chef-cookbook/issues/403)
+
+**Merged pull requests:**
+
+- Provision 3.6.8 by default [\#415](https://github.com/rabbitmq/chef-cookbook/pull/415) ([michaelklishin](https://github.com/michaelklishin))
+- Change heartbeat to 60 \(default since 3.5.5\) [\#413](https://github.com/rabbitmq/chef-cookbook/pull/413) ([tsupertramp](https://github.com/tsupertramp))
+- Remove defaults from resource [\#410](https://github.com/rabbitmq/chef-cookbook/pull/410) ([tas50](https://github.com/tas50))
+- Avoid double testing in Travis [\#409](https://github.com/rabbitmq/chef-cookbook/pull/409) ([tas50](https://github.com/tas50))
+- Update readme to require Chef 12.1 [\#408](https://github.com/rabbitmq/chef-cookbook/pull/408) ([tas50](https://github.com/tas50))
+- Add opensuse / opensuseleap to the metadata [\#407](https://github.com/rabbitmq/chef-cookbook/pull/407) ([tas50](https://github.com/tas50))
+- Remove attributes from the metadata [\#406](https://github.com/rabbitmq/chef-cookbook/pull/406) ([tas50](https://github.com/tas50))
+- Add support for non ssl management port [\#404](https://github.com/rabbitmq/chef-cookbook/pull/404) ([BasLangenberg](https://github.com/BasLangenberg))
+- Add kitchen-dokken support to .travis.yml and Gemfile [\#400](https://github.com/rabbitmq/chef-cookbook/pull/400) ([OBrienCommaJosh](https://github.com/OBrienCommaJosh))
+- defined policies and disabled\_policies as \[\] to avoid nil:NilClass error [\#399](https://github.com/rabbitmq/chef-cookbook/pull/399) ([jklare](https://github.com/jklare))
+- apply\_to parameter missing [\#381](https://github.com/rabbitmq/chef-cookbook/pull/381) ([satyabhan](https://github.com/satyabhan))
+
+## [v4.10.0](https://github.com/rabbitmq/chef-cookbook/tree/v4.10.0) (2016-09-20)
+[Full Changelog](https://github.com/rabbitmq/chef-cookbook/compare/v4.9.0...v4.10.0)
+
+**Closed issues:**
+
+- Unable to get secondary node to join cluster. [\#393](https://github.com/rabbitmq/chef-cookbook/issues/393)
+- Unable to enable plugins [\#392](https://github.com/rabbitmq/chef-cookbook/issues/392)
+- New version with MR 376 [\#390](https://github.com/rabbitmq/chef-cookbook/issues/390)
+
+**Merged pull requests:**
+
+- 4.10.0 release [\#397](https://github.com/rabbitmq/chef-cookbook/pull/397) ([jjasghar](https://github.com/jjasghar))
+- Fix README [\#394](https://github.com/rabbitmq/chef-cookbook/pull/394) ([dhui](https://github.com/dhui))
+- Cluster join never happens for manual clustering [\#380](https://github.com/rabbitmq/chef-cookbook/pull/380) ([akadoya](https://github.com/akadoya))
+
+## [v4.9.0](https://github.com/rabbitmq/chef-cookbook/tree/v4.9.0) (2016-08-02)
 [Full Changelog](https://github.com/rabbitmq/chef-cookbook/compare/v4.8.0...v4.9.0)
 
 **Closed issues:**
@@ -12,6 +194,7 @@
 
 **Merged pull requests:**
 
+- v4.9.0 [\#391](https://github.com/rabbitmq/chef-cookbook/pull/391) ([jjasghar](https://github.com/jjasghar))
 - Comments out example HA policy attributes [\#384](https://github.com/rabbitmq/chef-cookbook/pull/384) ([dgoradia](https://github.com/dgoradia))
 - Fix warning:already initialized constant LOG\_LEVEL [\#378](https://github.com/rabbitmq/chef-cookbook/pull/378) ([ruizink](https://github.com/ruizink))
 - Update bundler that comes with Travis' ruby 2.1.0. [\#377](https://github.com/rabbitmq/chef-cookbook/pull/377) ([ruizink](https://github.com/ruizink))
@@ -48,7 +231,6 @@
 - Nodes try to rejoin cluster when first listed node is down [\#347](https://github.com/rabbitmq/chef-cookbook/issues/347)
 - Logrotating [\#338](https://github.com/rabbitmq/chef-cookbook/issues/338)
 - rabbitmq\_plugin\[rabbitmq\_management\] erlexec: HOME must be set [\#334](https://github.com/rabbitmq/chef-cookbook/issues/334)
-- Is "notifies restart" necessary for enabling or disabling a policy? [\#319](https://github.com/rabbitmq/chef-cookbook/issues/319)
 - Alternate restarts fail on CentOS [\#264](https://github.com/rabbitmq/chef-cookbook/issues/264)
 - rabbitmq-server fail to start after setting the cipher suites [\#259](https://github.com/rabbitmq/chef-cookbook/issues/259)
 - Add auth\_backends attribute [\#230](https://github.com/rabbitmq/chef-cookbook/issues/230)
@@ -60,6 +242,7 @@
 - added an example to the "user\_management" section. [\#350](https://github.com/rabbitmq/chef-cookbook/pull/350) ([farshidce](https://github.com/farshidce))
 - Fix check for whether node has joined cluster [\#348](https://github.com/rabbitmq/chef-cookbook/pull/348) ([ccrebolder](https://github.com/ccrebolder))
 - Update metadata.rb with config\_template\_cookbook [\#345](https://github.com/rabbitmq/chef-cookbook/pull/345) ([jgonera](https://github.com/jgonera))
+- allowing to clear a parameter which is created in a vhost [\#343](https://github.com/rabbitmq/chef-cookbook/pull/343) ([sergiu-svinarciuc](https://github.com/sergiu-svinarciuc))
 - simplified clustering logic [\#340](https://github.com/rabbitmq/chef-cookbook/pull/340) ([jklare](https://github.com/jklare))
 - Package install logrotate for \*.log [\#339](https://github.com/rabbitmq/chef-cookbook/pull/339) ([ptqa](https://github.com/ptqa))
 - Debian Fixes [\#330](https://github.com/rabbitmq/chef-cookbook/pull/330) ([bdwyertech](https://github.com/bdwyertech))
@@ -386,7 +569,7 @@
 - Removing the PATH from the execute resource [\#176](https://github.com/rabbitmq/chef-cookbook/pull/176) ([jjasghar](https://github.com/jjasghar))
 
 ## [v3.5.0](https://github.com/rabbitmq/chef-cookbook/tree/v3.5.0) (2014-12-02)
-[Full Changelog](https://github.com/rabbitmq/chef-cookbook/compare/pull...v3.5.0)
+[Full Changelog](https://github.com/rabbitmq/chef-cookbook/compare/v3.4.0...v3.5.0)
 
 **Fixed bugs:**
 
@@ -411,11 +594,11 @@
 - Add raw configuration for rabbitmq.erb [\#123](https://github.com/rabbitmq/chef-cookbook/pull/123) ([kYann](https://github.com/kYann))
 -  expose the heartbeat configuration parameter [\#87](https://github.com/rabbitmq/chef-cookbook/pull/87) ([kisoku](https://github.com/kisoku))
 
-## [pull](https://github.com/rabbitmq/chef-cookbook/tree/pull) (2014-11-23)
-[Full Changelog](https://github.com/rabbitmq/chef-cookbook/compare/v3.4.0...pull)
-
 ## [v3.4.0](https://github.com/rabbitmq/chef-cookbook/tree/v3.4.0) (2014-11-23)
-[Full Changelog](https://github.com/rabbitmq/chef-cookbook/compare/v3.3.0...v3.4.0)
+[Full Changelog](https://github.com/rabbitmq/chef-cookbook/compare/pull...v3.4.0)
+
+## [pull](https://github.com/rabbitmq/chef-cookbook/tree/pull) (2014-11-23)
+[Full Changelog](https://github.com/rabbitmq/chef-cookbook/compare/v3.3.0...pull)
 
 **Closed issues:**
 
@@ -497,7 +680,7 @@
 
 - foodcritic  alerts fixes [\#52](https://github.com/rabbitmq/chef-cookbook/pull/52) ([ranjib](https://github.com/ranjib))
 - Make clustering work [\#48](https://github.com/rabbitmq/chef-cookbook/pull/48) ([tchoi80](https://github.com/tchoi80))
-- \[COOK-2575\] add LWRP for setting policies [\#43](https://github.com/rabbitmq/chef-cookbook/pull/43) ([robertchoi8099](https://github.com/robertchoi8099))
+- \[COOK-2575\] add LWRP for setting policies [\#43](https://github.com/rabbitmq/chef-cookbook/pull/43) ([robertchoi80](https://github.com/robertchoi80))
 
 ## [2.0.0](https://github.com/rabbitmq/chef-cookbook/tree/2.0.0) (2013-03-22)
 [Full Changelog](https://github.com/rabbitmq/chef-cookbook/compare/1.8.0...2.0.0)

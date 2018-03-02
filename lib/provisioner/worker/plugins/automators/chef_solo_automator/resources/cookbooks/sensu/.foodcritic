@@ -1,0 +1,5 @@
+~FC015 # Consider converting definition to a Custom Resource
+~FC059 # LWRP provider does not declare use_inline_resources
+
+# these should all get fixed
+

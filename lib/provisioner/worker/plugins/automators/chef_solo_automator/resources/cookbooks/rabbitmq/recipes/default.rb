@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 #
 # Cookbook Name:: rabbitmq
 # Recipe:: default
@@ -5,6 +6,7 @@
 # Copyright 2009, Benjamin Black
 # Copyright 2009-2013, Chef Software, Inc.
 # Copyright 2012, Kevin Nuckolls <kevin.nuckolls@gmail.com>
+# Copyright 2016-2018, Pivotal Software, Inc
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -25,6 +27,44 @@ class Chef::Resource
 end
 
 include_recipe 'erlang'
+
+version = node['rabbitmq']['version']
+
+default_package_url = if version =~ /^3\.[7-8]/
+                        # 3.7.0 and later
+                        "https://dl.bintray.com/rabbitmq/all/rabbitmq-server/#{version}/"
+                      else
+                        # prior to 3.7.0
+                        legacy_version = version.tr('.', '_')
+                        "https://github.com/rabbitmq/rabbitmq-server/releases/download/rabbitmq_v#{legacy_version}/"
+                      end
+
+default_deb_package_name = "rabbitmq-server_#{version}-1_all.deb"
+
+case node['platform_family']
+when 'rhel', 'fedora'
+  default_rpm_package_name = if node['platform_version'].to_i > 6
+                               "rabbitmq-server-#{version}-1.el7.noarch.rpm"
+                             else
+                               "rabbitmq-server-#{version}-1.el6.noarch.rpm"
+                             end
+when 'suse'
+  default_rpm_package_name = "rabbitmq-server-#{version}-1.suse.noarch.rpm"
+end
+
+deb_package_name = node['rabbitmq']['deb_package'] || default_deb_package_name
+deb_package_url = node['rabbitmq']['deb_package_url'] || default_package_url
+rpm_package_name = node['rabbitmq']['rpm_package'] || default_rpm_package_name
+rpm_package_url = node['rabbitmq']['rpm_package_url'] || default_package_url
+
+# see rabbitmq/chef-cookbook#351
+directory node['rabbitmq']['config_root'] do
+  owner 'root'
+  group 'root'
+  mode  '755'
+  recursive true
+  action :create
+end
 
 ## Install the package
 case node['platform_family']
@@ -48,6 +88,11 @@ when 'debian'
     allow false
   end
 
+  if node['platform_version'].to_i < 8 && !node['rabbitmq']['use_distro_version']
+    Chef::Log.warn 'Debian 7 is too old to use the recent .deb RabbitMQ packages. Falling back to distro package!'
+    node.normal['rabbitmq']['use_distro_version'] = true
+  end
+
   if node['rabbitmq']['use_distro_version']
     package 'rabbitmq-server' do
       action :install
@@ -55,14 +100,12 @@ when 'debian'
     end
   else
     # we need to download the package
-    deb_package = "#{node['rabbitmq']['deb_package_url']}#{node['rabbitmq']['deb_package']}"
-    remote_file "#{Chef::Config[:file_cache_path]}/#{node['rabbitmq']['deb_package']}" do
-      source deb_package
+    remote_file "#{Chef::Config[:file_cache_path]}/#{deb_package_name}" do
+      source "#{deb_package_url}#{deb_package_name}"
       action :create_if_missing
     end
-    package 'rabbitmq-server' do
-      provider Chef::Provider::Package::Dpkg
-      source ::File.join(Chef::Config[:file_cache_path], node['rabbitmq']['deb_package'])
+    dpkg_package 'rabbitmq-server' do
+      source ::File.join(Chef::Config[:file_cache_path], deb_package_name)
       action :upgrade
     end
   end
@@ -83,6 +126,18 @@ when 'debian'
       action :delete
     end
 
+    include_recipe 'logrotate'
+
+    logrotate_app 'rabbitmq-server' do
+      path node['rabbitmq']['logrotate']['path']
+      enable node['rabbitmq']['logrotate']['enable']
+      rotate node['rabbitmq']['logrotate']['rotate']
+      frequency node['rabbitmq']['logrotate']['frequency']
+      options node['rabbitmq']['logrotate']['options']
+      sharedscripts node['rabbitmq']['logrotate']['sharedscripts']
+      postrotate node['rabbitmq']['logrotate']['postrotate']
+    end
+
     template "/etc/init/#{node['rabbitmq']['service_name']}.conf" do
       source 'rabbitmq.upstart.conf.erb'
       owner 'root'
@@ -93,6 +148,9 @@ when 'debian'
   end
 
 when 'rhel', 'fedora'
+
+  # logrotate is a package dependency of rabbitmq-server
+  package 'logrotate'
 
   # socat is a package dependency of rabbitmq-server
   package 'socat'
@@ -112,16 +170,21 @@ when 'rhel', 'fedora'
     end
   else
     # We need to download the rpm
-    rpm_package = "#{node['rabbitmq']['rpm_package_url']}#{node['rabbitmq']['rpm_package']}"
-
-    remote_file "#{Chef::Config[:file_cache_path]}/#{node['rabbitmq']['rpm_package']}" do
-      source rpm_package
+    remote_file "#{Chef::Config[:file_cache_path]}/#{rpm_package_name}" do
+      source "#{rpm_package_url}#{rpm_package_name}"
       action :create_if_missing
     end
-    rpm_package "#{Chef::Config[:file_cache_path]}/#{node['rabbitmq']['rpm_package']}"
+    rpm_package "#{Chef::Config[:file_cache_path]}/#{rpm_package_name}"
   end
 
 when 'suse'
+
+  # logrotate is a package dependency of rabbitmq-server
+  package 'logrotate'
+
+  # socat is a package dependency of rabbitmq-server
+  package 'socat'
+
   # rabbitmq-server-plugins needs to be first so they both get installed
   # from the right repository. Otherwise, zypper will stop and ask for a
   # vendor change.
@@ -164,6 +227,7 @@ end
 
 template "#{node['rabbitmq']['config_root']}/rabbitmq-env.conf" do
   source 'rabbitmq-env.conf.erb'
+  cookbook node['rabbitmq']['config-env_template_cookbook']
   owner 'root'
   group 'root'
   mode 00644
@@ -209,6 +273,7 @@ if node['rabbitmq']['clustering']['enable'] && (node['rabbitmq']['erlang_cookie'
     owner 'rabbitmq'
     group 'rabbitmq'
     mode 00400
+    sensitive true
     notifies :start, "service[#{node['rabbitmq']['service_name']}]", :immediately
     notifies :run, 'execute[reset-node]', :immediately
   end
@@ -217,11 +282,15 @@ if node['rabbitmq']['clustering']['enable'] && (node['rabbitmq']['erlang_cookie'
   execute 'reset-node' do
     command 'rabbitmqctl stop_app && rabbitmqctl reset && rabbitmqctl start_app'
     action :nothing
+    retries 12
+    retry_delay 5
   end
 end
 
 if node['rabbitmq']['manage_service']
   service node['rabbitmq']['service_name'] do
+    retries node['rabbitmq']['retry']
+    retry_delay node['rabbitmq']['retry_delay']
     action [:enable, :start]
     supports :status => true, :restart => true
     provider Chef::Provider::Service::Upstart if node['rabbitmq']['job_control'] == 'upstart'
