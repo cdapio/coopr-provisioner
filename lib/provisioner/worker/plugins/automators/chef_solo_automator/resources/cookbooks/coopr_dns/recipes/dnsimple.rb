@@ -2,7 +2,7 @@
 # Cookbook Name:: coopr_dns
 # Recipe:: dnsimple
 #
-# Copyright (C) 2013-2014 Cask Data, Inc.
+# Copyright (C) 2013-2018 Cask Data, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -36,27 +36,8 @@ end
 subdomain_whitelist = node['coopr_dns']['subdomain_whitelist']
 
 if subdomain_whitelist.nil? || subdomain_whitelist.include?(subdomain)
-  # Install some pre-requisites
-  case node['platform_family']
-  when 'debian'
-    zpkg = 'libz-dev'
-  when 'rhel'
-    zpkg = 'zlib-devel'
-  end
-
-  r = package( zpkg ) { action :nothing }
-  r.run_action( :install )
-
-  chef_gem 'fog-core' do
-    version '1.43.0' # newer requires xmlrpc which requires ruby >= 2.3
-    compile_time true if Chef::Resource::ChefGem.instance_methods(false).include?(:compile_time)
-    action :install
-  end
-
-  include_recipe 'dnsimple'
-
   # Get credentials
-  if node['dnsimple']['username'] && node['dnsimple']['password']
+  if node.key?('dnsimple') && node['dnsimple'].key?('access_token')
     dnsimple = node['dnsimple']
   else
     begin
@@ -64,7 +45,7 @@ if subdomain_whitelist.nil? || subdomain_whitelist.include?(subdomain)
       item = node['coopr_dns']['dnsimple']['databag_item']
       dnsimple = data_bag_item(bag, item)
     rescue
-      Chef::Application.fatal!('You must specify either a data bag or username/password!')
+      Chef::Application.fatal!('You must specify either a data bag or access_token!')
     end
   end
 
@@ -72,8 +53,7 @@ if subdomain_whitelist.nil? || subdomain_whitelist.include?(subdomain)
   dnsimple_record hostname do
     content access_v4
     type 'A'
-    username dnsimple['username']
-    password dnsimple['password']
+    access_token dnsimple['access_token']
     domain subdomain
     ttl node['coopr_dns']['default_ttl']
     not_if { subdomain == 'local' || subdomain == 'provider' }
