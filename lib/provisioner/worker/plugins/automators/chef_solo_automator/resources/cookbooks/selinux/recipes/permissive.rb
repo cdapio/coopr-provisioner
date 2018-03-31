@@ -1,9 +1,9 @@
 #
 # Author:: Sean OMeara (<someara@chef.io>)
-# Cookbook Name:: selinux
+# Cookbook:: selinux
 # Recipe:: permissive
 #
-# Copyright 2011, Chef Software, Inc.
+# Copyright:: 2011-2017, Chef Software, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,9 +17,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+# this recipe will be deprecated in future releases
 
 include_recipe 'selinux::_common'
 
-selinux_state "SELinux Permissive" do
+selinux_state 'SELinux Permissive' do
   action :permissive
 end
