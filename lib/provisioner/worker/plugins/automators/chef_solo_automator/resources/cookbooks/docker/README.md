@@ -1,917 +1,1438 @@
-# chef-docker [![Build Status](https://secure.travis-ci.org/bflad/chef-docker.png?branch=master)](http://travis-ci.org/bflad/chef-docker)
-[![Gitter](https://badges.gitter.im/Join Chat.svg)](https://gitter.im/bflad/chef-docker?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+# Docker Cookbook
 
-## Description
+[![Build Status](https://travis-ci.org/chef-cookbooks/docker.svg?branch=master)](https://travis-ci.org/chef-cookbooks/docker)
+[![Cookbook Version](https://img.shields.io/cookbook/v/docker.svg)](https://supermarket.chef.io/cookbooks/docker)
 
-Installs/Configures [Docker](http://docker.io). Please see [COMPATIBILITY.md](COMPATIBILITY.md) for more information about Docker versions that are tested and supported by cookbook versions along with LWRP features.
+The Docker Cookbook is a library cookbook that provides custom
+resources for use in recipes.
 
-This cookbook was inspired by @thoward's docker-cookbook: https://github.com/thoward/docker-cookbook
+## Scope
 
-## Breaking Change Alert
-
-In version 1.0 of this cookbook, we will be making a significant breaking changes including the way that we handle the custom resources (`docker_image`, `docker_container` and `docker_registry`). It is highly recommended that you constrain the version of the cookbook you are using in the appropriate places.
-  - metadata.rb
-  - Chef Environments
-  - Berksfile
-  - Chef Policyfile
-
-More details about specific changes will be documented in the [1.0_CHANGES.md](1.0_CHANGES.md) file.
+This cookbook is concerned with the [Docker](http://docker.io)
+container engine as distributed by Docker, Inc. It does not address
+Docker ecosystem tooling or prerequisite technology such as cgroups or
+aufs.
 
 ## Requirements
 
-### Chef
+- Chef 12.7 or later
+- Network accessible web server hosting the docker binary.
+- SELinux permissive/disabled if CentOS [Docker Issue #15498](https://github.com/docker/docker/issues/15498)
 
-* Chef 11+
+## Platform Support
 
-### Platforms
+- Amazon Linux
+- Debian 7/8/9
+- Fedora
+- Ubuntu 14.04/16.04
+- CentOS 7
 
-* Amazon 2014.03.1 (experimental)
-* CentOS 6
-* Debian 7
-* Fedora 19, 20
-* Mac OS X (only docker installation currently)
-* Oracle 6
-* RHEL 6
-* Ubuntu 12.04, 12.10, 13.04, 13.10, 14.04 (experimental)
 
-### Cookbooks
+## Cookbook Dependencies
 
-[Opscode Cookbooks](https://github.com/opscode-cookbooks/)
+This cookbook has a loose dependency on the official docker repositories, which can be installed with [chef-apt-docker](https://supermarket.chef.io/cookbooks/chef-apt-docker) or [chef-yum-docker](https://supermarket.chef.io/cookbooks/chef-yum-docker) cookbooks. You may choose to use your OS version of docker, but you may run into issues such as the docker group being named differently.
 
-* [apt](https://github.com/opscode-cookbooks/apt)
-* [git](https://github.com/opscode-cookbooks/git)
-* [homebrew](https://github.com/opscode-cookbooks/homebrew)
-* [yum-epel](https://github.com/opscode-cookbooks/yum-epel)
+## Docker Group
 
-Third-Party Cookbooks
+If you are not using the official docker repositories you may run into issues with the docker group being different. RHEL is a known issue that defaults to using `dockerroot` for the service group. Add the `group` property to the `docker_service`.
 
-* [aufs](https://github.com/bflad/chef-aufs)
-* [device-mapper](https://github.com/bflad/chef-device-mapper)
-* [golang](https://github.com/NOX73/chef-golang)
-* [lxc](https://github.com/hw-cookbooks/lxc)
-* [modules](https://github.com/Youscribe/modules-cookbook)
-* [sysctl](https://github.com/onehealth-cookbooks/sysctl)
+```ruby
+docker_service 'default' do
+  group 'dockerroot'
+  action [:create, :start]
+end
+```
 
 ## Usage
 
-### Default Installation
+- Add `depends 'docker', '~> 2.0'` to your cookbook's metadata.rb
+- Use the resources shipped in cookbook in a recipe, the same way
+  you'd use core Chef resources (file, template, directory, package,
+  etc).
 
-* Add `recipe[docker]` to your node's run list
+```ruby
+docker_service 'default' do
+  action [:create, :start]
+end
 
-### Execution Drivers
+docker_image 'busybox' do
+  action :pull
+end
 
-If your system is running a Docker version before 0.9, you'll need to explicitly set up LXC outside of this cookbook. This will likely be true for most distros after Docker 1.0 and chef-docker 1.0 is released.
-* [lxc on community site](http://community.opscode.com/cookbooks/lxc)
-* [lxc on Github](https://github.com/hw-cookbooks/lxc/)
+docker_container 'an-echo-server' do
+  repo 'busybox'
+  port '1234:1234'
+  command "nc -ll -p 1234 -e /bin/cat"
+end
+```
 
-### Storage Drivers
+## Test Cookbooks as Examples
 
-Beginning in chef-docker 1.0, storage driver installation and configuration is expected to be handled before this cookbook's execution, except where required by Docker.
+The cookbooks ran under test-kitchen make excellent usage examples.
 
-#### AUFS
+The test recipes are found at:
 
-If you need AUFS support, consider adding the aufs cookbook to your node/recipe before docker.
-* [aufs on community site](http://community.opscode.com/cookbooks/aufs)
-* [chef-aufs on Github](https://github.com/bflad/chef-aufs)
+```
+test/cookbooks/docker_test/
+```
 
-Then, set the `storage_driver` attribute of this cookbook to `aufs`.
+## Cgroups, Execution and Storage drivers
 
-#### device-mapper
+Beginning in chef-docker 1.0, support for LXC execution driver has
+been removed in favor of native. Cgroups and storage drivers are now
+loosely coupled dependencies and should be configured using other
+cookbooks if needed.
 
-If you need device-mapper support, consider adding the device-mapper cookbook to your node/recipe before docker.
-* [device-mapper on community site](http://community.opscode.com/cookbooks/device-mapper)
-* [chef-device-mapper on Github](https://github.com/bflad/chef-device-mapper)
+Storage drivers can be selected with the `storage_driver` property on
+the `docker_service` resource like this:
 
-Then, set the `storage_driver` attribute of this cookbook to `devicemapper` (please note lack of dash).
+```ruby
+docker_service 'default' do
+   storage_driver 'zfs'
+end
+```
 
-### Ubuntu 14.04 Package Installation via Docker PPA
+Configuration of the backing storage driver, including kernel module loading, is out of scope for this cookbook.
 
-By default, this cookbook will use the docker.io package from Ubuntu 14.04's repository. To use the Docker PPA package, just set the repo_url attribute to the Docker PPA URL. e.g. `node.set['docker']['package']['repo_url'] = 'https://get.docker.io/ubuntu'`
+## Resources Overview
 
-## Attributes
+- [docker_service](#docker_service): composite resource that uses
+  docker_installation and docker_service_manager
+- [docker_installation](#docker_installation): automatically select an
+  installation method
+- [docker_service_manager](#docker_service_manager): automatically
+  selects a service manager
+- [docker_installation_binary](#docker_installation_binary): copies a
+  pre-compiled docker binary onto disk
+- [docker_installation_script](#docker_installation_script): curl | bash
+- [docker_installation_package](#docker_installation_package): package
+  'docker-engine'
+- [docker_service_manager_execute](#docker_service_manager_execute):
+  manage docker daemon with Chef
+- [docker_service_manager_sysvinit](#docker_service_manager_sysvinit):
+  manage docker daemon with a sysvinit script
+- [docker_service_manager_upstart](#docker_service_manager_upstart):
+  manage docker daemon with upstart script
+- [docker_service_manager_systemd](#docker_service_manager_systemd):
+  manage docker daemon with systemd unit files
+- [docker_image](#docker_image): image/repository operations
+- [docker_container](#docker_container): container operations
+- [docker_tag](#docker_tag): image tagging operations
+- [docker_registry](#docker_registry): registry operations
+- [docker_network](#docker_network): network operations
+- [docker_volume](#docker_volume): volume operations
 
-### Installation/System Attributes
+## Getting Started
 
-These attributes are under the `node['docker']` namespace.
-
-Attribute | Description | Type | Default
-----------|-------------|------|--------
-arch | Architecture for docker binary (note: Docker only currently supports x86_64) | String | auto-detected (see attributes/default.rb)
-group_members | Users to manage in `node['docker']['group']` | Array of Strings | []
-init_type | Init type for docker ("runit", "systemd", "sysv", or "upstart") | String | auto-detected (see attributes/default.rb)
-install_dir | Installation directory for docker binary (custom setting only valid for non-package installations) | String | auto-detected (see attributes/default.rb)
-install_type | Installation type for docker ("binary", "package" or "source") | String | package
-ipv4_forward | Sysctl set net.ipv4.ip_forward to 1 | TrueClass, FalseClass | true
-ipv6_forward | Sysctl set net.ipv6.conf.all.forwarding to 1 | TrueClass, FalseClass | true
-version | Version of docker | String | nil
-
-#### Binary Installation Attributes
-
-These attributes are under the `node['docker']['binary']` namespace.
-
-Attribute | Description | Type | Default
-----------|-------------|------|--------
-checksum | Optional SHA256 checksum for docker binary | String | auto-detected (see attributes/default.rb)
-version | Version of docker binary | String | `node['docker']['version']` (if set) or `latest`
-url | URL for downloading docker binary | String | `http://get.docker.io/builds/#{node['kernel']['name']}/#{node['docker']['arch']}/docker-#{node['docker']['binary']['version']}`
-
-#### Package Installation Attributes
-
-These attributes are under the `node['docker']['package']` namespace.
-
-Attribute | Description | Type | Default
-----------|-------------|------|--------
-action | Action for docker packages ("install", "update", etc.) | String | install
-distribution | Distribution for docker packages | String | auto-detected (see attributes/default.rb)
-name | Override Docker package name | String | auto-detected (see attributes/default.rb)
-repo_url | Repository URL for docker packages | String | auto-detected (see attributes/default.rb)
-repo_key | Repository GPG key URL for docker packages | String | https://get.docker.io/gpg
-
-#### Source Installation Attributes
-
-These attributes are under the `node['docker']['source']` namespace.
-
-Attribute | Description | Type | Default
-----------|-------------|------|--------
-ref | Repository reference for docker source | String | master
-url | Repository URL for docker source | String | https://github.com/dotcloud/docker.git
-
-### Docker Daemon Attributes
-
-For more information: http://docs.docker.io/en/latest/reference/commandline/cli/#daemon
-
-These attributes are under the `node['docker']` namespace.
-
-Attribute | Description | Type | Default
-----------|-------------|------|--------
-api_enable_cors | Enable CORS headers in API | TrueClass, FalseClass | nil
-bind_socket (*DEPRECATED*) | Socket path that docker should bind | String | unix:///var/run/docker.sock
-bind_uri (*DEPRECATED*) | TCP URI docker should bind | String | nil
-bip | Use this CIDR notation address for the network bridge's IP, not compatible with `bridge` | String | nil
-bridge | Attach containers to a pre-existing network bridge; use 'none' to disable container networking | String | nil
-debug | Enable debug mode | TrueClass, FalseClass | nil (implicitly false)
-dns | DNS server(s) for containers | String, Array | nil
-dns_search | DNS search domain(s) for containers | String, Array | nil
-exec_driver | Execution driver for docker | String | nil (implicitly native as of 0.9.0)
-graph | Path to use as the root of the docker runtime | String | nil (implicitly /var/lib/docker)
-group | Group for docker socket and group_members | String | nil (implicitly docker)
-host | Socket(s) that docker should bind | String, Array | unix:///var/run/docker.sock
-http_proxy | HTTP_PROXY environment variable | String | nil
-icc | Enable inter-container communication | TrueClass, FalseClass | nil (implicitly true)
-insecure-registry | List of well-known insecure registries | String, Array | nil
-ip | Default IP address to use when binding container ports | String | nil (implicitly 0.0.0.0)
-iptables | Enable Docker's addition of iptables rules | TrueClass, FalseClass | nil (implicitly true)
-logfile | Set custom DOCKER_LOGFILE | String | nil
-mtu | Set the containers network MTU | Fixnum | nil (implicitly default route MTU or 1500 if no default route is available)
-no_proxy | NO_PROXY environment variable | String | nil
-options | Additional options to pass to docker. These could be flags like "-api-enable-cors". | String | nil
-pidfile | Path to use for daemon PID file | String | nil (implicitly /var/run/docker.pid)
-ramdisk | Set DOCKER_RAMDISK when using RAM disk | TrueClass or FalseClass | false
-registry-mirror | List of docker registry mirrors | String, Array | nil
-restart (*DEPRECATED*) | Restart containers on boot | TrueClass or FalseClass | nil
-selinux_enabled | Enable SELinux | TrueClass or FalseClass | nil
-storage_driver | Storage driver for docker | String | nil
-storage_opt | Storage driver options | String, Array | nil
-tls | Use TLS | TrueClass, FalseClass | nil (implicitly false)
-tlscacert | Trust only remotes providing a certificate signed by the CA given here | String | nil (implicitly ~/.docker/ca.pem)
-tlscert | Path to TLS certificate file | String | nil (implicitly ~/.docker/cert.pem)
-tlskey | Path to TLS key file | String | nil (implicitly ~/.docker/key.pem)
-tlsverify | Use TLS and verify the remote (daemon: verify client, client: verify daemon) | TrueClass, FalseClass | nil (implicitly false)
-tmpdir | TMPDIR environment variable | String | nil
-
-### LWRP Attributes
-
-These attributes are under the `node['docker']` namespace.
-
-Attribute | Description | Type | Default
-----------|-------------|------|--------
-docker_daemon_timeout | Timeout to wait for the docker daemon to start in seconds for LWRP commands | Fixnum | 10
-
-#### docker_container Attributes
-
-These attributes are under the `node['docker']` namespace.
-
-Attribute | Description | Type | Default
-----------|-------------|------|--------
-container_cmd_timeout | container LWRP default cmd_timeout seconds | Fixnum | 60
-container_init_type | Init type for docker containers (nil, "runit", "systemd", "sysv", or "upstart") | String | `node['docker']['init_type']`
-
-#### docker_image Attributes
-
-These attributes are under the `node['docker']` namespace.
-
-Attribute | Description | Type | Default
-----------|-------------|------|--------
-image_cmd_timeout | image LWRP default cmd_timeout seconds | Fixnum | 300
-
-#### docker_registry Attributes
-
-These attributes are under the `node['docker']` namespace.
-
-Attribute | Description | Type | Default
-----------|-------------|------|--------
-registry_cmd_timeout | registry LWRP default cmd_timeout seconds | Fixnum | 60
-
-## Recipes
-
-* `recipe[docker]` Installs/Configures Docker
-* `recipe[docker::aufs]` Installs/Loads AUFS Linux module
-* `recipe[docker::binary]` Installs Docker binary
-* `recipe[docker::cgroups]` Installs/configures default platform Control Groups support
-* `recipe[docker::devicemapper]` Installs/Configures Device Mapper
-* `recipe[docker::group]` Installs/Configures docker group
-* `recipe[docker::lxc]` Installs/configures default platform LXC support
-* `recipe[docker::package]` Installs Docker via package
-* `recipe[docker::runit]` Installs/Starts Docker via runit
-* `recipe[docker::source]` Installs Docker via source
-* `recipe[docker::systemd]` Installs/Starts Docker via systemd
-* `recipe[docker::sysv]` Installs/Starts Docker via SysV
-* `recipe[docker::upstart]` Installs/Starts Docker via Upstart
-
-## LWRPs
-
-* docker_container: container operations
-* docker_image: image/repository operations
-* docker_registry: registry operations
-
-### Getting Started
-
-Here's a quick example of pulling the latest image and running a container with exposed ports (creates service automatically):
+Here's a quick example of pulling the latest image and running a
+container with exposed ports.
 
 ```ruby
 # Pull latest image
-docker_image 'samalba/docker-registry'
+docker_image 'nginx' do
+  tag 'latest'
+  action :pull
+  notifies :redeploy, 'docker_container[my_nginx]'
+end
 
 # Run container exposing ports
-docker_container 'samalba/docker-registry' do
-  detach true
-  port '5000:5000'
-  env 'SETTINGS_FLAVOR=local'
-  volume '/mnt/docker:/docker-storage'
+docker_container 'my_nginx' do
+  repo 'nginx'
+  tag 'latest'
+  port '80:80'
+  host_name 'www'
+  domain_name 'computers.biz'
+  env 'FOO=bar'
+  volumes [ '/some/local/files/:/etc/nginx/conf.d' ]
 end
 ```
 
-Maybe you want to automatically update your private registry with changes from your container?
+You might run a private registry and multiple Docker hosts.
 
 ```ruby
 # Login to private registry
-docker_registry 'https://docker-registry.example.com/' do
+docker_registry 'https://registry.computers.biz/' do
   username 'shipper'
   password 'iloveshipping'
+  email 'shipper@computers.biz'
 end
 
 # Pull tagged image
-docker_image 'apps/crowsnest' do
-  tag 'not-latest'
+docker_image 'registry.computers.biz:443/my_project/my_container' do
+  tag 'latest'
+  action :pull
+  host 'tcp://host-1.computers.biz:2376'
 end
 
 # Run container
-docker_container 'crowsnest'
-
-# Save current timestamp
-timestamp = Time.new.strftime('%Y%m%d%H%M')
-
-# Commit container changes
 docker_container 'crowsnest' do
-  repository 'apps'
-  tag timestamp
-  action :commit
-end
-
-# Push image
-docker_image 'crowsnest' do
-  repository 'apps'
-  tag timestamp
-  action :push
-end
-```
-
-See full documentation for each LWRP and action below for more information.
-
-### docker_container
-
-Below are the available actions for the LWRP, default being `run`.
-
-These attributes are associated with all LWRP actions.
-
-Attribute | Description | Type | Default
-----------|-------------|------|--------
-cmd_timeout | Timeout for docker commands (catchable exception: `Chef::Provider::Docker::Container::CommandTimeout`)| Integer | `node['docker']['container_cmd_timeout']`
-command | Command to run in or identify container | String | nil
-container_name | Name for container/service | String | nil
-
-#### docker_container action :commit
-
-These attributes are associated with this LWRP action.
-
-Attribute | Description | Type | Default
-----------|-------------|------|--------
-author | Author for commit | String | nil
-message | Message for commit | String | nil
-repository | Remote repository | String | nil
-run | Configuration to be applied when the image is launched with `docker run` | String | nil
-tag | Specific tag for image | String | nil
-
-Commit a container with optional repository, run specification, and tag:
-
-```ruby
-docker_container 'myApp' do
-  repository 'myRepo'
-  tag Time.new.strftime("%Y%m%d%H%M")
-  run '{"Cmd": ["cat", "/world"], "PortSpecs": ["22"]}'
-  action :commit
-end
-```
-
-#### docker_container action :cp
-
-These attributes are associated with this LWRP action.
-
-Attribute | Description | Type | Default
-----------|-------------|------|--------
-destination | Host path to copy file | String | nil
-source | Container path to get file | String | nil
-
-Copying a file from container to host:
-
-```ruby
-docker_container 'myApp' do
-  source '/path/to/container/file'
-  destination '/path/to/save/on/host'
-  action :cp
-end
-```
-
-#### docker_container action :create
-
-By default, this will handle creating a service for the container when action is create, run or start. `set['docker']['container_init_type'] = false` or add `init_type false` for LWRP to disable this behavior.
-
-Attributes for this action can be found in the `run` action (except for the `detach` attribute).
-
-#### docker_container action :export
-
-These attributes are associated with this LWRP action.
-
-Attribute | Description | Type | Default
-----------|-------------|------|--------
-destination | Host path to save tarball | String | nil
-
-Exporting container to host:
-
-```ruby
-docker_container 'myApp' do
-  destination '/path/to/save/on/host.tgz'
-  action :export
-end
-```
-
-#### docker_container action :kill
-
-These attributes are associated with this LWRP action.
-
-Attribute | Description | Type | Default
-----------|-------------|------|--------
-cookbook | Cookbook to grab any templates | String | docker
-init_type | Init type for container service handling | FalseClass, String | `node['docker']['container_init_type']`
-init_template | Template to use for init configuration | String | nil
-signal | Signal to send to the container | String | nil (implicitly KILL)
-socket_template | Template to use for configuring socket (relevent for init_type systemd only) | String | nil
-
-Kill a running container:
-
-```ruby
-docker_container 'shipyard' do
-  action :kill
-end
-```
-
-Send SIGQUIT to a running container:
-
-```ruby
-docker_container 'shipyard' do
-  signal 'QUIT'
-  action :kill
-end
-```
-
-#### docker_container action :redeploy
-
-Stops, removes, and runs a container. Useful for notifications from image build/pull.
-
-Attributes for this action can be found in the `stop`, `remove`, and `run` actions.
-
-Redeploy container when new image is pulled:
-
-```ruby
-docker_image 'shipyard/shipyard' do
-  action :pull
-  notifies :redeploy, 'docker_container[shipyard]', :immediately
-end
-
-docker_container 'shipyard' do
-  # Other attributes
+  repo 'registry.computers.biz:443/my_project/my_container'
+  tag 'latest'
+  host 'tcp://host-2.computers.biz:2376'
+  tls_verify true
+  tls_ca_cert "/path/to/ca.pem"
+  tls_client_cert "/path/to/cert.pem"
+  tls_client_key "/path/to/key.pem"
   action :run
 end
 ```
 
-#### docker_container action :remove
-
-These attributes are associated with this LWRP action.
-
-Attribute | Description | Type | Default
-----------|-------------|------|--------
-cookbook | Cookbook to grab any templates | String | docker
-force | Force removal | TrueClass, FalseClass | nil
-init_type | Init type for container service handling | FalseClass, String | `node['docker']['container_init_type']`
-init_template | Template to use for init configuration | String | nil
-socket_template | Template to use for configuring socket (relevent for init_type systemd only) | String | nil
-
-Remove a container:
+You can manipulate Docker volumes and networks
 
 ```ruby
-docker_container 'shipyard' do
-  action :remove
+docker_network 'my_network' do
+  subnet '10.9.8.0/24'
+  gateway '10.9.8.1'
+end
+
+docker_volume 'my_volume' do
+  action :create
+end
+
+docker_container 'my_container' do
+  repo 'alpine'
+  tag '3.1'
+  command "nc -ll -p 1234 -e /bin/cat"
+  volumes 'my_volume:/my_data'
+  network_mode 'my_network'
+  action :run
 end
 ```
 
-#### docker_container action :remove_link
+See full documentation for each resource and action below for more information.
 
-These attributes are associated with this LWRP action.
+## Resources Details
 
-Attribute | Description | Type | Default
-----------|-------------|------|--------
-link | Link to remove from container | String | nil
+## docker_installation
 
-Remove a container:
+The `docker_installation` resource auto-selects one of the below
+resources with the provider resolution system.
+
+### Example
 
 ```ruby
-docker_container 'shipyard' do
-  link 'foo'
-  action :remove_link
+docker_installation 'default' do
+  action :create
 end
 ```
 
-#### docker_container action :remove_volume
+## docker_installation_binary
 
-These attributes are associated with this LWRP action.
+The `docker_installation_binary` resource copies the precompiled Go
+binary onto the disk. It exists to help run older Docker versions. It
+should not be used in production, especially with devicemapper.
 
-Attribute | Description | Type | Default
-----------|-------------|------|--------
-volume | Volume(s) to remove from container | String, Array | nil
-
-Remove a container:
+### Example
 
 ```ruby
-docker_container 'shipyard' do
-  volume %w(/extravol1 /extravol2)
-  action :remove_volume
+docker_installation_binary 'default' do
+  version '1.8.2'
+  source 'https://my.computers.biz/dist/docker'
+  checksum '97a3f5924b0b831a310efa8bf0a4c91956cd6387c4a8667d27e2b2dd3da67e4d'
+  action :create
 end
 ```
 
-#### docker_container action :restart
+### Properties
 
-These attributes are associated with this LWRP action.
+- `version` - The desired version of docker. Used to calculate source.
+- `source` - Path to network accessible Docker binary. Ignores version
+- `checksum` - SHA-256
 
-Attribute | Description | Type | Default
-----------|-------------|------|--------
-cookbook | Cookbook to grab any templates | String | docker
-init_type | Init type for container service handling | FalseClass, String | `node['docker']['container_init_type']`
-init_template | Template to use for init configuration | String | nil
-socket_template | Template to use for configuring socket (relevent for init_type systemd only) | String | nil
+## docker_installation_tarball
 
-Restart a container:
+The `docker_installation_tarball` resource copies the precompiled Go
+binary tarball onto the disk. It exists to help run newer Docker
+versions from 1.11.0 onwards. It should not be used in production,
+especially with devicemapper.
+
+### Example
 
 ```ruby
-docker_container 'shipyard' do
-  action :restart
+docker_installation_tarball 'default' do
+  version '1.11.0'
+  source 'https://my.computers.biz/dist/docker.tgz'
+  checksum '97a3f5924b0b831a310efa8bf0a4c91956cd6387c4a8667d27e2b2dd3da67e4d'
+  action :create
 end
 ```
 
-#### docker_container action :run
+### Properties
 
-By default, this will handle creating a service for the container when action is create, run or start. `set['docker']['container_init_type'] = false` or add `init_type false` for LWRP to disable this behavior.
+- `version` - The desired version of docker. Used to calculate source.
+- `source` - Path to network accessible Docker binary tarball. Ignores
+  version
+- `checksum` - SHA-256
 
-These attributes are associated with this LWRP action.
+## docker_installation_script
 
-Attribute | Description | Type | Default
-----------|-------------|------|--------
-additional_host | Add a custom host-to-IP mapping (host:ip) | String, Array | nil
-attach | Attach container's stdout/stderr and forward all signals to the process | TrueClass, FalseClass | nil
-cap_add | Capabilities to add to container | String, Array | nil
-cidfile | File to store container ID | String | nil
-container_name | Name for container/service | String | nil
-cookbook | Cookbook to grab any templates | String | docker
-cpu_shares | CPU shares for container | Fixnum | nil
-detach | Detach from container when starting | TrueClass, FalseClass | nil
-device | Device(s) to pass through to container | String, Array | nil
-dns | DNS servers for container | String, Array | nil
-dns_search | DNS search domains for container | String, Array | nil
-entrypoint | Overwrite the default entrypoint set by the image | String | nil
-env | Environment variables to pass to container | String, Array | nil
-env_file | Read in a line delimited file of ENV variables | String | nil
-expose | Expose a port from the container without publishing it to your host | Fixnum, String, Array | nil
-hostname | Container hostname | String | nil
-image | Image for container | String | LWRP name
-init_type | Init type for container service handling | FalseClass, String | `node['docker']['container_init_type']`
-init_template | Template to use for init configuration | String | nil
-link | Add link to another container | String, Array | nil
-label | Options to pass to underlying labeling system | String | nil
-lxc_conf | Custom LXC options | String, Array | nil
-memory | Set memory limit for container | Fixnum, String | nil
-net | [Configure networking](http://docs.docker.io/reference/run/#network-settings) for container | String | nil
-networking (*DEPRECATED*) | Configure networking for container | TrueClass, FalseClass | true
-opt | Custom driver options | String, Array | nil
-port | Map network port(s) to the container | Fixnum (*DEPRECATED*), String, Array | nil
-privileged | Give extended privileges | TrueClass, FalseClass | nil
-public_port (*DEPRECATED*) | Map host port to container | Fixnum | nil
-publish_exposed_ports | Publish all exposed ports to the host interfaces | TrueClass, FalseClass | false
-remove_automatically | Automatically remove the container when it exits (incompatible with detach) | TrueClass, FalseClass | false
-restart | Restart policy for the container (no, on-failure, always) | String | nil
-socket_template | Template to use for configuring socket (relevent for init_type systemd only) | String | nil
-stdin | Attach container's stdin | TrueClass, FalseClass | nil
-tty | Allocate a pseudo-tty | TrueClass, FalseClass | nil
-user | User to run container | String | nil
-volume | Create bind mount(s) with: [host-dir]:[container-dir]:[rw\|ro]. If "container-dir" is missing, then docker creates a new volume. | String, Array | nil
-volumes_from | Mount all volumes from the given container(s) | String | nil
-working_directory | Working directory inside the container | String | nil
+The `docker_installation_script` resource runs the script hosted by
+Docker, Inc at <http://get.docker.com>. It configures package
+repositories and installs a dynamically compiled binary.
 
-Run a container:
+### Example
 
 ```ruby
-docker_container 'myImage' do
-  detach true
+docker_installation_script 'default' do
+  repo 'main'
+  script_url 'https://my.computers.biz/dist/scripts/docker.sh'
+  action :create
 end
 ```
 
-Run a container via command:
+### Properties
+
+- `repo` - One of 'main', 'test', or 'experimental'. Used to calculate
+  script_url in its absense. Defaults to 'main'
+- `script_url` - 'URL of script to pipe into /bin/sh as root.
+
+## docker_installation_package
+
+The `docker_installation_package` resource uses the system package
+manager to install Docker. It relies on the pre-configuration of the
+system's package repositories. The `chef-yum-docker` and
+`chef-apt-docker` Supermarket cookbooks are used to do this in
+test-kitchen.
+
+**_This is the recommended production installation method._**
+
+### Example
 
 ```ruby
-docker_container 'busybox' do
-  command 'sleep 9999'
-  detach true
+docker_installation_package 'default' do
+  version '1.8.3'
+  action :create
+  package_options %q|--force-yes -o Dpkg::Options::='--force-confold' -o Dpkg::Options::='--force-all'| # if Ubuntu for example
 end
 ```
 
-Run a container from image (docker-registry for example):
+### Properties
+
+- `version` - Used to calculate package_version string
+- `package_version` - Manually specify the package version string
+- `package_name` - Name of package to install. Defaults to
+  'docker-engine'
+- `package_options` - Manually specify additional options, like
+  apt-get directives for example
+
+## docker_service_manager
+
+The `docker_service_manager` resource auto-selects a strategy from the
+`docker_service_manager_*` group of resources based on platform and
+version. The `docker_service` family share a common set of properties.
+
+### Example
 
 ```ruby
-docker_container 'docker-registry' do
-  image 'samalba/docker-registry'
-  detach true
-  hostname 'docker-registry.example.com'
-  port '5000:5000'
-  env 'SETTINGS_FLAVOR=local'
-  volume '/mnt/docker:/docker-storage'
-end
-```
-
-#### docker_container action :start
-
-These attributes are associated with this LWRP action.
-
-Attribute | Description | Type | Default
-----------|-------------|------|--------
-attach | Attach container's stdout/stderr and forward all signals to the cookbook | Cookbook to grab any templates | String | docker
-init_type | Init type for container service handling | FalseClass, String | `node['docker']['container_init_type']`
-init_template | Template to use for init configuration | String | nil
-socket_template | Template to use for configuring socket (relevent for init_type systemd only) | String | nil
-stdin | Attach container's stdin | TrueClass, FalseClass | nil
-
-Start a stopped container:
-
-```ruby
-docker_container 'shipyard' do
+docker_service_manager 'default' do
   action :start
 end
 ```
 
-#### docker_container action :stop
+## docker_service_manager_execute
 
-These attributes are associated with this LWRP action.
-
-Attribute | Description | Type | Default
-----------|-------------|------|--------
-cookbook | Cookbook to grab any templates | String | docker
-init_type | Init type for container service handling | FalseClass, String | `node['docker']['container_init_type']`
-init_template | Template to use for init configuration | String | nil
-socket_template | Template to use for configuring socket (relevent for init_type systemd only) | String | nil
-
-Stop a running container:
+### Example
 
 ```ruby
-docker_container 'shipyard' do
+docker_service_manager_execute 'default' do
+  action :start
+end
+```
+
+## docker_service_manager_sysvinit
+
+### Example
+
+```ruby
+docker_service_manager_sysvinit 'default' do
+  host 'unix:///var/run/docker.sock'
   action :stop
 end
 ```
 
-#### docker_container action :wait
+## docker_service_manager_upstart
 
-Wait for a container to finish:
+### Example
 
 ```ruby
-docker_container 'busybox' do
-  command 'sleep 9999'
-  action :wait
+docker_service_manager_upstart 'default' do
+  host ['unix:///var/run/docker.sock', 'tcp://127.0.0.1:2376']
+  action :start
 end
 ```
 
-### docker_image
+## docker_service_manager_systemd
 
-Below are the available actions for the LWRP, default being `pull`.
-
-These attributes are associated with all LWRP actions.
-
-Attribute | Description | Type | Default
-----------|-------------|------|--------
-cmd_timeout | Timeout for docker commands (catchable exception: `Chef::Provider::Docker::Image::CommandTimeout`) | Integer | `node['docker']['image_cmd_timeout']`
-
-#### docker_image action :build and :build_if_missing
-
-These attributes are associated with this LWRP action.
-
-Attribute | Description | Type | Default
-----------|-------------|------|--------
-dockerfile (*DEPRECATED*) | Dockerfile to build image | String | nil
-image_url (*DEPRECATED*) | URL to grab image | String | nil
-no_cache | Do not use the cache when building the image | TrueClass, FalseClass | false
-path (*DEPRECATED*) | Local path to files | String | nil
-rm | Remove intermediate containers after a successful build | TrueClass, FalseClass | false
-source | Source dockerfile/directory/URL to build | String | nil
-tag | Optional tag for image | String | nil
-
-Build image from Dockerfile:
+### Example
 
 ```ruby
-docker_image 'myImage' do
-  tag 'myTag'
-  source 'myImageDockerfile'
-  action :build_if_missing
+docker_service_manager_systemd 'default' do
+  host ['unix:///var/run/docker.sock', 'tcp://127.0.0.1:2376']
+  tls_verify true
+  tls_ca_cert "/path/to/ca.pem"
+  tls_server_cert "/path/to/server.pem"
+  tls_server_key "/path/to/server-key.pem"
+  tls_client_cert "/path/to/cert.pem"
+  tls_client_key "/path/to/key.pem"
+  systemd_opts ["TasksMax=infinity","MountFlags=private"]
+  action :start
 end
 ```
 
-Build image from remote repository:
+## docker_service
+
+The `docker_service`: resource is a composite resource that uses
+`docker_installation` and `docker_service_manager` resources.
+
+- The `:create` action uses a `docker_installation`
+- The `:delete` action uses a `docker_installation`
+- The `:start` action uses a `docker_service_manager`
+- The `:stop` action uses a `docker_service_manager`
+
+The service management strategy for the host platform is dynamically
+chosen based on platform, but can be overridden.
+
+### Example
 
 ```ruby
-docker_image 'myImage' do
-  source 'example.com/foo/myImage'
-  tag 'myTag'
-  action :build_if_missing
+docker_service 'tls_test:2376' do
+  host [ "tcp://#{node['ipaddress']}:2376", 'unix:///var/run/docker.sock' ]
+  tls_verify true
+  tls_ca_cert '/path/to/ca.pem'
+  tls_server_cert '/path/to/server.pem'
+  tls_server_key '/path/to/server-key.pem'
+  tls_client_cert '/path/to/client.pem'
+  tls_client_key '/path/to/client-key.pem'
+  action [:create, :start]
 end
 ```
 
-Conditionally rebuild image if changes upstream:
+WARNING - When creating multiple `docker_service` resources on the
+same machine, you will need to specify unique graph properties to
+avoid unexpected behavior and possible data corruption.
+
+### Properties
+
+The `docker_service` resource property list mostly corresponds to the
+options found in the
+[Docker Command Line Reference](https://docs.docker.com/reference/commandline/cli/)
+
+- `install_method` - Select binary, script, package, tarball, none, or auto. Defaults to  `auto`.
+- `source` - URL to the pre-compiled Docker binary used for installation. Defaults to a calculated URL based on kernel version, Docker version, and platform arch. By default, this will try to get to "<http://get.docker.io/builds/>".
+- `version` - Docker version to install
+- `checksum` - sha256 checksum of Docker binary
+- `api_cors_header` - Set CORS headers in the remote API
+- `bridge` - Attach containers to a network bridge
+- `bip` - Specify network bridge IP
+- `debug` - Enable debug mode
+- `cluster_store` - Cluster store to use
+- `cluster_advertise` - IP and port that this daemon should advertise
+  to the cluster
+- `cluster_store_opts` - Cluster store options
+- `daemon` - Enable daemon mode
+- `dns` - DNS server(s) to use
+- `dns_search` - DNS search domains to use
+- `exec_driver` - Exec driver to use
+- `fixed_cidr` - IPv4 subnet for fixed IPs
+- `fixed_cidr_v6` - IPv6 subnet for fixed IPs
+- `group` - Posix group for the unix socket. Default to `docker`
+- `graph` - Root of the Docker runtime - Effectively, the "data
+  directory"
+- `host` - Daemon socket(s) to connect to - `tcp://host:port`,
+  `unix:///path/to/socket`, `fd://*` or `fd://socketfd`
+- `icc` - Enable inter-container communication
+- `insecure_registry` - Enable insecure registry communication
+- `ip` - Default IP when binding container ports
+- `ip_forward` - Enable ip forwarding
+- `ipv4_forward` - Enable net.ipv4.ip_forward
+- `ipv6_forward` - Enable net.ipv6.ip_forward
+- `ip_masq` - Enable IP masquerading
+- `iptables` - Enable addition of iptables rules
+- `ipv6` - Enable IPv6 networking
+- `log_level` - Set the logging level
+- `labels` A string or array to set metadata on the daemon in the form ['foo:bar', 'hello:world']`
+- `log_driver` - Container's logging driver (json-file/syslog/journald/gelf/fluentd/none)
+- `log_driver` - Container's logging driver (json-file/syslog/journald/gelf/fluentd/awslogs/splunk/etwlogs/gcplogs/none)
+- `log_opts` - Container's logging driver options (driver-specific)
+- `mtu` - Set the containers network MTU
+- `package_name` - Set the package name. Defaults to `docker-ce`
+- `pidfile` - Path to use for daemon PID file
+- `registry_mirror` - Preferred Docker registry mirror
+- `storage_driver` - Storage driver to use
+- `selinux_enabled` - Enable selinux support
+- `storage_opts` - Set storage driver options
+- `tls` - Use TLS; implied by --tlsverify. Defaults to  ENV['DOCKER_TLS'] if set
+- `tls_verify` - Use TLS and verify the remote. Defaults to  ENV['DOCKER_TLS_VERIFY'] if set
+- `tls_ca_cert` - Trust certs signed only by this CA. Defaults to  ENV['DOCKER_CERT_PATH'] if set
+- `tls_server_cert` - Path to TLS certificate file for docker service
+- `tls_server_key` - Path to TLS key file for docker service
+- `tls_client_cert` - Path to TLS certificate file for docker cli. Defaults to ENV['DOCKER_CERT_PATH'] if set
+- `tls_client_key` - Path to TLS key file for docker cli. Defaults to  ENV['DOCKER_CERT_PATH'] if set
+- `default_ulimit` - Set default ulimit settings for containers
+- `http_proxy` - ENV variable set before for Docker daemon starts
+- `https_proxy` - ENV variable set before for Docker daemon starts
+- `no_proxy` - ENV variable set before for Docker daemon starts
+- `tmpdir` - ENV variable set before for Docker daemon starts
+- `logfile` - Location of Docker daemon log file
+- `userland_proxy`- Enables or disables docker-proxy
+- `disable_legacy_registry` - Do not contact legacy registries
+- `userns_remap` - Enable user namespace remapping options -
+  `default`, `uid`, `uid:gid`, `username`, `username:groupname` (see: [Docker User Namespaces](see: https://docs.docker.com/v1.10/engine/reference/commandline/daemon/#daemon-user-namespace-options))
+- `mount_flags` - Set the systemd mount propagation flag.
+
+#### Miscellaneous Options
+
+- `misc_opts` - Pass the docker daemon any other options bypassing
+  flag validation, supplied as `--flag=value`
+
+#### Systemd-specific Options
+
+- `systemd_opts` - An array of strings that will be included as
+  individual lines in the systemd service unit for Docker.  *Note*:
+  This option is only relevant for systems where systemd is the
+  default service manager or where systemd is specified explicitly as
+  the service manager.
+
+### Actions
+
+- `:create` - Lays the Docker bits out on disk
+- `:delete` - Removes the Docker bits from the disk
+- `:start` - Makes sure the service provider is set up properly and start it
+- `:stop` - Stops the service
+- `:restart` - Restarts the service
+
+### `docker_service` implementations
+
+- `docker_service_execute` - The simplest docker_service. Just starts
+  a process. Fire and forget.
+- `docker_service_sysvinit` - Uses a SystemV init script to manage the
+  service state.
+- `docker_service_upstart` - Uses an Upstart script to manage the
+  service state.
+- `docker_service_systemd` - Uses an Systemd unit file to manage the
+  service state. NOTE: This does NOT enable systemd socket activation.
+
+## docker_image
+
+The `docker_image` is responsible for managing Docker image pulls,
+builds, and deletions. It speaks directly to the
+[Docker remote API](https://docs.docker.com/reference/api/docker_remote_api_v1.20/).
+
+### Examples
+
+- default action, default properties
 
 ```ruby
-git "#{Chef::Config[:file_cache_path]}/docker-testcontainerd" do
-  repository 'git@github.com:bflad/docker-testcontainerd.git'
-  notifies :build, 'docker_image[tduffield/testcontainerd]', :immediately
-end
+docker_image 'hello-world'
+```
 
-docker_image 'tduffield/testcontainerd' do
-  action :pull_if_missing
+- non-default name attribute
+
+```ruby
+docker_image "Tom's container" do
+  repo 'tduffield/testcontainerd'
+  action :pull
 end
 ```
 
-#### docker_image action :import
-
-These attributes are associated with this LWRP action.
-
-Attribute | Description | Type | Default
-----------|-------------|------|--------
-image_url (*DEPRECATED*) | URL to grab image | String | nil
-repository | Optional repository | String | nil
-source | Source file/directory/URL | String | nil
-tag | Optional tag for image | String | nil
-
-Import image from local directory:
-
-```ruby
-docker_image 'test' do
-  source '/path/to/test'
-  action :import
-end
-```
-
-Import image from local file:
-
-```ruby
-docker_image 'test' do
-  source '/path/to/test.tgz'
-  action :import
-end
-```
-
-Import image from remote URL:
-
-```ruby
-docker_image 'test' do
-  source 'https://example.com/testimage.tgz'
-  action :import
-end
-```
-
-#### docker_image action :insert
-
-*ACTION DEPRECATED AS OF DOCKER 0.10.0*
-
-These attributes are associated with this LWRP action.
-
-Attribute | Description | Type | Default
-----------|-------------|------|--------
-destination | Destination path/URL | String | nil
-source | Source path/URL | String | nil
-
-Insert file from remote URL:
-
-```ruby
-docker_image 'test' do
-  source 'http://example.com/some/file.txt'
-  destination '/container/path/for/some/file.txt'
-  action :insert
-end
-```
-
-#### docker_image action :load
-
-These attributes are associated with this LWRP action.
-
-Attribute | Description | Type | Default
-----------|-------------|------|--------
-input | Image source (via tar archive file) | String | nil
-source | Image source (via stdin) | String | nil
-
-Load repository via input:
-
-```ruby
-docker_image 'test' do
-  input '/path/to/test.tar'
-  action :load
-end
-```
-
-Load repository via stdin:
-
-```ruby
-docker_image 'test' do
-  source '/path/to/test.tgz'
-  action :load
-end
-```
-
-#### docker_image action :pull and :pull_if_missing
-
-These attributes are associated with this LWRP action.
-
-Attribute | Description | Type | Default
-----------|-------------|------|--------
-registry | Optional registry server | String | nil
-tag | Optional tag for image | String | nil
-
-Pull latest image every Chef run:
-
-```ruby
-docker_image 'busybox'
-```
-
-Pull latest image only if missing:
+- pull every time
 
 ```ruby
 docker_image 'busybox' do
-  action :pull_if_missing
+  action :pull
 end
 ```
 
-Pull tagged image:
+- specify a tag
 
 ```ruby
-docker_image 'bflad/test' do
-  tag 'not-latest'
+docker_image 'alpine' do
+  tag '3.1'
 end
 ```
 
-#### docker_image action :push
-
-Push image (after logging in with `docker_registry`):
+- specify read/write timeouts
 
 ```ruby
-docker_image 'bflad/test' do
-  action :push
+docker_image 'alpine' do
+  read_timeout 60
+  write_timeout 60
 end
 ```
 
-#### docker_image action :remove
-
-These attributes are associated with this LWRP action.
-
-Attribute | Description | Type | Default
-----------|-------------|------|--------
-force | Force removal | TrueClass, FalseClass | nil
-no_prune | Do not delete untagged parents | TrueClass, FalseClass | nil
-
-Remove image:
-
 ```ruby
-docker_image 'busybox' do
+docker_image 'vbatts/slackware' do
   action :remove
 end
 ```
 
-#### docker_image action :save
-
-These attributes are associated with this LWRP action.
-
-Attribute | Description | Type | Default
-----------|-------------|------|--------
-destination | Destination path (via stdout) | String | nil
-output | Destination path (via file) | String | nil
-tag | Save specific tag | String | nil
-
-Save repository via file to path:
+- save
 
 ```ruby
-docker_image 'test' do
-  destination '/path/to/test.tar'
+docker_image 'save hello-world' do
+  repo 'hello-world'
+  destination '/tmp/hello-world.tar'
+  not_if { ::File.exist?('/tmp/hello-world.tar') }
   action :save
 end
 ```
 
-Save repository via stdout to path:
+- build from a Dockerfile on every chef-client run
 
 ```ruby
-docker_image 'test' do
-  destination '/path/to/test.tgz'
-  action :save
+docker_image 'image_1' do
+  tag 'v0.1.0'
+  source '/src/myproject/container1/Dockerfile'
+  action :build
 end
 ```
 
-#### docker_image action :tag
-
-These attributes are associated with this LWRP action.
-
-Attribute | Description | Type | Default
-----------|-------------|------|--------
-force | Force operation | Boolean | false
-repository | Remote repository | String | nil
-tag | Specific tag for image | String | nil
-
-Tag image:
+- build from a directory, only if image is missing
 
 ```ruby
-docker_image 'test' do
-  repository 'bflad'
-  tag '1.0.0'
+docker_image 'image_2' do
+  tag 'v0.1.0'
+  source '/src/myproject/container2'
+  action :build_if_missing
+end
+```
+
+- build from a tarball NOTE: this is not an "export" tarball generated
+  from an an image save. The contents should be a Dockerfile, and
+  anything it references to COPY or ADD
+
+```ruby
+docker_image 'image_3' do
+  tag 'v0.1.0'
+  source '/tmp/image_3.tar'
+  action :build
+end
+```
+
+```ruby
+docker_image 'hello-again' do
+  tag 'v0.1.0'
+  source '/tmp/hello-world.tar'
+  action :import
+end
+```
+
+- push
+
+```ruby
+docker_image 'my.computers.biz:5043/someara/hello-again' do
+  action :push
+end
+  ```
+
+- Connect to an external docker daemon and pull an image
+
+```ruby
+docker_image 'alpine' do
+  host 'tcp://127.0.0.1:2376'
+  tag '2.7'
+end
+```
+
+### Properties
+
+The `docker_image` resource properties mostly corresponds to the
+[Docker Remote API](https://docs.docker.com/reference/api/docker_remote_api_v1.20/#2-2-images)
+as driven by the
+[Swipley docker-api Ruby gem](https://github.com/swipely/docker-api)
+
+
+A `docker_image`'s full identifier is a string in the form
+"\<repo\>:\<tag\>". There is some nuance around naming using the
+public registry vs a private one.
+
+- `repo` - aka `image_name` - The first half of a Docker image's
+  identity. This is a string in the form:
+  `registry:port/owner/image_name`. If the `registry:port` portion is
+  left off, Docker will implicitly use the Docker public
+  registry. "Official Images" omit the owner part. This means a repo
+  id can be as short as `busybox`, `alpine`, or `centos`. These names refer
+  to official images on the public registry. Names can be as long as
+  `my.computers.biz:5043/what/ever` to refer to custom images on an
+  private registry. Often you'll see something like `chef/chef` to
+  refer to private images on the public registry. - Defaults to
+  resource name.
+- `tag` - The second half of a Docker image's identity. - Defaults to
+  `latest`
+- `source` - Path to input for the `:import`, `:build` and
+  `:build_if_missing` actions. For building, this can be a Dockerfile,
+  a tarball containing a Dockerfile in its root, or a directory
+  containing a Dockerfile. For `:import`, this should be a tarball
+  containing Docker formatted image, as generated with `:save`.
+- `destination` - Path for output from the `:save` action.
+- `force` - A force boolean used in various actions - Defaults to
+  false
+- `nocache` - Used in `:build` operations. - Defaults to false
+- `noprune` - Used in `:remove` operations - Defaults to false
+- `rm` - Remove intermediate containers after a successful build
+  (default behavior) - Defaults to `true`
+- `read_timeout` - May need to increase for long image builds/pulls
+- `write_timeout` - May need to increase for long image builds/pulls
+- `host` - A string containing the host the API should communicate
+  with. Defaults to `ENV['DOCKER_HOST']` if set.
+- `tls` - Use TLS; implied by --tlsverify. Defaults to
+  ENV['DOCKER_TLS'] if set.
+- `tls_verify` - Use TLS and verify the remote. Defaults to
+  `ENV['DOCKER_TLS_VERIFY']` if set
+- `tls_ca_cert` - Trust certs signed only by this CA. Defaults to
+  `ENV['DOCKER_CERT_PATH']` if set.
+- `tls_client_cert` - Path to TLS certificate file for docker
+  cli. Defaults to `ENV['DOCKER_CERT_PATH']` if set
+- `tls_client_key` - Path to TLS key file for docker cli. Defaults to
+  `ENV['DOCKER_CERT_PATH']` if set.
+
+### Actions
+
+The following actions are available for a `docker_image`
+resource. Defaults to `pull`
+
+- `:pull` - Pulls an image from the registry
+- `:pull_if_missing` - Pulls an image from the registry, only if it missing
+- `:build` - Builds an image from a Dockerfile, directory, or tarball
+- `:build_if_missing` - Same build, but only if it is missing
+- `:save` - Exports an image to a tarball at `destination`
+- `:import` - Imports an image from a tarball at `destination`
+- `:remove` - Removes (untags) an image
+- `:push` - Pushes an image to the registry
+
+## docker_tag
+
+Docker tags work very much like hard links in a Unix filesystem. They
+are just references to an existing image. Therefore, the docker_tag
+resource has taken inspiration from the Chef `link` resource.
+
+### Examples
+
+```ruby
+docker_tag 'private repo tag for hello-again:1.0.1' do
+  target_repo 'hello-again'
+  target_tag 'v0.1.0'
+  to_repo 'localhost:5043/someara/hello-again'
+  to_tag 'latest'
   action :tag
 end
 ```
 
-### docker_registry
+### Properties
 
-These attributes are associated with all LWRP actions.
+- `target_repo` - The repo half of the source image identifier.
+- `target_tag` - The tag half of the source image identifier.
+- `to_repo` - The repo half of the new image identifier
+- `to_tag`- The tag half of the new image identifier
 
-Attribute | Description | Type | Default
-----------|-------------|------|--------
-cmd_timeout | Timeout for docker commands (catchable exception: `Chef::Provider::Docker::Registry::CommandTimeout`) | Integer | `node['docker']['registry_cmd_timeout']`
+### Actions
 
-#### docker_registry action :login
+- `:tag` - Tags the image
 
-These attributes are associated with this LWRP action.
+## docker_container
 
-Attribute | Description | Type | Default
-----------|-------------|------|--------
-email | Registry email | String | nil
-password | Registry password | String | nil
-username | Registry username | String | nil
+The `docker_container` is responsible for managing Docker container
+actions. It speaks directly to the
+[Docker remote API](https://docs.docker.com/reference/api/docker_remote_api_v1.20/).
 
-Log into or register with public registry:
 
-    docker_registry 'https://index.docker.io/v1/' do
-      email 'publicme@example.com'
-      username 'publicme'
-      password 'hope_this_is_in_encrypted_databag'
-    end
+Containers are process oriented, and move through an event
+cycle. Thanks to [Glider Labs](http://gliderlabs.com/) for this
+excellent
+diagram. ![alt tag](http://gliderlabs.com/images/docker_events.png)
+
+
+### Examples
+
+- Create a container without starting it.
+
+```ruby
+docker_container 'hello-world' do
+  command '/hello'
+  action :create
+end
+```
+
+- This will exit succesfully. It will happen on every chef-client run.
+
+```ruby
+docker_container 'busybox_ls' do
+  repo 'busybox'
+  command 'ls -la /'
+  action :run
+end
+```
+
+- The :run action contains both :create and :start the container in one action. Redeploys the container on resource change. It is the default action.
+
+```ruby
+docker_container 'alpine_ls' do
+  repo 'alpine'
+  tag '3.1'
+  command 'ls -la /'
+  action :run
+end
+```
+
+- Set environment variables in a container
+
+```ruby
+docker_container 'env' do
+  repo 'debian'
+  env ['PATH=/usr/bin', 'FOO=bar']
+  command 'env'
+  action :run
+end
+```
+
+```ruby
+docker_container 'env_files' do
+  repo 'debian'
+  env_file lazy { ['/env_file1', '/env_file2'] }
+  command 'env'
+  action :run
+end
+```
+
+- This process remains running between chef-client runs, :run will do nothing on subsequent converges.
+
+```ruby
+docker_container 'an_echo_server' do
+  repo 'alpine'
+  tag '3.1'
+  command 'nc -ll -p 7 -e /bin/cat'
+  port '7:7'
+  action :run
+end
+```
+
+- Let docker pick the host port
+
+```ruby
+docker_container 'another_echo_server' do
+  repo 'alpine'
+  tag '3.1'
+  command 'nc -ll -p 7 -e /bin/cat'
+  port '7'
+  action :run
+end
+```
+
+- Specify the udp protocol
+
+```ruby
+docker_container 'an_udp_echo_server' do
+  repo 'alpine'
+  tag '3.1'
+  command 'nc -ul -p 7 -e /bin/cat'
+  port '5007:7/udp'
+  action :run
+end
+```
+
+- Kill a container
+
+```ruby
+docker_container 'bill' do
+  action :kill
+end
+```
+
+- Stop a container
+
+```ruby
+docker_container 'hammer_time' do
+  action :stop
+end
+```
+
+- Force-stop a container after 30 seconds
+
+```ruby
+docker_container 'hammer_time' do
+  kill_after 30
+  action :stop
+end
+```
+
+- Pause a container
+
+```ruby
+docker_container 'red_light' do
+  action :pause
+end
+```
+
+- Unpause a container
+
+```ruby
+docker_container 'green_light' do
+  action :unpause
+end
+```
+
+- Restart a container
+
+```ruby
+docker_container 'restarter' do
+  action :restart
+end
+```
+
+- Delete a container
+
+```ruby
+docker_container 'deleteme' do
+  remove_volumes true
+  action :delete
+end
+```
+
+- Redeploy a container
+
+```ruby
+docker_container 'redeployer' do
+  repo 'alpine'
+  tag '3.1'
+  command 'nc -ll -p 7777 -e /bin/cat'
+  port '7'
+  action :run
+end
+
+execute 'redeploy redeployer' do
+  notifies :redeploy, 'docker_container[redeployer]', :immediately
+  action :run
+end
+```
+
+- Bind mount local directories
+
+```ruby
+docker_container 'bind_mounter' do
+  repo 'busybox'
+  command 'ls -la /bits /more-bits'
+  volumes ['/hostbits:/bits', '/more-hostbits:/more-bits']
+  action :run_if_missing
+end
+```
+
+- Mount volumes from another container
+
+```ruby
+docker_container 'chef_container' do
+  command 'true'
+  volumes '/opt/chef'
+  action :create
+end
+
+docker_container 'ohai_debian' do
+  command '/opt/chef/embedded/bin/ohai platform'
+  repo 'debian'
+  volumes_from 'chef_container'
+end
+```
+
+- Set a container's entrypoint
+
+```ruby
+docker_container 'ohai_again_debian' do
+  repo 'debian'
+  volumes_from 'chef_container'
+  entrypoint '/opt/chef/embedded/bin/ohai'
+  command 'platform'
+  action :run_if_missing
+end
+```
+
+- Automatically remove a container after it exits
+
+```ruby
+docker_container 'sean_was_here' do
+  command "touch /opt/chef/sean_was_here-#{Time.new.strftime('%Y%m%d%H%M')}"
+  repo 'debian'
+  volumes_from 'chef_container'
+  autoremove true
+  action :run
+end
+```
+
+- Grant NET_ADMIN rights to a container
+
+```ruby
+docker_container 'cap_add_net_admin' do
+  repo 'debian'
+  command 'bash -c "ip addr add 10.9.8.7/24 brd + dev eth0 label eth0:0 ; ip addr list"'
+  cap_add 'NET_ADMIN'
+  action :run_if_missing
+end
+```
+
+- Revoke MKNOD rights to a container
+
+```ruby
+docker_container 'cap_drop_mknod' do
+  repo 'debian'
+  command 'bash -c "mknod -m 444 /dev/urandom2 c 1 9 ; ls -la /dev/urandom2"'
+  cap_drop 'MKNOD'
+  action :run_if_missing
+end
+```
+
+- Set a container's hostname and domainname
+
+```ruby
+docker_container 'fqdn' do
+  repo 'debian'
+  command 'hostname -f'
+  host_name 'computers'
+  domain_name 'biz'
+  action :run_if_missing
+end
+```
+
+- Set a container's DNS resolution
+
+```ruby
+docker_container 'dns' do
+  repo 'debian'
+  command 'cat /etc/resolv.conf'
+  host_name 'computers'
+  dns ['4.3.2.1', '1.2.3.4']
+  dns_search ['computers.biz', 'chef.io']
+  action :run_if_missing
+end
+```
+
+- Add extra hosts to a container's `/etc/hosts`
+
+```ruby
+docker_container 'extra_hosts' do
+  repo 'debian'
+  command 'cat /etc/hosts'
+  extra_hosts ['east:4.3.2.1', 'west:1.2.3.4']
+  action :run_if_missing
+end
+```
+
+- Manage container's restart_policy
+
+```ruby
+docker_container 'try_try_again' do
+  repo 'alpine'
+  tag '3.1'
+  command 'grep asdasdasd /etc/passwd'
+  restart_policy 'on-failure'
+  restart_maximum_retry_count 2
+  action :run_if_missing
+end
+
+docker_container 'reboot_survivor' do
+  repo 'alpine'
+  tag '3.1'
+  command 'nc -ll -p 123 -e /bin/cat'
+  port '123'
+  restart_policy 'always'
+  action :run_if_missing
+end
+```
+
+- Manage container links
+
+```ruby
+docker_container 'link_source' do
+  repo 'alpine'
+  tag '3.1'
+  env ['FOO=bar', 'BIZ=baz']
+  command 'nc -ll -p 321 -e /bin/cat'
+  port '321'
+  action :run_if_missing
+end
+
+docker_container 'link_target_1' do
+  repo 'alpine'
+  tag '3.1'
+  env ['ASD=asd']
+  command 'ping -c 1 hello'
+  links ['link_source:hello']
+  action :run_if_missing
+end
+
+docker_container 'link_target_2' do
+  repo 'alpine'
+  tag '3.1'
+  command 'env'
+  links ['link_source:hello']
+  action :run_if_missing
+end
+
+execute 'redeploy_link_source' do
+  command 'touch /marker_container_redeploy_link_source'
+  creates '/marker_container_redeploy_link_source'
+  notifies :redeploy, 'docker_container[link_source]', :immediately
+  notifies :redeploy, 'docker_container[link_target_1]', :immediately
+  notifies :redeploy, 'docker_container[link_target_2]', :immediately
+  action :run
+end
+```
+
+- Mutate a container between chef-client runs
+
+```ruby
+docker_tag 'mutator_from_busybox' do
+  target_repo 'busybox'
+  target_tag 'latest'
+  to_repo 'someara/mutator'
+  target_tag 'latest'
+end
+
+docker_container 'mutator' do
+  repo 'someara/mutator'
+  tag 'latest'
+  command "sh -c 'touch /mutator-`date +\"%Y-%m-%d_%H-%M-%S\"`'"
+  outfile '/mutator.tar'
+  force true
+  action :run_if_missing
+end
+
+execute 'commit mutator' do
+  command 'true'
+  notifies :commit, 'docker_container[mutator]', :immediately
+  notifies :export, 'docker_container[mutator]', :immediately
+  notifies :redeploy, 'docker_container[mutator]', :immediately
+  action :run
+end
+```
+
+- Specify read/write timeouts
+
+```ruby
+docker_container 'api_timeouts' do
+  repo 'alpine'
+  read_timeout 60
+  write_timeout 60
+end
+```
+
+- Specify a custom logging driver and its options
+
+```ruby
+docker_container 'syslogger' do
+  repo 'alpine'
+  tag '3.1'
+  command 'nc -ll -p 780 -e /bin/cat'
+  log_driver 'syslog'
+  log_opts 'tag=container-syslogger'
+end
+```
+
+- Connect to an external docker daemon and create a container
+
+```ruby
+docker_container 'external_daemon' do
+  repo 'alpine'
+  host 'tcp://1.2.3.4:2376'
+  action :create
+end
+```
+
+### Properties
+
+Most `docker_container` properties are the `snake_case` version of the `CamelCase` keys found in the [Docker Remote Api](https://docs.docker.com/reference/api/docker_remote_api_v1.20/)
+
+- `container_name` - The name of the container. Defaults to the name of the `docker_container` resource.
+- `repo` - aka `image_name`. The first half of a the complete identifier for a Docker Image.
+- `tag` - The second half of a Docker image's identity. - Defaults to `latest`.
+- `command` - The command to run when starting the container.
+- `autoremove` - Boolean - Automatically delete a container when it's command exits. Defaults to `false`.
+- `volumes` - An array of volume bindings for this container. Each volume binding is a string in one of these forms: `container_path` to create a new volume for the container. `host_path:container_path` to bind-mount a host path into the container. `host_path:container_path:ro` to make the bind-mount read-only inside the container.
+- `cap_add` - An array Linux Capabilities (`man 7 capabilities`) to add to grant the container beyond what it normally gets.
+- `cap_drop` - An array Linux Capabilities (`man 7 capabilities`) to revoke that the container normally has.
+- `cpu_shares` - An integer value containing the CPU Shares for the container.
+- `devices` - A Hash of devices to add to the container.
+- `dns` - An array of DNS servers the container will use for name resolution.
+- `dns_search` - An array of domains the container will search for name resolution.
+- `domain_name` - Set's the container's dnsdomainname as returned by the `dnsdomainname` command.
+- `entrypoint` - Set the entry point for the container as a string or an array of strings.
+- `env` - Set environment variables in the container in the form `['FOO=bar', 'BIZ=baz']`
+- `env_file` - Read environment variables from a file and set in the container. Accepts an Array or String to the file location. lazy evaluator must be set if the file passed is created by Chef.
+- `extra_hosts` - An array of hosts to add to the container's `/etc/hosts` in the form `['host_a:10.9.8.7', 'host_b:10.9.8.6']`
+- `force` - A boolean to use in container operations that support a `force` option. Defaults to `false`
+- `host` - A string containing the host the API should communicate with. Defaults to ENV['DOCKER_HOST'] if set
+- `host_name` - The hostname for the container.
+- `labels` A string, array, or hash to set metadata on the container in the form ['foo:bar', 'hello:world']`
+- `links` - An array of source container/alias pairs to link the container to in the form `[container_a:www', container_b:db']`
+- `log_driver` - Sets a custom logging driver for the container (json-file/syslog/journald/gelf/fluentd/none).
+- `log_opts` - Configures the above logging driver options (driver-specific).
+- `init` - Run an init inside the container that forwards signals and reaps processes.
+- `ip_address` - Container IPv4 address (e.g. 172.30.100.104)
+- `mac_address` - The mac address for the container to use.
+- `memory` - Memory limit in bytes.
+- `memory_swap` - Total memory limit (memory + swap); set `-1` to disable swap limit (unlimited). You must use this with memory and make the swap value larger than memory.
+- `network_disabled` - Boolean to disable networking. Defaults to `false`.
+- `network_mode` - Sets the networking mode for the container. One of `bridge`, `host`, `container`.
+- `network_aliases` - Adds network-scoped alias for the container in form `['alias-1', 'alias-2']`.
+- `open_stdin` - Boolean value, opens stdin. Defaults to `false`.
+- `outfile` - The path to write the file when using `:export` action.
+- `port` - The port configuration to use in the container. Matches the syntax used by the `docker` CLI tool.
+- `privileged` - Boolean to start the container in privileged more. Defaults to `false`
+- `publish_all_ports` - Allocates a random host port for all of a container's exposed ports.
+- `remove_volumes` - A boolean to clean up "dangling" volumes when removing the last container with a reference to it. Default to `false` to match the Docker CLI behavior.
+- `restart_policy` - One of `no`, `on-failure`, `unless-stopped`, or `always`. Use `always` if you want a service container to survive a Dockerhost reboot. Defaults to `no`.
+- `restart_maximum_retry_count` - Maximum number of restarts to try when `restart_policy` is `on-failure`. Defaults to an ever increasing delay (double the previous delay, starting at 100mS), to prevent flooding the server.
+- `running_wait_time` - Amount of seconds `docker_container` wait to determine if a process is running.`
+- `security_opt` - A list of string values to customize labels for MLS systems, such as SELinux.
+- `signal` - The signal to send when using the `:kill` action. Defaults to `SIGTERM`.
+- `sysctls` - A hash of sysctls to set on the container. Defaults to `{}`.
+- `tty` - Boolean value to allocate a pseudo-TTY. Defaults to `false`.
+- `user` - A string value specifying the user inside the container.
+- `volumes` - An Array of paths inside the container to expose. Does the same thing as the `VOLUME` directive in a Dockerfile, but works on container creation.
+- `volumes_from` - A list of volumes to inherit from another container. Specified in the form `<container name>[:<ro|rw>]`
+- `volume_driver` - Driver that this container users to mount volumes.
+- `working_dir` - A string specifying the working directory for commands to run in.
+- `read_timeout` - May need to increase for commits or exports that are slow
+- `write_timeout` - May need to increase for commits or exports that are slow
+- `kill_after` - Number of seconds to wait before killing the container. Defaults to wait indefinitely; eventually will hit read_timeout limit.
+- `timeout` - Seconds to wait for an attached container to return
+- `tls` - Use TLS; implied by --tlsverify. Defaults to ENV['DOCKER_TLS'] if set
+- `tls_verify` - Use TLS and verify the remote. Defaults to ENV['DOCKER_TLS_VERIFY'] if set
+- `tls_ca_cert` - Trust certs signed only by this CA. Defaults to ENV['DOCKER_CERT_PATH'] if set
+- `tls_client_cert` - Path to TLS certificate file for docker cli. Defaults to ENV['DOCKER_CERT_PATH'] if set
+- `tls_client_key` - Path to TLS key file for docker cli. Defaults to ENV['DOCKER_CERT_PATH'] if set
+- `userns_mode` - Modify the user namespace mode - Defaults to `nil`, example option: `host`
+- `pid_mode` - Set the PID (Process) Namespace mode for the container. `host`: use the host's PID namespace inside the container.
+- `ipc_mode` - Set the IPC mode for the container - Defaults to `nil`, example option: `host`
+- `uts_mode` - Set the UTS namespace mode for the container. The UTS namespace is for setting the hostname and the domain that is visible to running processes in that namespace. By default, all containers, including those with `--network=host`, have their own UTS namespace. The host setting will result in the container using the same UTS namespace as the host. Note that --hostname is invalid in host UTS mode.
+- `ro_rootfs` - Mount the container's root filesystem as read only. Defaults to `false`
+
+### Actions
+
+- `:create` - Creates the container but does not start it. Useful for Volume containers.
+- `:start` - Starts the container. Useful for containers that run jobs.. command that exit.
+- `:run` - The default action. Both `:create` and `:start` the container in one action. Redeploys the container on resource change.
+- `:run_if_missing` - Runs a container only once.
+- `:stop` - Stops the container.
+- `:restart` - Stops and then starts the container.
+- `:kill` - Send a signal to the container process. Defaults to `SIGKILL`.
+- `:pause` - Pauses the container.
+- `:unpause` - Unpauses the container.
+- `:delete` - Deletes the container.
+- `:redeploy` - Deletes and runs the container.
+- `:reload` - Sends SIGHUP to pid 1 in the container
+
+## docker_registry
+
+The `docker_registry` resource is responsible for managing the
+connection auth information to a Docker registry.
+
+### docker_registry action :login
+
+- Log into or register with public registry:
+
+```ruby
+docker_registry 'https://index.docker.io/v1/' do
+  username 'publicme'
+  password 'hope_this_is_in_encrypted_databag'
+  email 'publicme@computers.biz'
+end
+```
 
 Log into private registry with optional port:
 
-    docker_registry 'https://docker-registry.example.com:8443/' do
-      username 'privateme'
-      password 'still_hope_this_is_in_encrypted_databag'
-    end
+```ruby
+docker_registry 'my local registry' do
+   serveraddress 'https://registry.computers.biz:8443/'
+   username 'privateme'
+   password 'still_hope_this_is_in_encrypted_databag'
+   email 'privateme@computers.biz'
+end
+```
+
+## docker_network
+
+The `docker_network` resource is responsible for managing Docker named
+networks. Usage of `overlay` driver requires the `docker_service` to
+be configured to use a distributed key/value store like `etcd`,
+`consul`, or `zookeeper`.
+
+### docker_network action :create
+
+```ruby
+docker_network 'my_network' do
+  subnet '192.168.88.0/24'
+  gateway '192.168.88.1'
+  action :create
+end
+
+docker_container 'echo-base' do
+  repo 'alpine'
+  tag '3.1'
+  command 'nc -ll -p 1337 -e /bin/cat'
+  port '1337'
+  network_mode 'my_network'
+  action :run
+end
+```
+
+### Properties
+
+- `driver` - The network driver to use. Defaults to `bridge`, other
+  options include `overlay`.
+- `subnet` - Specify the subnet(s) for the network. Ex:
+  `192.168.0.0/16`
+- `gateway` - Specify the gateway(s) for the network. Ex:
+  `192.168.0.1`
+- `ip_range` - Specify a range of IPs to allocate for containers. Ex:
+  `192.168.1.0/24`
+- `enable_ipv6` - Enable IPv6 on the network. Ex: true
+- `aux_address` - Auxillary addresses for the network. Ex:
+  `['a=192.168.1.5', 'b=192.168.1.6']`
+- `container` - Container-id/name to be connected/disconnected to/from
+  the network. Used only by `:connect` and `:disconnect` actions
+
+
+### Example
+
+```ruby
+docker_network 'network_g' do
+  driver 'overlay'
+  subnet ['192.168.0.0/16', '192.170.0.0/16']
+  gateway ['192.168.0.100', '192.170.0.100']
+  ip_range '192.168.1.0/24'
+  aux_address ['a=192.168.1.5', 'b=192.168.1.6', 'a=192.170.1.5', 'b=192.170.1.6']
+end
+```
+
+Connect to multiple networks
+
+```ruby
+docker_network 'network_h1' do
+  action :create
+end
+
+docker_network 'network_h2' do
+  action :create
+end
+
+docker_container 'echo-base-networks_h' do
+  repo 'alpine'
+  tag '3.1'
+  command 'nc -ll -p 1337 -e /bin/cat'
+  port '1337'
+  network_mode 'network_h1'
+  action :run
+end
+
+docker_network 'network_h2' do
+  container 'echo-base-networks_h'
+  action :connect
+end
+```
+
+IPv6 enabled network
+
+```ruby
+docker_network 'network_i1' do
+  enable_ipv6 true
+  subnet 'fd00:dead:beef::/48'
+  action :create
+end
+```
+
+### Actions
+
+- `:create` - create a network
+- `:delete` - delete a network
+- `:connect` - connect a container to a network
+- `:disconnect` - disconnect a container from a network
+
+## docker_volume
+
+The `docker_volume` resource is responsible for managing Docker named
+volumes.
+
+### docker_volume action :create
+
+```ruby
+docker_volume 'hello' do
+  action :create
+end
+
+docker_container 'file_writer' do
+  repo 'alpine'
+  tag '3.1'
+  volumes 'hello:/hello'
+  command 'touch /hello/sean_was_here'
+  action :run_if_missing
+end
+```
+
+### Actions
+
+- `:create` - create a volume
+- `:remove` - remove a volume
+
+## docker_execute
+
+The `docker_execute` resource allows you to execute commands inside of
+a running container.
+
+### Examples
+
+```ruby
+docker_exec 'touch_it' do
+  container 'busybox_exec'
+  command ['touch', '/tmp/onefile']
+end
+```
+
+### Properties
+
+- `host` - Daemon socket(s) to connect to - `tcp://host:port`,
+  `unix:///path/to/socket`, `fd://*` or `fd://socketfd`.
+- `command` - A command structured as an Array similar to `CMD` in a
+  Dockerfile.
+- `container` - Name of the container to execute the command in.
+- `timeout`- Seconds to wait for an attached container to
+  return. Defaults to 60 seconds.
+
+### Actions
+
+- `:run` - Runs the command
 
 ## Testing and Development
 
-* Quickly testing with Vagrant: [VAGRANT.md](VAGRANT.md)
-* Full development and testing workflow with Test Kitchen and friends: [TESTING.md](TESTING.md)
+- Full development and testing workflow with Test Kitchen and friends:
+
+  <testing.md>
+  </testing.md>
 
 ## Contributing
 
-Please see contributing information in: [CONTRIBUTING.md](CONTRIBUTING.md)
+Please see contributing information in:
+
+<contributing.md>
+</contributing.md>
 
 ## Maintainers
 
-* Tom Duffield (http://tomduffield.com)
-* Brian Flad (<bflad417@gmail.com>)
-* Fletcher Nichol (<fnichol@nichol.ca>)
+- Sean OMeara ([sean@sean.io](mailto:sean@sean.io))
+- Brian Flad ([bflad417@gmail.com](mailto:bflad417@gmail.com))
+- Chase Bolt ([chase.bolt@gmail.com](mailto:chase.bolt@gmail.com))
 
 ## License
 
-Please see licensing information in: [LICENSE](LICENSE)
+**Copyright:** 2015-2017, Chef Software, Inc.
+
+```
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+```

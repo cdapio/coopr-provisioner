@@ -1,5 +1,35 @@
-selinux Cookbook CHANGELOG
-==========================
+# selinux Cookbook CHANGELOG
+This file is used to list changes made in each version of the selinux cookbook.
+
+## 1.0.4 (2017-04-17)
+
+- Switch to local delivery for testing
+- Use the standard apache license string
+- Updates for early Chef 12 and Chef 13 compatibility
+- Update and add copyright blocks to the various files
+
+## 1.0.3 (2017-03-14)
+
+- Fix requirement in metadata to reflect need for Chef 12.7 as using action_class in state resource.
+
+## 1.0.2 (2017-03-01)
+
+- Remove setools* packages from install resource (utility to analyze and query policies, monitor and report audit logs, and manage file context). Future versions of this cookbook that might use this need to handle package install on Oracle Linux as not available in default repo.
+
+## 1.0.1 (2017-02-26)
+
+- Fix logic error in the permissive state change
+
+## 1.0.0 (2017-02-26)
+
+- **BREAKING CHANGE** `node['selinux']['state']` is now `node['selinux']['status']` to meet Chef 13 requirements.
+- Update to current cookbook engineering standards
+- Rewrite LWRP to 12.5 resources
+- Resolved cookstyle errors
+- Update package information for debian based on https://debian-handbook.info/browse/stable/sect.selinux.html
+ - selinux-activate looks like it's required to ACTUALLY activate selinux on non-RHEL systems. This seems like it could be destructive if unexpected.
+- Add property temporary to allow for switching between permissive and enabled
+- Add install resource
 
 v0.9.0 (2015-02-22)
 -------------------
