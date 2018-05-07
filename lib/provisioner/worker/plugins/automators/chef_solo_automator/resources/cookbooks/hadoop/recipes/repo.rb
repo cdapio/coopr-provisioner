@@ -50,7 +50,7 @@ when 'hdp'
        '2.3.0.0', '2.3.2.0', '2.3.4.0', '2.3.4.7', '2.3.6.0',
        '2.4.0.0', '2.4.2.0', '2.4.3.0',
        '2.5.0.0', '2.5.3.0', '2.5.5.0', '2.5.6.0',
-       '2.6.0.3', '2.6.1.0', '2.6.2.0', '2.6.3.0'
+       '2.6.0.3', '2.6.1.0', '2.6.2.0', '2.6.3.0', '2.6.4.0'
     hdp_version = '2.2.0.0'
     hdp_update_version = node['hadoop']['distribution_version']
   when '2.2'
@@ -75,7 +75,7 @@ when 'hdp'
     node.override['hadoop']['distribution_version'] = hdp_update_version
   when '2.6', '2'
     hdp_version = '2.2.0.0'
-    hdp_update_version = '2.6.3.0'
+    hdp_update_version = '2.6.4.0'
     Chef::Log.warn("Short versions for node['hadoop']['distribution_version'] are deprecated! Please use full version!")
     node.override['hadoop']['distribution_version'] = hdp_update_version
   else
@@ -121,6 +121,17 @@ when 'hdp'
         gpgkey yum_repo_key_url
         action :add
       end
+
+      # HDP 2.6.4.0 has moved hadooplzo to a separate repo
+      yum_repository 'hdp-updates' do
+        name 'HDP-GPL-2.x'
+        description 'Hortonworks Data Platform Version - HDP-GPL-2.x'
+        url "#{yum_base_url}-GPL/#{os}/2.x/updates/#{hdp_update_version}"
+        gpgkey yum_repo_key_url
+        action :add
+        only_if { Gem::Version.new(hdp_update_version) >= Gem::Version.new('2.6.4.0') }
+      end
+
     end
     yum_repository 'hdp-utils' do
       name "HDP-UTILS-#{hdp_utils_version}"
@@ -152,7 +163,7 @@ when 'hdp'
            '2.3.0.0', '2.3.2.0', '2.3.4.0', '2.3.4.7', '2.3.6.0',
            '2.4.0.0', '2.4.2.0', '2.4.3.0',
            '2.5.0.0', '2.5.3.0', '2.5.5.0', '2.5.6.0',
-           '2.6.0.3', '2.6.1.0', '2.6.2.0', '2.6.3.0'
+           '2.6.0.3', '2.6.1.0', '2.6.2.0', '2.6.3.0', '2.6.4.0'
         "2.x/updates/#{hdp_update_version}"
       else
         hdp_update_version
@@ -169,6 +180,18 @@ when 'hdp'
       components ['main']
       action :add
     end
+
+    # HDP 2.6.4.0 has moved hadooplzo to a separate repo
+    apt_repository 'hdp-gpl' do
+      uri "#{apt_base_url}-GPL/#{os}/2.x/updates/#{hdp_update_version}"
+      key apt_repo_key_url
+      distribution 'HDP-GPL'
+      trusted true
+      components ['main']
+      action :add
+      only_if { Gem::Version.new(hdp_update_version) >= Gem::Version.new('2.6.4.0') }
+    end
+
     apt_repository 'hdp-utils' do
       uri "#{apt_base_url}-UTILS-#{hdp_utils_version}/repos/#{os}"
       key apt_repo_key_url
