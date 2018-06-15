@@ -2,7 +2,7 @@
 # Cookbook Name:: rsyslog
 # Recipe:: server
 #
-# Copyright 2009-2013, Opscode, Inc.
+# Copyright 2009-2015, Chef Software, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -23,8 +23,8 @@ node.set['rsyslog']['server'] = true
 include_recipe 'rsyslog::default'
 
 directory node['rsyslog']['log_dir'] do
-  owner    'root'
-  group    'root'
+  owner    node['rsyslog']['user']
+  group    node['rsyslog']['group']
   mode     '0755'
   recursive true
 end
@@ -37,8 +37,9 @@ template "#{node['rsyslog']['config_prefix']}/rsyslog.d/35-server-per-host.conf"
   notifies :restart, "service[#{node['rsyslog']['service_name']}]"
 end
 
+# if we're a server we shouldn't be sending logs to a remote like a client
 file "#{node['rsyslog']['config_prefix']}/rsyslog.d/remote.conf" do
   action   :delete
-  notifies :reload, "service[#{node['rsyslog']['service_name']}]"
-  only_if  { ::File.exists?("#{node['rsyslog']['config_prefix']}/rsyslog.d/remote.conf") }
+  notifies :restart, "service[#{node['rsyslog']['service_name']}]"
+  only_if  { ::File.exist?("#{node['rsyslog']['config_prefix']}/rsyslog.d/remote.conf") }
 end
