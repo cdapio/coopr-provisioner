@@ -61,7 +61,7 @@ class FogProviderGoogle < Coopr::Plugin::Provider
       # handle boot disk
       @disks = []
       create_disk(@providerid, @google_root_disk_size_gb.to_i, @google_root_disk_type, @zone_name, @image)
-      disk = confirm_disk(@providerid)
+      disk = confirm_disk(@providerid, @zone_name)
 
       @disks << disk
 
@@ -72,7 +72,7 @@ class FogProviderGoogle < Coopr::Plugin::Provider
           next unless disk_size.to_i > 0
           disk_name = "#{@providerid}-data#{disknum == 0 ? '' : disknum + 1}"
           create_disk(disk_name, disk_size.to_i, @google_data_disk_type, @zone_name, nil)
-          data_disk = confirm_disk(disk_name)
+          data_disk = confirm_disk(disk_name, @zone_name)
           @disks.push(data_disk)
         end
       end
@@ -137,7 +137,7 @@ class FogProviderGoogle < Coopr::Plugin::Provider
       # If quota exceeded, the previous create call does not fail, but server will be nil here.
       fail "Unable to retrieve server information for #{providerid}. Please check that you have not reached your quotas" if server.nil?
       # Wait until the server is ready
-      fail "Server #{server.name} is in ERROR state" if server.state == 'ERROR'
+      fail "Server #{server.name} is in ERROR state" if server.status == 'ERROR'
       log.debug "Waiting for server to come up: #{providerid}"
       server.wait_for(self.class.server_confirm_timeout) { ready? }
 
@@ -151,7 +151,7 @@ class FogProviderGoogle < Coopr::Plugin::Provider
           @task['config']['hostname']
         end
 
-      bind_ip = server.private_ip_address
+      bind_ip = server.private_ip_addresses.first
       access_ip =
         if server.public_ip_address
           server.public_ip_address
@@ -290,7 +290,7 @@ class FogProviderGoogle < Coopr::Plugin::Provider
 
       if known_disks.nil? && !server.nil?
         # this is the first delete attempt, persist the names of the currently attached disks
-        known_disks = server.disks.map { |d| d['source'].split('/').last }
+        known_disks = server.disks.map { |d| d[:source].split('/').last }
         @result['result']['disks'] = known_disks
       end
 
@@ -307,7 +307,7 @@ class FogProviderGoogle < Coopr::Plugin::Provider
       # delete any disks
       unless known_disks.nil?
         # query our known_disks to see if they exist
-        existing_disks = known_disks.map { |d| connection.disks.get(d) }.compact
+        existing_disks = known_disks.map { |d| connection.disks.get(d, @zone_name) }.compact
         log.debug "existing disks to delete: #{ existing_disks.map(&:name) }"
 
         # issue destroy to all attached disks
@@ -340,7 +340,7 @@ class FogProviderGoogle < Coopr::Plugin::Provider
         provider: 'google',
         google_project: @google_project,
         google_client_email: @google_client_email,
-        google_key_location: p12_key
+        google_json_key_location: p12_key
       )
     end
     # rubocop:enable UselessAssignment
@@ -375,7 +375,7 @@ class FogProviderGoogle < Coopr::Plugin::Provider
       end
 
     # check if a disks already exists (retry scenario)
-    disk = connection.disks.get(name)
+    disk = connection.disks.get(name, zone_name)
     unless disk.nil?
       # disk of requested name exists already
       existing_size_gb = disk.size_gb.nil? ? nil : disk.size_gb.to_i
@@ -397,8 +397,8 @@ class FogProviderGoogle < Coopr::Plugin::Provider
     disk.name
   end
 
-  def confirm_disk(name)
-    disk = connection.disks.get(name)
+  def confirm_disk(name, zone)
+    disk = connection.disks.get(name, zone)
     disk.wait_for(self.class.disk_confirm_timeout) { disk.ready? }
     disk.reload
     disk

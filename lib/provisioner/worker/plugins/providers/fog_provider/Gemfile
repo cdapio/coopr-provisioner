@@ -20,12 +20,14 @@
 
 source 'https://rubygems.org'
 
-gem 'fog', '~> 1.36.0'
-gem 'fog-profitbricks', '< 2.0' # requires a newer fog 1.42+
-gem 'fog-core', '1.43.0' # newer requires Ruby 2.3+
+#gem 'fog', '~> 1.36.0'
+gem 'fog'
+#gem 'fog-profitbricks', '< 2.0' # requires a newer fog 1.42+
+#gem 'fog-core', '1.43.0' # newer requires Ruby 2.3+
 gem 'net-ssh', '~> 2.6'
 
-gem 'google-api-client', '~> 0.8.6'
-gem 'jwt', '~> 1.5.6' # deep dependency of google-api-client, 2.0 requires Ruby 2.1+
-gem 'addressable', '< 2.5' # dependency of google-api-client, 2.5 requires Ruby 2.0+
-gem 'nokogiri', '< 1.7' # dependency of fog (fog-xml), 1.7 requires Ruby 2.1+
+#gem 'google-api-client'
+#gem 'google-api-client', '~> 0.8.6'
+#gem 'jwt', '~> 1.5.6' # deep dependency of google-api-client, 2.0 requires Ruby 2.1+
+#gem 'addressable', '< 2.5' # dependency of google-api-client, 2.5 requires Ruby 2.0+
+#gem 'nokogiri', '< 1.7' # dependency of fog (fog-xml), 1.7 requires Ruby 2.1+
