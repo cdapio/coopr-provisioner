@@ -300,8 +300,8 @@ class ChefSoloAutomator < Coopr::Plugin::Automator
           begin
             candidate_version = ssh_exec!(ssh, "#{sudo} apt-cache policy chef | grep Candidate | awk '{ print $2}'", 'Retrieving candidate Chef version').first.chomp
             log.debug "Found chef version #{candidate_version} available for install via package repositories"
-            # Bundled cookbooks require Chef 12.5 or later
-            if candidate_version.to_f >= 12.5
+            # Bundled cookbooks require Chef 12.14 or later
+            if candidate_version.to_f >= 12.14
               ssh_exec!(ssh, "which apt-get && DEBIAN_FRONTEND=noninteractive #{sudo} apt-get -q -y install chef", 'Attempting Chef install via apt-get')
               return
             end
@@ -311,7 +311,7 @@ class ChefSoloAutomator < Coopr::Plugin::Automator
         end
 
         # determine if curl is installed, else default to wget
-        chef_version = '12.21.3'
+        chef_version = '13.8.5'
         chef_install_cmd = "set -o pipefail && curl --fail -L https://omnitruck.chef.io/install.sh | #{sudo} bash -s -- -v #{chef_version}"
         begin
           ssh_exec!(ssh, 'which curl', 'Checking for curl')
