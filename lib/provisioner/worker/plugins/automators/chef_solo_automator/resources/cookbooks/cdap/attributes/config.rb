@@ -19,8 +19,8 @@
 
 # Default: conf.chef
 default['cdap']['conf_dir'] = 'conf.chef'
-# Default: 4.3.4-1
-default['cdap']['version'] = '4.3.4-1'
+# Default: 5.0.0-1
+default['cdap']['version'] = '5.0.0-1'
 # cdap-site.xml
 default['cdap']['cdap_site']['root.namespace'] = 'cdap'
 # ideally we could put the macro '/${cdap.namespace}' here but this attribute is used elsewhere in the cookbook
@@ -42,14 +42,24 @@ if node.key?('hadoop') && node['hadoop'].key?('distribution') && node['hadoop'].
   if node['hadoop']['distribution'] == 'hdp' && node['hadoop']['distribution_version'].to_f >= 2.2 &&
      node['cdap']['version'].to_f >= 3.1
     default['cdap']['cdap_env']['opts'] = '${OPTS} -Dhdp.version=%<_FULL_VERSION>s'
-    default['cdap']['cdap_site']['app.program.jvm.opts'] = '-XX:MaxPermSize=128M ${twill.jvm.gc.opts} -Dhdp.version=%<_FULL_VERSION>s'
+    default['cdap']['cdap_site']['app.program.jvm.opts'] =
+      if node['java']['jdk_version'].to_i < 8
+        '-XX:MaxPermSize=128M ${twill.jvm.gc.opts} -Dhdp.version=%<_FULL_VERSION>s'
+      else
+        '${twill.jvm.gc.opts} -Dhdp.version=%<_FULL_VERSION>s'
+      end
     if node['cdap']['version'].to_f < 3.4
       default['cdap']['cdap_env']['spark_home'] = '/usr/hdp/%<_FULL_VERSION>s/spark'
     end
   elsif node['hadoop']['distribution'] == 'iop'
     iop_version = node['hadoop']['distribution_version']
     default['cdap']['cdap_env']['opts'] = "${OPTS} -Diop.version=#{iop_version}"
-    default['cdap']['cdap_site']['app.program.jvm.opts'] = "-XX:MaxPermSize=128M ${twill.jvm.gc.opts} -Diop.version=#{iop_version}"
+    default['cdap']['cdap_site']['app.program.jvm.opts'] =
+      if node['java']['jdk_version'].to_i < 8
+        "-XX:MaxPermSize=128M ${twill.jvm.gc.opts} -Diop.version=#{iop_version}"
+      else
+        "${twill.jvm.gc.opts} -Diop.version=#{iop_version}"
+      end
   elsif node['cdap']['version'].to_f < 3.4 # CDAP 3.4 determines SPARK_HOME on its own (CDAP-5086)
     default['cdap']['cdap_env']['spark_home'] = '/usr/lib/spark'
   end
