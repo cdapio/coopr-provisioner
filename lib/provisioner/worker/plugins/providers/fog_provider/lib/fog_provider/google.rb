@@ -24,7 +24,7 @@ class FogProviderGoogle < Coopr::Plugin::Provider
   include FogProvider
 
   # plugin defined resources
-  @p12_key_dir = 'api_keys'
+  @json_key_dir = 'api_keys'
   @ssh_key_dir = 'ssh_keys'
 
   # Set Fog timeouts
@@ -32,7 +32,7 @@ class FogProviderGoogle < Coopr::Plugin::Provider
   @disk_confirm_timeout = 120
 
   class << self
-    attr_accessor :p12_key_dir, :ssh_key_dir
+    attr_accessor :json_key_dir, :ssh_key_dir
     attr_accessor :server_confirm_timeout, :disk_confirm_timeout
   end
 
@@ -334,13 +334,13 @@ class FogProviderGoogle < Coopr::Plugin::Provider
   def connection
     # Create connection
     # rubocop:disable UselessAssignment
-    p12_key = File.join(self.class.p12_key_dir, @api_key_resource)
+    json_key = File.join(self.class.json_key_dir, @api_key_resource)
     @connection ||= begin
       connection = Fog::Compute.new(
         provider: 'google',
         google_project: @google_project,
         google_client_email: @google_client_email,
-        google_json_key_location: p12_key
+        google_json_key_location: json_key
       )
     end
     # rubocop:enable UselessAssignment
@@ -423,8 +423,8 @@ class FogProviderGoogle < Coopr::Plugin::Provider
       errors << 'Invalid service account email address. It must be in the gserviceaccount.com domain'
     end
     ssh_key = File.join(self.class.ssh_key_dir, @ssh_key_resource)
-    p12_key = File.join(self.class.p12_key_dir, @api_key_resource)
-    [ssh_key, p12_key].each do |key|
+    json_key = File.join(self.class.json_key_dir, @api_key_resource)
+    [ssh_key, json_key].each do |key|
       next if File.readable?(key)
       errors << "Cannot read named key from resource directory: #{key}. Please ensure you have uploaded a key via the UI or API"
     end

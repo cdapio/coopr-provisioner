@@ -245,7 +245,7 @@
           "api_key_resource": {
             "label": "API Key Resource Name",
             "type": "text",
-            "tip": "Name of the P12 key resource uploaded to the server"
+            "tip": "Name of the JSON key resource uploaded to the server"
           },
           "ssh_key_resource": {
             "label": "SSH Key Resource Name",
