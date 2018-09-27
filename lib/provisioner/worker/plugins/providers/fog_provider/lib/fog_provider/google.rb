@@ -355,9 +355,13 @@ class FogProviderGoogle < Coopr::Plugin::Provider
       tags: ['coopr']
     }
     # optional attrs
-    server_def[:network] = @network unless @network.to_s == ''
-    server_def[:external_ip] = false if @external_ip.to_s == 'false'
-    server_def[:auto_restart] = @auto_restart
+    # Network Interface: https://github.com/fog/fog-google/issues/360
+    nic = {}
+    nic[:network] = "global/networks/#{@network}" unless @network.to_s == ''
+    nic[:access_configs] = [{ :name => 'External NAT', :type => 'ONE_TO_ONE_NAT' }] unless @external_ip.to_s == 'false'
+    server_def[:network_interfaces] = [ nic ]
+
+    server_def[:scheduling] = { :automatic_restart => @auto_restart.to_s == 'true' }
     server_def
   end
 
