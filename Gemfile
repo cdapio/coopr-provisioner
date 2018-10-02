@@ -44,4 +44,3 @@ Dir.glob(File.join(File.dirname(__FILE__), 'lib', 'provisioner', 'worker', 'plug
   puts "Including provisioner plugin Gemfile: #{gemfile}"
   eval_gemfile(gemfile)
 end
-
