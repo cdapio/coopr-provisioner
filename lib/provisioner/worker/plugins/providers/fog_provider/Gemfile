@@ -21,7 +21,9 @@
 source 'https://rubygems.org'
 
 #gem 'fog', '~> 1.36.0'
-gem 'fog'
+#gem 'fog'
+gem 'fog-aws'
+gem 'fog-google'
 #gem 'fog-profitbricks', '< 2.0' # requires a newer fog 1.42+
 #gem 'fog-core', '1.43.0' # newer requires Ruby 2.3+
 gem 'net-ssh', '~> 2.6'
