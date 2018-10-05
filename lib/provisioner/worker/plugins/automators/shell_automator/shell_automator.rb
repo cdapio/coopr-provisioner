@@ -70,7 +70,7 @@ class ShellAutomator < Coopr::Plugin::Automator
 
   def set_credentials(sshauth)
     @credentials = Hash.new
-    @credentials[:paranoid] = false
+    @credentials[:verify_host_key] = :never
     sshauth.each do |k, v|
       if (k =~ /identityfile/)
         @credentials[:keys] = [ v ]
