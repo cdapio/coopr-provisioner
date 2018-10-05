@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
 # encoding: UTF-8
 #
-# Copyright © 2012-2014 Cask Data, Inc.
+# Copyright © 2012-2018 Cask Data, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -23,14 +23,10 @@ require_relative 'fog_provider/joyent'
 require_relative 'fog_provider/openstack'
 require_relative 'fog_provider/rackspace'
 
-#gem 'fog', '~> 1.36.0'
-#gem 'fog'
-#gem 'google-api-client', '~> 0.8.0'
-#gem 'google-api-client'
-
-#require 'fog'
-#gem 'fog-google'
 require 'fog/google'
 require 'fog/aws'
+require 'fog/rackspace'
+require 'fog/joyent'
+
 require 'ipaddr'
 require 'net/ssh'
