@@ -31,6 +31,7 @@ module Coopr
       unless spec.instance_of?(TenantSpec)
         raise ArgumentError, 'TenantManager needs to be initialized with object of type TenantSpec', caller
       end
+
       @spec = spec
       @config = config
       @provisioner_id = provisioner_id
@@ -150,6 +151,7 @@ module Coopr
         pids_to_kill = []
         @workerpids.reverse_each do |pid|
           break if pids_to_kill.size == difference.abs
+
           pids_to_kill.push(pid) unless @terminating_workers.include?(pid)
         end
 

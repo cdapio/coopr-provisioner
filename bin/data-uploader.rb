@@ -96,7 +96,7 @@ module Coopr
       attr_accessor :options
       def initialize(options)
         @options = options
-        @headers = { :'Coopr-UserID' => options[:user], :'Coopr-TenantID' => options[:tenant] }
+        @headers = { 'Coopr-UserID': options[:user], 'Coopr-TenantID': options[:tenant] }
       end
 
       def validate
@@ -124,18 +124,22 @@ module Coopr
           unless plugin_type =~ /^(automatortypes|providertypes)$/i
             raise ArgumentError, "invalid remote-target argument, must begin with 'automatortypes/' or 'providertypes/': #{@options[:target]}"
           end
+
           @options[:plugin_type] = plugin_type
           if plugin_name.nil?
             raise ArgumentError, "invalid remote-target argument, must be of format 'plugin_type/plugin_name/resource_type/resource_name'': #{@options[:target]}"
           end
+
           @options[:plugin_name] = plugin_name
           if resource_type.nil?
             raise ArgumentError, "invalid remote-target argument, must be of format 'plugin_type/plugin_name/resource_type/resource_name'': #{@options[:target]}"
           end
+
           @options[:resource_type] = resource_type
           if resource_name.nil?
             raise ArgumentError, "invalid remote-target argument, must be of format 'plugin_type/plugin_name/resource_type/resource_name'': #{@options[:target]}"
           end
+
           @options[:resource_name] = resource_name
         end
       end

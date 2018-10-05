@@ -55,8 +55,6 @@ Style/VariableName:
     - 'lib/provisioner/worker/pluginmanager.rb'
 
 # Manually-added
-Performance/HashEachMethods:
-  Enabled: false
 Style/Dir:
   Enabled: false
 Style/Encoding:

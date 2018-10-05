@@ -345,6 +345,7 @@ module Coopr
         end
 
         break if @once
+
         sleep 5
       end
     end

@@ -31,11 +31,7 @@ group :test do
   gem 'rack-test', '~> 0.6'
   gem 'rake'
   gem 'rspec', '~> 3.0'
-  # rubocop: disable Lint/UnneededDisable
-  # rubocop: disable Bundler/DuplicatedGem
   gem 'rubocop'
-  # rubocop: enable Bundler/DuplicatedGem
-  # rubocop: enable Lint/UnneededDisable
   gem 'simplecov', '~> 0.7.1', require: false
 end
 

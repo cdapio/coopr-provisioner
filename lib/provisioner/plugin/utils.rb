@@ -39,7 +39,7 @@ module Coopr
           @exit_signal = exit_signal
         end
 
-        def to_json(*a)
+        def to_json(*arr)
           result = {
             'message' => message,
             'command' => command,
@@ -48,7 +48,7 @@ module Coopr
             'exit_code' => @exit_code,
             'exit_signal' => @exit_signal
           }
-          result.to_json(*a)
+          result.to_json(*arr)
         end
       end
 
@@ -61,6 +61,7 @@ module Coopr
       # Writes out an SSH file, given a path and task JSON, returns fully-qualified path to file, or nil
       def write_ssh_file(path, task)
         return nil unless task['config']['provider']['provisioner'].key?('ssh_keyfile')
+
         ssh_keyfile = task['config']['provider']['provisioner']['ssh_keyfile']
         identityfile = ::File.join(path, task['taskId'])
         log.debug "Writing out SSH private key to #{identityfile}"
@@ -75,6 +76,7 @@ module Coopr
         key = `ssh-keyscan -t #{type} #{host} 2>&1 | grep #{keytype}`.split(' ')
         # Bad key type == "unknown key type #{type}"
         raise "Unknown SSH Key Type: #{type}" if key[2] == 'type' || key[2].nil?
+
         key[2]
       end
 
