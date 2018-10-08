@@ -67,7 +67,7 @@ class FogProviderGoogle < Coopr::Plugin::Provider
 
       # handle additional data disks
       if fields['google_data_disk_size_gb']
-        disk_sizes = fields['google_data_disk_size_gb'].split(',')
+        disk_sizes = fields['google_data_disk_size_gb'].to_s.split(',')
         disk_sizes.each_with_index do |disk_size, disknum|
           next unless disk_size.to_i > 0
           disk_name = "#{@providerid}-data#{disknum == 0 ? '' : disknum + 1}"
