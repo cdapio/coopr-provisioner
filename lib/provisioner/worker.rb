@@ -17,8 +17,6 @@
 # limitations under the License.
 #
 
-gem 'json', '~> 1.7.7' # activesupport
-
 require 'json'
 require 'optparse'
 require 'rest-client'
@@ -347,6 +345,7 @@ module Coopr
         end
 
         break if @once
+
         sleep 5
       end
     end

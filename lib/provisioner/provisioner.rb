@@ -17,8 +17,6 @@
 # limitations under the License.
 #
 
-gem 'json', '~> 1.7.7' # activesupport
-
 require 'thin'
 require 'sinatra/base'
 require 'json'
@@ -161,6 +159,7 @@ module Coopr
           unless @signals.empty?
             sig = @signals.shift
             next if signals_processed.key?(sig)
+
             log.debug "processing signal: #{sig}"
             case sig
             when 'CLD'
@@ -194,7 +193,7 @@ module Coopr
           uri = "#{@server_uri}/v2/provisioners/#{provisioner_id}/heartbeat"
           begin
             json = heartbeat.to_json
-            resp = Coopr::RestHelper.post(uri.to_s, json, :'Coopr-UserID' => 'admin')
+            resp = Coopr::RestHelper.post(uri.to_s, json, 'Coopr-UserID': 'admin')
             unless resp.code == 200
               if resp.code == 404
                 log.warn "Response code #{resp.code} when sending heartbeat, re-registering provisioner"
@@ -217,6 +216,7 @@ module Coopr
         loop do
           @tenantmanagers.each do |_id, tmgr|
             next unless tmgr.resource_sync_needed? && tmgr.num_workers.zero?
+
             while tmgr.resource_sync_needed?
               log.debug "resource thread invoking sync for tenant #{tmgr.id}"
               tmgr.sync
@@ -240,7 +240,7 @@ module Coopr
       log.info "Registering with server at #{uri}: #{data.to_json}"
 
       begin
-        resp = Coopr::RestHelper.put(uri.to_s, data.to_json, :'Coopr-UserID' => 'admin')
+        resp = Coopr::RestHelper.put(uri.to_s, data.to_json, 'Coopr-UserID': 'admin')
         if resp.code == 200
           log.info 'Successfully registered'
           @registered = true
@@ -268,7 +268,7 @@ module Coopr
       uri = "#{@server_uri}/v2/provisioners/#{@provisioner_id}"
       log.info "Unregistering with server at #{uri}"
       begin
-        resp = Coopr::RestHelper.delete(uri.to_s, :'Coopr-UserID' => 'admin')
+        resp = Coopr::RestHelper.delete(uri.to_s, 'Coopr-UserID': 'admin')
         if resp.code == 200
           log.info 'Successfully unregistered'
         else
@@ -288,6 +288,7 @@ module Coopr
       unless tenantspec.instance_of?(TenantSpec)
         raise ArgumentError, 'only instances of TenantSpec can be added to provisioner', caller
       end
+
       # validate input
       id = tenantspec.id
       log.debug "Adding/Editing tenant: #{id}"

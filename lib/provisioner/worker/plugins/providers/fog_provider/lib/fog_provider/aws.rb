@@ -17,7 +17,6 @@
 #
 
 require_relative 'utils'
-require 'readline'
 require 'resolv'
 
 class FogProviderAWS < Coopr::Plugin::Provider

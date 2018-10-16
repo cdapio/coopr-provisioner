@@ -62,7 +62,7 @@ class ChefSoloAutomator < Coopr::Plugin::Automator
 
   def set_credentials(sshauth)
     @credentials = {}
-    @credentials[:paranoid] = false
+    @credentials[:verify_host_key] = :never
     sshauth.each do |k, v|
       if k =~ /identityfile/
         @credentials[:keys] = [v]

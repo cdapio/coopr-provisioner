@@ -24,7 +24,7 @@ class FogProviderGoogle < Coopr::Plugin::Provider
   include FogProvider
 
   # plugin defined resources
-  @p12_key_dir = 'api_keys'
+  @json_key_dir = 'api_keys'
   @ssh_key_dir = 'ssh_keys'
 
   # Set Fog timeouts
@@ -32,7 +32,7 @@ class FogProviderGoogle < Coopr::Plugin::Provider
   @disk_confirm_timeout = 120
 
   class << self
-    attr_accessor :p12_key_dir, :ssh_key_dir
+    attr_accessor :json_key_dir, :ssh_key_dir
     attr_accessor :server_confirm_timeout, :disk_confirm_timeout
   end
 
@@ -61,18 +61,18 @@ class FogProviderGoogle < Coopr::Plugin::Provider
       # handle boot disk
       @disks = []
       create_disk(@providerid, @google_root_disk_size_gb.to_i, @google_root_disk_type, @zone_name, @image)
-      disk = confirm_disk(@providerid)
+      disk = confirm_disk(@providerid, @zone_name)
 
       @disks << disk
 
       # handle additional data disks
       if fields['google_data_disk_size_gb']
-        disk_sizes = fields['google_data_disk_size_gb'].split(',')
+        disk_sizes = fields['google_data_disk_size_gb'].to_s.split(',')
         disk_sizes.each_with_index do |disk_size, disknum|
           next unless disk_size.to_i > 0
           disk_name = "#{@providerid}-data#{disknum == 0 ? '' : disknum + 1}"
           create_disk(disk_name, disk_size.to_i, @google_data_disk_type, @zone_name, nil)
-          data_disk = confirm_disk(disk_name)
+          data_disk = confirm_disk(disk_name, @zone_name)
           @disks.push(data_disk)
         end
       end
@@ -137,7 +137,7 @@ class FogProviderGoogle < Coopr::Plugin::Provider
       # If quota exceeded, the previous create call does not fail, but server will be nil here.
       fail "Unable to retrieve server information for #{providerid}. Please check that you have not reached your quotas" if server.nil?
       # Wait until the server is ready
-      fail "Server #{server.name} is in ERROR state" if server.state == 'ERROR'
+      fail "Server #{server.name} is in ERROR state" if server.status == 'ERROR'
       log.debug "Waiting for server to come up: #{providerid}"
       server.wait_for(self.class.server_confirm_timeout) { ready? }
 
@@ -151,7 +151,7 @@ class FogProviderGoogle < Coopr::Plugin::Provider
           @task['config']['hostname']
         end
 
-      bind_ip = server.private_ip_address
+      bind_ip = server.private_ip_addresses.first
       access_ip =
         if server.public_ip_address
           server.public_ip_address
@@ -290,7 +290,7 @@ class FogProviderGoogle < Coopr::Plugin::Provider
 
       if known_disks.nil? && !server.nil?
         # this is the first delete attempt, persist the names of the currently attached disks
-        known_disks = server.disks.map { |d| d['source'].split('/').last }
+        known_disks = server.disks.map { |d| d[:source].split('/').last }
         @result['result']['disks'] = known_disks
       end
 
@@ -307,7 +307,7 @@ class FogProviderGoogle < Coopr::Plugin::Provider
       # delete any disks
       unless known_disks.nil?
         # query our known_disks to see if they exist
-        existing_disks = known_disks.map { |d| connection.disks.get(d) }.compact
+        existing_disks = known_disks.map { |d| connection.disks.get(d, @zone_name) }.compact
         log.debug "existing disks to delete: #{ existing_disks.map(&:name) }"
 
         # issue destroy to all attached disks
@@ -334,13 +334,13 @@ class FogProviderGoogle < Coopr::Plugin::Provider
   def connection
     # Create connection
     # rubocop:disable UselessAssignment
-    p12_key = File.join(self.class.p12_key_dir, @api_key_resource)
+    json_key = File.join(self.class.json_key_dir, @api_key_resource)
     @connection ||= begin
       connection = Fog::Compute.new(
         provider: 'google',
         google_project: @google_project,
         google_client_email: @google_client_email,
-        google_key_location: p12_key
+        google_json_key_location: json_key
       )
     end
     # rubocop:enable UselessAssignment
@@ -355,9 +355,13 @@ class FogProviderGoogle < Coopr::Plugin::Provider
       tags: ['coopr']
     }
     # optional attrs
-    server_def[:network] = @network unless @network.to_s == ''
-    server_def[:external_ip] = false if @external_ip.to_s == 'false'
-    server_def[:auto_restart] = @auto_restart
+    # Network Interface: https://github.com/fog/fog-google/issues/360
+    nic = {}
+    nic[:network] = "global/networks/#{@network}" unless @network.to_s == ''
+    nic[:access_configs] = [{ :name => 'External NAT', :type => 'ONE_TO_ONE_NAT' }] unless @external_ip.to_s == 'false'
+    server_def[:network_interfaces] = [ nic ]
+
+    server_def[:scheduling] = { :automatic_restart => @auto_restart.to_s == 'true' }
     server_def
   end
 
@@ -375,7 +379,7 @@ class FogProviderGoogle < Coopr::Plugin::Provider
       end
 
     # check if a disks already exists (retry scenario)
-    disk = connection.disks.get(name)
+    disk = connection.disks.get(name, zone_name)
     unless disk.nil?
       # disk of requested name exists already
       existing_size_gb = disk.size_gb.nil? ? nil : disk.size_gb.to_i
@@ -397,8 +401,8 @@ class FogProviderGoogle < Coopr::Plugin::Provider
     disk.name
   end
 
-  def confirm_disk(name)
-    disk = connection.disks.get(name)
+  def confirm_disk(name, zone)
+    disk = connection.disks.get(name, zone)
     disk.wait_for(self.class.disk_confirm_timeout) { disk.ready? }
     disk.reload
     disk
@@ -419,8 +423,8 @@ class FogProviderGoogle < Coopr::Plugin::Provider
       errors << 'Invalid service account email address. It must be in the gserviceaccount.com domain'
     end
     ssh_key = File.join(self.class.ssh_key_dir, @ssh_key_resource)
-    p12_key = File.join(self.class.p12_key_dir, @api_key_resource)
-    [ssh_key, p12_key].each do |key|
+    json_key = File.join(self.class.json_key_dir, @api_key_resource)
+    [ssh_key, json_key].each do |key|
       next if File.readable?(key)
       errors << "Cannot read named key from resource directory: #{key}. Please ensure you have uploaded a key via the UI or API"
     end

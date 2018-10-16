@@ -61,6 +61,7 @@ module Coopr
             jsondata = JSON.parse(IO.read(jsonfile))
 
             raise "missing 'name' field when loading plugin #{jsonfile}" unless jsondata.key?('name')
+
             p_name = jsondata['name']
             # p_description = jsondata['description'] || "No description found"
             p_providertypes = jsondata['providertypes'] || []
@@ -73,12 +74,14 @@ module Coopr
               raise "declared providertype \"#{providertype}\" already defined in another plugin" if @providermap.key?(providertype)
 
               raise "providertype \"#{providertype}\" does not define an implementor classname" unless jsondata[providertype].key?('classname')
+
               # require every .rb file in the plugin top-level directory
               Dir["#{File.dirname(jsonfile)}/*.rb"].each { |file| require file }
               # check ancestor to determine plugin type
               klass = Object.const_get(jsondata[providertype]['classname'])
               if klass.ancestors.include? Object.const_get('Coopr').const_get('Plugin').const_get('Provider')
                 raise "plugin \"#{p_name}\" attempting to load duplicate provider type \"#{providertype}\"" if @providermap.key?(providertype)
+
                 @providermap.merge!(providertype => jsondata[providertype])
               else
                 raise "Declared provider \"#{providertype}\" implementation class " \
@@ -91,12 +94,14 @@ module Coopr
               raise "declared automatortype \"#{automatortype}\" already defined in another plugin" if @providermap.key?(automatortype)
 
               raise "automatortype \"#{automatortype}\" does not define an implentor classname" unless jsondata[automatortype].key?('classname')
+
               # require every .rb file in the plugin top-level directory
               Dir["#{File.dirname(jsonfile)}/*.rb"].each { |file| require file }
               # check ancestor to determine plugin type
               klass = Object.const_get(jsondata[automatortype]['classname'])
               if klass.ancestors.include? Object.const_get('Coopr').const_get('Plugin').const_get('Automator')
                 raise "plugin \"#{p_name}\" attempting to load duplicate automator type \"#{automatortype}\"" if @automatormap.key?(automatortype)
+
                 @automatormap.merge!(automatortype => jsondata[automatortype])
               else
                 raise "Declared automator \"#{automatortype}\" implementation class " \
@@ -129,7 +134,7 @@ module Coopr
           log.debug "registering provider/automator type: #{name}"
           json = JSON.generate(json_obj)
           # TODO: config options for registration user/tenant
-          resp = Coopr::RestHelper.put(uri.to_s, json, :'Coopr-UserID' => 'admin', :'Coopr-TenantID' => 'superadmin')
+          resp = Coopr::RestHelper.put(uri.to_s, json, 'Coopr-UserID': 'admin', 'Coopr-TenantID': 'superadmin')
           if resp.code == 200
             log.info "Successfully registered #{name}"
           else
@@ -149,23 +154,23 @@ module Coopr
       end
 
       # returns registered class name for given provider plugin
-      def getHandlerActionObjectForProvider(providerName)
-        if @providermap.key?(providerName)
-          if @providermap[providerName].key?('classname')
-            return @providermap[providerName]['classname']
+      def getHandlerActionObjectForProvider(provider_name)
+        if @providermap.key?(provider_name)
+          if @providermap[provider_name].key?('classname')
+            return @providermap[provider_name]['classname']
           end
         end
-        raise "No registered provider for #{providerName}"
+        raise "No registered provider for #{provider_name}"
       end
 
       # returns registered class name for given automator plugin
-      def getHandlerActionObjectForAutomator(automatorName)
-        if @automatormap.key?(automatorName)
-          if @automatormap[automatorName].key?('classname')
-            return @automatormap[automatorName]['classname']
+      def getHandlerActionObjectForAutomator(automator_name)
+        if @automatormap.key?(automator_name)
+          if @automatormap[automator_name].key?('classname')
+            return @automatormap[automator_name]['classname']
           end
         end
-        raise "No registered automator for #{automatorName}"
+        raise "No registered automator for #{automator_name}"
       end
 
       # returns all registered automators, used for bootstrap task

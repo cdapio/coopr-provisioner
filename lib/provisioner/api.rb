@@ -16,13 +16,12 @@
 # limitations under the License.
 #
 
-gem 'json', '~> 1.7.7' # activesupport
-
 require 'thin'
 require 'sinatra/base'
 require 'json'
 require 'rest-client'
 
+require_relative 'constants'
 require_relative 'tenantspec'
 require_relative 'provisioner'
 require_relative 'cli'

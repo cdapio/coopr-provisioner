@@ -39,12 +39,15 @@ module Coopr
         # example resource_jsonobj: "automatortype" => {...}
         resource_jsonobj.each do |type, h_type|
           next if h_type.nil?
+
           # example h_type hash: "chef-solo" => {...}
           h_type.each do |id, h_id|
             next if h_id.nil?
+
             # example h_id hash: "cookbooks" => {"format" => "...", "active => [...]"}
             h_id.each do |resource_type, h_resource|
               next if h_resource.nil?
+
               format = nil
               format = h_resource['format'] if h_resource.key?('format')
               permissions = nil
@@ -52,6 +55,7 @@ module Coopr
                 permissions = h_resource['permissions']
               end
               next unless h_resource.key?('active')
+
               h_resource['active'].each do |nv|
                 name = nv['name']
                 version = nv['version']

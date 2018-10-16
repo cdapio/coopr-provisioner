@@ -206,6 +206,7 @@ module Coopr
     def active_version(resource)
       work_link = %W(#{@workdir} #{resource}).join('/')
       return nil unless File.symlink? work_link
+
       target = File.readlink(work_link)
       target.split('/')[-2]
     end
@@ -216,6 +217,7 @@ module Coopr
 
       # if data is a directory, its an archive resource and its synced
       return true if File.directory?(data)
+
       # if data is a file, we need to check permissions
       if File.file?(data)
         if @resourcespec.resource_permissions.key?(resource)
@@ -246,6 +248,7 @@ module Coopr
         workdir.find do |path|
           # symlinks indicate an active version of a resource
           next unless File.symlink?(path)
+
           target = File.readlink(path)
           # the version will be the parent directory
           version = target.split('/')[-2]
