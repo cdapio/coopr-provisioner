@@ -92,6 +92,8 @@ if subdomain_whitelist.nil? || subdomain_whitelist.include?(subdomain)
   end
 
   # Create record set
+  # Retry with random delay. GDNS API is atomic, and there is a possibility of collisions with other provisioners
+  # https://cloud.google.com/dns/docs/troubleshooting#preconditionfailed
   gdns_resource_record_set "#{fqdn}." do
     action :create
     managed_zone gdns['managed_zone']
@@ -103,5 +105,7 @@ if subdomain_whitelist.nil? || subdomain_whitelist.include?(subdomain)
     project gdns['project']
     credential 'coopr-dns-service-account-creds'
     not_if { subdomain == 'local' || subdomain == 'provider' }
+    retries 5
+    retry_delay 5 + rand(15)
   end
 end
