@@ -4,7 +4,7 @@ maintainer_email 'ops@cask.co'
 license          'All rights reserved'
 description      'Installs/Configures DNS'
 long_description IO.read(File.join(File.dirname(__FILE__), 'README.md'))
-version          '1.1.0'
+version          '1.1.1'
 
 depends 'dnsimple', '>= 2.0'
 depends 'dynect'
