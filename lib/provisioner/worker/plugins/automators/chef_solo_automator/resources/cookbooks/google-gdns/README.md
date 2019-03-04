@@ -35,7 +35,7 @@ gdns_managed_zone 'testzone-3-com' do
   dns_name 'test.somewild-example.com.'
   description 'Test Example Zone'
   credential 'mycred'
-  project 'google.com:graphite-playground'
+  project ENV['PROJECT'] # ex: 'my-test-project'
 end
 
 gdns_resource_record_set 'www.testzone-4.com.' do
@@ -48,7 +48,7 @@ gdns_resource_record_set 'www.testzone-4.com.' do
     '40.5.6.7',
     '80.9.10.11'
   ]
-  project 'google.com:graphite-playground'
+  project ENV['PROJECT'] # ex: 'my-test-project'
   credential 'mycred'
 end
 ```
@@ -85,7 +85,11 @@ For complete details of the authentication cookbook, visit the
     A project resource. The project is a top level container for resources
     including Cloud DNS ManagedZones.
 * [`gdns_resource_record_set`](#gdns_resource_record_set) -
-    A unit of data that will be returned by the DNS servers.
+    A single DNS record that exists on a domain name (i.e. in a managed zone).
+    This record defines the information about the domain and where the
+    domain / subdomains direct to.
+    The record will include the domain/subdomain name, a type (i.e. A, AAA,
+    CAA, MX, CNAME, NS, etc)
 
 
 ### gdns_managed_zone
@@ -120,7 +124,7 @@ gdns_managed_zone 'testzone-3-com' do
   # ]
   # creation_time '2016-12-02T04:59:24.333Z'
 
-  project 'google.com:graphite-playground'
+  project ENV['PROJECT'] # ex: 'my-test-project'
   credential 'mycred'
 end
 
@@ -211,7 +215,7 @@ including Cloud DNS ManagedZones.
 gdns_project 'google.com:graphite-playground' do
   quota_managed_zones 10_000
   quota_total_rrdata_size_per_change 100_000
-  project 'google.com:graphite-playground'
+  project ENV['PROJECT'] # ex: 'my-test-project'
   credential 'mycred'
 end
 
@@ -221,15 +225,17 @@ end
 
 ```ruby
 gdns_project 'id-for-resource' do
-  number                             integer
-  quota_managed_zones                integer
-  quota_resource_records_per_rrset   integer
-  quota_rrset_additions_per_change   integer
-  quota_rrset_deletions_per_change   integer
-  quota_rrsets_per_managed_zone      integer
-  quota_total_rrdata_size_per_change integer
-  project                            string
-  credential                         reference to gauth_credential
+  number     integer
+  quota      {
+    managed_zones                integer,
+    resource_records_per_rrset   integer,
+    rrset_additions_per_change   integer,
+    rrset_deletions_per_change   integer,
+    rrsets_per_managed_zone      integer,
+    total_rrdata_size_per_change integer,
+  }
+  project    string
+  credential reference to gauth_credential
 end
 ```
 
@@ -246,31 +252,31 @@ end
 #### Properties
 
 * `number` -
-  Output only. Unique numeric identifier for the resource; defined by the
-  server.
+  Output only. Unique numeric identifier for the resource; defined by the server.
 
-* `quota_managed_zones` -
+* `quota` -
+  Output only. Quota allowed in project
+
+* `quota/managed_zones`
   Output only. Maximum allowed number of managed zones in the project.
 
-* `quota_resource_records_per_rrset` -
-  Output only. Maximum allowed number of ResourceRecords per
-  ResourceRecordSet.
+* `quota/resource_records_per_rrset`
+  Output only. Maximum allowed number of ResourceRecords per ResourceRecordSet.
 
-* `quota_rrset_additions_per_change` -
+* `quota/rrset_additions_per_change`
   Output only. Maximum allowed number of ResourceRecordSets to add per
   ChangesCreateRequest.
 
-* `quota_rrset_deletions_per_change` -
+* `quota/rrset_deletions_per_change`
   Output only. Maximum allowed number of ResourceRecordSets to delete per
   ChangesCreateRequest.
 
-* `quota_rrsets_per_managed_zone` -
+* `quota/rrsets_per_managed_zone`
   Output only. Maximum allowed number of ResourceRecordSets per zone in the
   project.
 
-* `quota_total_rrdata_size_per_change` -
-  Output only. Maximum allowed size for total rrdata in one
-  ChangesCreateRequest
+* `quota/total_rrdata_size_per_change`
+  Output only. Maximum allowed size for total rrdata in one ChangesCreateRequest
   in bytes.
 
 #### Label
@@ -279,7 +285,13 @@ of this object. The primary key will always be referred to by the initials of
 the resource followed by "_label"
 
 ### gdns_resource_record_set
-A unit of data that will be returned by the DNS servers.
+A single DNS record that exists on a domain name (i.e. in a managed zone).
+This record defines the information about the domain and where the
+domain / subdomains direct to.
+
+The record will include the domain/subdomain name, a type (i.e. A, AAA,
+CAA, MX, CNAME, NS, etc)
+
 
 #### Example
 
@@ -296,7 +308,7 @@ gdns_resource_record_set 'www.testzone-4.com.' do
     '40.5.6.7',
     '80.9.10.11'
   ]
-  project 'google.com:graphite-playground'
+  project ENV['PROJECT'] # ex: 'my-test-project'
   credential 'mycred'
 end
 
@@ -305,7 +317,7 @@ gdns_resource_record_set 'sites.testzone-4.com.' do
   managed_zone 'testzone-4-com'
   type 'CNAME'
   target ['www.testzone-4.com.']
-  project 'google.com:graphite-playground'
+  project ENV['PROJECT'] # ex: 'my-test-project'
   credential 'mycred'
 end
 
@@ -354,7 +366,8 @@ end
   As defined in RFC 1035 (section 5) and RFC 1034 (section 3.6.1)
 
 * `managed_zone` -
-  Required. A reference to ManagedZone resource
+  Required. Identifies the managed zone addressed by this request.
+  Can be the managed zone name or id.
 
 #### Label
 Set the `rrs_label` property when attempting to set primary key

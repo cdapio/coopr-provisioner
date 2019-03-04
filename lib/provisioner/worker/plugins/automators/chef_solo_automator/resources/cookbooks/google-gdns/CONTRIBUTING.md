@@ -86,6 +86,7 @@ chef-codegen:
   * .gitignore
   * .rubocop.yml
   * Berksfile
+  * CHANGELOG.md
   * chefignore
   * CONTRIBUTING.md
   * Gemfile
@@ -99,10 +100,10 @@ chef-codegen:
   * libraries/google/dns/property/enum.rb
   * libraries/google/dns/property/integer.rb
   * libraries/google/dns/property/managedzone_name.rb
+  * libraries/google/dns/property/project_quota.rb
   * libraries/google/dns/property/string.rb
   * libraries/google/dns/property/string_array.rb
   * libraries/google/dns/property/time.rb
-  * LICENSE
   * metadata.rb
   * README.md
   * recipes/examples~delete_managed_zone.rb
