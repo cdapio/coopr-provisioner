@@ -17,6 +17,27 @@
 # limitations under the License.
 #
 
+# CentOS 6 is EOL. Point repos to CentOS vault
+if node['platform_family'] == 'rhel' && node['platform_version'].to_i == 6
+  centos_eol = cookbook_file '/etc/yum.repos.d/CentOS-Base.repo' do
+    source 'CentOS-Base.repo'
+    mode '0644'
+  end
+  centos_eol.run_action(:create)
+
+  scl_eol = cookbook_file '/etc/yum.repos.d/CentOS-SCLo-scl.repo' do
+    source 'CentOS-SCLo-scl.repo'
+    mode '0644'
+  end
+  scl_eol.run_action(:create)
+
+  scl_rh_eol = cookbook_file '/etc/yum.repos.d/CentOS-SCLo-scl-rh.repo' do
+    source 'CentOS-SCLo-scl-rh.repo'
+    mode '0644'
+  end
+  scl_rh_eol.run_action(:create)
+end
+
 # This forces an apt-get update on Ubuntu/Debian
 case node['platform_family']
 when 'debian'
